@@ -73,8 +73,9 @@ json_copy_int(struct jsonparse_state *parser)
 // All functions are stored in a table
 typedef void (*FunctionCall)(struct jsonparse_state);
 int g_nbFunctions = 5;
-FunctionCall g_functions[]    = {&list_functions, &init_sensor, &destroy_object,&get_data,&set_data};
-const char* g_functionNames[] = {"list_functions", "init_sensor", "destroy_object", "get_data", "set_data"};
+FunctionCall g_functions[]     = {&list_functions, &init_sensor, &destroy_object,&get_data,&set_data};
+const char* g_functionNames[]  = {"list_functions", "init_sensor", "destroy_object", "get_data", "set_data"};
+const char* g_functionInputs[] = {"{}", "{}", "{}", "{\"led\":%d}", "{}"};
 
 
 //--------------------------------------------------------------- 
@@ -119,7 +120,7 @@ PROCESS_THREAD(init_com_process, ev, data)
 						}
 						else
 						{
-							PRINTF( "{\"status\":\"NOK\", \"Infos\":\"Wrong function number\"}}");
+							PRINTF( "{\"status\":\"NOK\", \"infos\":\"Wrong function number\"}}");
 						}
 						break;
 					} 
@@ -148,11 +149,11 @@ void list_functions(struct jsonparse_state parser)
 	int i;
 	for( i = 0 ; i < g_nbFunctions - 1 ; i++)
 	{
-		PRINTF("{\"id\":%d,\"description\":\"%s\"},", i, g_functionNames[i]);
+		PRINTF("{\"id\":%d,\"description\":\"%s\",\"inputs\":%s},", i, g_functionNames[i], g_functionInputs[i]);
 	}
 	if(i == g_nbFunctions - 1)
 	{
-		PRINTF("{\"id\":%d,\"description\":\"%s\"}", i, g_functionNames[i]);
+		PRINTF("{\"id\":%d,\"description\":\"%s\",\"inputs\":%s}", i, g_functionNames[i], g_functionInputs[i]);
 	}
 	PRINTF( "}");
 } 
@@ -200,7 +201,7 @@ void get_data(struct jsonparse_state parser){
 		tempint = ((absraw >> 8) * sign)-3;
 		tempfrac = ((absraw >> 4) % 16) * 625;	
 		minus = ((tempint == 0) & (sign == -1)) ? '-' : ' ';
-		PRINTF( "{\"status\":\"OK\", \"Infos\":{\"Temperature\":\"%c%d.%04d\"}}", minus, tempint, tempfrac);
+		PRINTF( "{\"status\":\"OK\", \"infos\":{\"temperature\":\"%c%d.%04d\"}}", minus, tempint, tempfrac);
 	}
 	// else{
 	// PRINTF( "{\"status\":\"NOK\", \"Infos\":\"Not connected\"}}");
@@ -237,12 +238,12 @@ void set_data(struct jsonparse_state parser){
 			PRINTF( "{\"status\":\"OK\"}");
 		}
 		if(led==3){
-			PRINTF( "{\"status\":\"NOK\", \"Infos\":\"No leds for this ID\"}}");
+			PRINTF( "{\"status\":\"NOK\", \"infos\":\"No leds for this ID\"}}");
 		}
 
 	}
 	else{
-		PRINTF( "{\"status\":\"NOK\", \"Infos\":\"Not connected\"}}");
+		PRINTF( "{\"status\":\"NOK\", \"infos\":\"Not connected\"}}");
 	}
 }
 
