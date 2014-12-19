@@ -13,7 +13,7 @@ SensorProxy.obj: POPSensor.ph POPSensor.cc SensorProxy.ph SensorProxy.cc
 	${POPCC} -parclass-nobroker -c POPSensor.ph
 	${POPCC} -object SensorProxy.ph SensorProxy.cc -o SensorProxy.obj
 
-main: POPSensor.ph SensorProxy.ph SensorProxy.cc
+main: POPSensor.ph SensorProxy.ph SensorProxy.cc main.cc
 	${POPCC} -parclass-nobroker -c POPSensor.ph
 	${POPCC} -parclass-nobroker -c SensorProxy.ph SensorProxy.cc
 	${POPCC} -o main main.cc POPSensor.ph POPSensor.o SensorProxy.ph SensorProxy.o
@@ -21,3 +21,6 @@ main: POPSensor.ph SensorProxy.ph SensorProxy.cc
 objects.map: POPSensor.obj SensorProxy.obj
 	./POPSensor.obj -listlong > objects.map
 	./SensorProxy.obj -listlong >> objects.map
+
+run:
+	popcrun objects.map ./main

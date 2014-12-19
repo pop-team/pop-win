@@ -26,12 +26,10 @@ public:
 	/// Subscribe to a sensor
 	void SubscribeMe(const std::string& x_link);
 
+	void ReadData();
+	void SendData(POPString JSONData);
 
 private:
-	void BufferReadData();
-	void BufferSendData(const char* JSONData);
-	int GetData(char* JSONData);
-	int SetData(const char* JSONData);
 
 	int m_fd;
 	std::string m_data;

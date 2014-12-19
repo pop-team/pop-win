@@ -63,7 +63,7 @@ SensorProxy::SensorProxy(POPString x_url)
 	fd_set mask;
 	speed_t speed = BAUDRATE;
 	const char *device = MODEMDEVICE;
-	int m_fd = open(device, O_RDWR | O_NOCTTY | O_NDELAY | O_SYNC );
+	m_fd = open(device, O_RDWR | O_NOCTTY | O_NDELAY | O_SYNC );
 
 	if (m_fd <0) {
 		fprintf(stderr, "Cannot open device\n");
@@ -105,9 +105,13 @@ SensorProxy::SensorProxy(POPString x_url)
 	FD_SET(m_fd, &mask);
 	FD_SET(fileno(stdin), &mask);
 
-	int indexS = 0;
+	if(m_fd <= 0)
+	{
+		perror("Fail to open "MODEMDEVICE);
+		exit(-1);
+	}
 
-	printf("port is open\n");
+	printf("port is open on %d\n", m_fd);
 }
 
 SensorProxy::~SensorProxy()
@@ -116,14 +120,7 @@ SensorProxy::~SensorProxy()
 	close(m_fd);
 }
 
-int SensorProxy::GetData(char* JSONData)
-{
-	BufferSendData(JSONData);
-	BufferReadData();
-	fflush(stdout);
-	return 0;
-}
-
+/*
 int SensorProxy::SetData(const char* JSONData)
 {
 	BufferSendData(JSONData);
@@ -131,6 +128,7 @@ int SensorProxy::SetData(const char* JSONData)
 	fflush(stdout);
 	return 0;
 }
+*/
 
 
 /// Subscribe to a sensor
@@ -140,32 +138,42 @@ void SensorProxy::SubscribeMe(const string& x_link)
 
 
 
-void SensorProxy::BufferSendData(const char* JSONData)
+void SensorProxy::SendData(POPString JSONData)
 {
-	int n = strlen(JSONData);
+	const char* data = JSONData.c_str();
+	printf("Sending %s on %d\n", data, m_fd);
+	int n = strlen(data);
 	if (n < 0) {
 		perror("could not read");
 		exit(-1);
-	} else if (n > 0) {
-		if(n > 0) {
-			int i;
-			for (i = 0; i < n; i++) { 
-				if (write(m_fd, &JSONData[i], 1) <= 0) {
+	}
+	else if (n > 0)
+	{
+		if(n > 0)
+		{
+			for (int i = 0; i < n; i++)
+			{
+				if (write(m_fd, &data[i], 1) <= 0)
+				{
 					perror("write");
 					exit(1);
-				}  else {
+				}
+				else
+				{
 					fflush(NULL);
 					usleep(6000);
 				}
 			}
 		}
-	} else {
+	}
+	else
+	{
 		/* End of input, exit. */
 		exit(0);
 	}
 
 }
-void SensorProxy::BufferReadData()
+void SensorProxy::ReadData()
 {
 	char buf[BUFSIZE], outbuf[HCOLS];
 	printf("BufferReadData:\n");
@@ -173,7 +181,7 @@ void SensorProxy::BufferReadData()
 	int n=-1;
 	int i,j;
 	int b=0;
-	usleep(10*1000);
+	usleep(10*1000);  // TODO remove
 	while(n != 0) {   
 		n=-1;
 		i=0;

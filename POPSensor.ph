@@ -30,6 +30,9 @@ public:
 	/// Publish data (called by SensorProxy)
 	void Publish(std::string x_data);
 
+	void ReadData();
+	void SendData(POPString JSONData);
+
 	/// Retrieve data gathered 
 	std::string RetrieveData();
 

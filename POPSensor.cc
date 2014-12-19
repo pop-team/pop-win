@@ -32,7 +32,7 @@ POPSensor::~POPSensor()
 void POPSensor::Connect()
 {
 	// TODO: Handle resource description files
-	for(int i = 0 ; i < 4 ; i++)
+	for(int i = 0 ; i < 1 ; i++)
 	{
 		m_sensorsProxy.push_back(new SensorProxy("localhost"));
 	}
@@ -55,6 +55,22 @@ void POPSensor::Publish(std::string x_data)
 std::string POPSensor::RetrieveData()
 {
 	return m_data;	
+}
+
+void POPSensor::SendData(POPString JSONData)
+{
+	for(auto it : m_sensorsProxy)
+	{
+		it->SendData(JSONData);
+	}
+}
+
+void POPSensor::ReadData()
+{
+	for(auto it : m_sensorsProxy)
+	{
+		it->ReadData();
+	}
 }
 
 
