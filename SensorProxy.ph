@@ -11,7 +11,10 @@
 #ifndef SENSOR_PROXY_H
 #define SENSOR_PROXY_H
 
-class Gateway;
+#include <vector>
+#include <string>
+
+class POPSensor;
 
 parclass SensorProxy {
 	classuid(1903);
@@ -21,11 +24,18 @@ public:
 	~SensorProxy();
 
 	/// Subscribe to a sensor
-	void SubscribeMe(/*Gateway* xp_gateway*/);
+	void SubscribeMe(const std::string& x_link);
 
 
 private:
+	void BufferReadData();
+	void BufferSendData(const char* JSONData);
+	int GetData(char* JSONData);
+	int SetData(const char* JSONData);
+
+	int m_fd;
 	std::string m_data;
+	std::vector<POPSensor*> m_subscribed;
 };
 
 #endif

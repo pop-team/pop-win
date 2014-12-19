@@ -1,11 +1,13 @@
-popcc -parclass-nobroker -c Gateway.ph Gateway.o
-popcc -parclass-nobroker -c SensorProxy.ph SensorProxy.cc
-popcc -object Gateway.ph Gateway.cc -o Gateway.obj SensorProxy.stub.o
-popcc -object SensorProxy.ph SensorProxy.cc -o SensorProxy.obj
+POPCC="popcc --std=c++11"
 
-popcc -parclass-nobroker -c Gateway.ph Gateway.o
-popcc -parclass-nobroker -c SensorProxy.ph SensorProxy.cc
-popcc -o main main.cc Gateway.ph Gateway.o SensorProxy.ph SensorProxy.o
+$POPCC -parclass-nobroker -c POPSensor.ph POPSensor.o
+$POPCC -parclass-nobroker -c SensorProxy.ph SensorProxy.cc
+$POPCC -object POPSensor.ph POPSensor.cc -o POPSensor.obj SensorProxy.stub.o
+$POPCC -object SensorProxy.ph SensorProxy.cc -o SensorProxy.obj
 
-./Gateway.obj -listlong > objects.map
+$POPCC -parclass-nobroker -c POPSensor.ph POPSensor.o
+$POPCC -parclass-nobroker -c SensorProxy.ph SensorProxy.cc
+$POPCC -o main main.cc POPSensor.ph POPSensor.o SensorProxy.ph SensorProxy.o
+
+./POPSensor.obj -listlong > objects.map
 ./SensorProxy.obj -listlong >> objects.map

@@ -7,10 +7,11 @@
  *
  *
  */
-#include "Gateway.ph"
+#include "POPSensor.ph"
 int main(int argc, char** argv)
 {
-	Gateway gateway("localhost");
+	POPSensor gateway("localhost");
+	gateway.Connect();
 
 
 	return 1;
