@@ -22,16 +22,16 @@ int main(int argc, char** argv)
 
 	cout<<"Send {\"function\":0}"<<popcendl;
 	sensorGroup.SendData("{\"function\":0}");
-	cout<<"Send {\"function\":3,\"led\":1}"<<popcendl;
-	sensorGroup.SendData("{\"function\":3,\"led\":1}");
-	sensorGroup.SendData("{\"function\":3,\"led\":1}");
-	sensorGroup.SendData("{\"function\":3,\"led\":1}");
-	sensorGroup.SendData("{\"function\":3,\"led\":1}");
-	sensorGroup.SendData("{\"function\":3,\"led\":1}");
-	cout<<"Sleep"<<popcendl;
-	sleep(2);
 	cout<<"Read"<<popcendl;
 	sensorGroup.ReadData();
+	cout<<"Send {\"function\":3,\"led\":1}"<<popcendl;
+	sensorGroup.SendData("{\"function\":3,\"led\":0}");
+	sensorGroup.SendData("{\"function\":3,\"led\":1}");
+	sensorGroup.SendData("{\"function\":3,\"led\":2}");
+	sensorGroup.SendData("{\"function\":3,\"led\":3}");
+	sensorGroup.SendData("{\"function\":3,\"led\":4}");
+	cout<<"Sleep"<<popcendl;
+	sleep(2);
 
 
 	return 1;
