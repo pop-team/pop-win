@@ -26,12 +26,15 @@ public:
 	/// Subscribe to a sensor
 	void SubscribeMe(const std::string& x_link);
 
-	void ReadData();
 	void SendData(POPString JSONData);
+	async conc void StartListening();
+	async conc void StopListening();
 
 private:
+	POPString ReadData();
 
 	int m_fd;
+	bool m_listening;
 	std::string m_data;
 	std::vector<POPSensor*> m_subscribed;
 };

@@ -1,4 +1,4 @@
-POPCC=popcc --std=c++11
+POPCC=popcc --std=c++11 -g
 
 all: POPSensor.obj SensorProxy.obj main objects.map
 

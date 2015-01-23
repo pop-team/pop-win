@@ -44,7 +44,7 @@ void POPSensor::Subscribe(SensorProxy& x_sensorProxy)
 	// x_sensorProxy.SubscribeMe(this);
 }
 
-/// Publish data (called by SensorProxy)
+/// Publish data
 void POPSensor::Publish(std::string x_data)
 {
 	m_data += x_data.c_str();
@@ -65,11 +65,21 @@ void POPSensor::SendData(POPString JSONData)
 	}
 }
 
-void POPSensor::ReadData()
+void POPSensor::StartListening()
 {
+	printf("POPSensor::StopListening\n");
 	for(auto it : m_sensorsProxy)
 	{
-		it->ReadData();
+		it->StartListening();
+	}
+}
+
+void POPSensor::StopListening()
+{
+	printf("POPSensor::StopListening\n");
+	for(auto it : m_sensorsProxy)
+	{
+		it->StopListening();
 	}
 }
 

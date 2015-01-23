@@ -173,28 +173,47 @@ void SensorProxy::SendData(POPString JSONData)
 	}
 
 }
-void SensorProxy::ReadData()
+POPString SensorProxy::ReadData()
 {
-	char buf[BUFSIZE], outbuf[HCOLS];
-	printf("BufferReadData:\n");
-	char* s;
+	POPString result;
+	char buf[BUFSIZE];
+	//printf("BufferReadData:\n");
+	//usleep(10*1000);  // TODO remove
 	int n=-1;
-	int i,j;
-	int b=0;
-	usleep(10*1000);  // TODO remove
 	while(n != 0) {   
-		n=-1;
-		i=0;
-		j=0;
-		i,j, n = read(m_fd, buf, sizeof(buf));
-		for(i = 0; i < n; i++) {
+		// i=0;
+		// j=0;
+		//i,j, 
+		n = read(m_fd, buf, sizeof(buf));
+		// printf("n=%d\n", n);
+		for(int i = 0; i < n; i++) {
 			printf("%c", buf[i]);
 		}
 	}
-	printf("\n- end of BufferReadData\n");
+	//printf("\n- end of BufferReadData\n");
 
+	return result;
 }
 
+void SensorProxy::StartListening()
+{
+	printf("SensorProxy::StartListening\n");
+	m_listening = true;
+	while(m_listening == true)
+	{
+		POPString received = ReadData();
+		if(received.Length() != 0 && strcmp(received.c_str(), "(null)"))
+		{
+			printf("Message received: %s \n", received.c_str());
+		}
+	}
+}
+
+void SensorProxy::StopListening()
+{
+	printf("SensorProxy::StopListening\n");
+	m_listening = false; // TODO: See if we must protect this var
+}
 
 
 @pack(SensorProxy);
