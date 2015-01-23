@@ -1,0 +1,1 @@
+Support "sensordes", inject code duiring _paroc3_*.* files, and the description file will be parsed and analysised during _paroc3_*.* files.

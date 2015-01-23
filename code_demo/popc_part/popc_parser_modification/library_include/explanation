@@ -1,0 +1,4 @@
+add the definition and implementation inside combox_socket as an special combox member.
+To avoid compile other files.
+
+
