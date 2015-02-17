@@ -22,8 +22,10 @@ POPSensor::POPSensor(POPString x_url)
 
 POPSensor::~POPSensor()
 {
+	cout<<"Destroying sensor proxyAAAAA "<<m_sensorsProxy.size()<<popcendl;
 	for(auto it : m_sensorsProxy)
 	{
+		cout<<"Destroying sensor proxy"<<popcendl;
 		delete(it);
 	}
 }
@@ -34,6 +36,7 @@ void POPSensor::Connect()
 	// TODO: Handle resource description files
 	for(int i = 0 ; i < 1 ; i++)
 	{
+		cout<<"Creating sensor proxy"<<popcendl;
 		m_sensorsProxy.push_back(new SensorProxy("localhost"));
 	}
 }
@@ -67,7 +70,7 @@ void POPSensor::SendData(POPString JSONData)
 
 void POPSensor::StartListening()
 {
-	printf("POPSensor::StopListening\n");
+	printf("POPSensor::StartListening\n");
 	for(auto it : m_sensorsProxy)
 	{
 		it->StartListening();

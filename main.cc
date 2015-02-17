@@ -21,20 +21,28 @@ int main(int argc, char** argv)
 	sleep(2);
 
 	cout<<"Send {\"function\":0}"<<popcendl;
-	sensorGroup.SendData("{\"function\":0}");
-	cout<<"Read"<<popcendl;
+	sensorGroup.SendData("{\"function\":0}\n");
+
+	sleep(2);
+
+	cout<<"Read the available functions:"<<popcendl;
 	sensorGroup.StartListening();
+
+/*
 	cout<<"Send {\"function\":3,\"led\":1}"<<popcendl;
-	sensorGroup.SendData("{\"function\":3,\"led\":0}");
-	sensorGroup.SendData("{\"function\":3,\"led\":1}");
-	sensorGroup.SendData("{\"function\":3,\"led\":2}");
-	sensorGroup.SendData("{\"function\":3,\"led\":3}");
-	sensorGroup.SendData("{\"function\":3,\"led\":4}");
-	cout<<"Sleep"<<popcendl;
-	sleep(10);
-	cout<<"End of Sleep"<<popcendl;
+	sensorGroup.SendData("{\"function\":3,\"led\":0}\n");
+	sensorGroup.SendData("{\"function\":3,\"led\":1}\n");
+	sensorGroup.SendData("{\"function\":3,\"led\":2}\n");
+	sensorGroup.SendData("{\"function\":3,\"led\":3}\n");
+	sensorGroup.SendData("{\"function\":3,\"led\":4}\n");
+	*/
+
+	cout<<"main sleep"<<popcendl;
+
+	sleep(200);
+	cout<<"End of main sleep"<<popcendl;
 	sensorGroup.StopListening();
 
 
-	return 1;
+	return 0;
 }

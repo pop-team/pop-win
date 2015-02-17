@@ -42,7 +42,7 @@
 
 #define CSNA_INIT 0x01
 
-#define BUFSIZE 100
+#define BUFSIZE 64
 #define HCOLS 20
 #define ICOLS 18
 
@@ -141,7 +141,7 @@ void SensorProxy::SubscribeMe(const string& x_link)
 void SensorProxy::SendData(POPString JSONData)
 {
 	const char* data = JSONData.c_str();
-	printf("Sending %s on %d\n", data, m_fd);
+	// printf("Sending %s on %d\n", data, m_fd);
 	int n = strlen(data);
 	if (n < 0) {
 		perror("could not read");
@@ -175,7 +175,6 @@ void SensorProxy::SendData(POPString JSONData)
 }
 POPString SensorProxy::ReadData()
 {
-	POPString result;
 	char buf[BUFSIZE];
 	//printf("BufferReadData:\n");
 	//usleep(10*1000);  // TODO remove
@@ -185,12 +184,15 @@ POPString SensorProxy::ReadData()
 		// j=0;
 		//i,j, 
 		n = read(m_fd, buf, sizeof(buf));
-		// printf("n=%d\n", n);
+		printf("n=%d\n", n);
 		for(int i = 0; i < n; i++) {
 			printf("%c", buf[i]);
 		}
 	}
-	//printf("\n- end of BufferReadData\n");
+	// TODO: Can we manage an overflow of the buffer ?
+	printf("received buffer %s\n", buf);
+	POPString result = buf;
+	printf("received buffer 2: %s\n", result.c_str());
 
 	return result;
 }
@@ -207,6 +209,7 @@ void SensorProxy::StartListening()
 			printf("Message received: %s \n", received.c_str());
 		}
 	}
+	printf("End of SensorProxy::StartListening\n");
 }
 
 void SensorProxy::StopListening()
