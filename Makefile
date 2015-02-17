@@ -3,7 +3,7 @@ POPCC=popcc --std=c++11 -g
 all: POPSensor.obj SensorProxy.obj main objects.map
 
 clean:
-	rm -f POPSensor.obj SensorProxy.obj main objects.map
+	rm -f *.o *.obj main objects.map
 
 POPSensor.obj: POPSensor.ph SensorProxy.ph SensorProxy.cc
 	${POPCC} -parclass-nobroker -c SensorProxy.ph
@@ -11,7 +11,7 @@ POPSensor.obj: POPSensor.ph SensorProxy.ph SensorProxy.cc
 
 SensorProxy.obj: POPSensor.ph POPSensor.cc SensorProxy.ph SensorProxy.cc
 	${POPCC} -parclass-nobroker -c POPSensor.ph
-	${POPCC} -object SensorProxy.ph SensorProxy.cc -o SensorProxy.obj
+	${POPCC} -object SensorProxy.ph SensorProxy.cc -o SensorProxy.obj POPSensor.stub.o
 
 main: POPSensor.ph SensorProxy.ph SensorProxy.cc main.cc
 	${POPCC} -parclass-nobroker -c POPSensor.ph

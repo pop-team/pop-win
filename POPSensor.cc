@@ -10,6 +10,7 @@
 
 
 #include "POPSensor.ph"
+#include "SensorProxy.ph"
 #include <unistd.h>
 
 
@@ -38,6 +39,12 @@ void POPSensor::Connect()
 	{
 		cout<<"Creating sensor proxy"<<popcendl;
 		m_sensorsProxy.push_back(new SensorProxy("localhost"));
+
+		// Subscribe to sensor
+		// m_sensorsProxy.back()->SubscribeMe(*this);
+		// POPSensor tmp(GetAccessPointForThis()); // TODO
+		// m_sensorsProxy.back()->SubscribeMe(tmp);
+		m_sensorsProxy.back()->SubscribeMe(*__POPThis_POPSensor);
 	}
 }
 
@@ -47,12 +54,6 @@ void POPSensor::Subscribe(SensorProxy& x_sensorProxy)
 	// x_sensorProxy.SubscribeMe(this);
 }
 
-/// Publish data
-void POPSensor::Publish(std::string x_data)
-{
-	m_data += x_data.c_str();
-	m_data += ",";
-}
 
 /// Retrieve data that was published here
 std::string POPSensor::RetrieveData()
@@ -66,6 +67,15 @@ void POPSensor::SendData(POPString JSONData)
 	{
 		it->SendData(JSONData);
 	}
+}
+
+void POPSensor::Publish(POPString x_message)
+{
+	LOG_DEBUG("gagne !!!!!!");
+	cout<<"m0:"<<x_message<<popcendl;
+	m_data += x_message.c_str();
+	m_data += ",";
+
 }
 
 void POPSensor::StartListening()

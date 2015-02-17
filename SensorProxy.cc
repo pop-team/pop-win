@@ -131,9 +131,10 @@ int SensorProxy::SetData(const char* JSONData)
 */
 
 
-/// Subscribe to a sensor
-void SensorProxy::SubscribeMe(const string& x_link)
+/// A gateway subscribes to a sensor to be sent the data
+void SensorProxy::SubscribeMe(POPSensor& xr_gateway)
 {
+	m_subscribed.push_back(&xr_gateway);
 }
 
 
@@ -218,7 +219,11 @@ void SensorProxy::StartListening()
 			std::string msg;
 
 			while(std::getline(received,msg,'\n')){
-				cout << "received:" << msg <<popcendl;
+				cout << "received:" << msg << ", publish to "<< m_subscribed.size() <<popcendl;
+				for(auto elem : m_subscribed)
+				{
+					elem->Publish(msg);
+				}
 			}
 		}
 		else

@@ -11,7 +11,9 @@
 #ifndef POPSENSOR_H
 #define POPSENSOR_H
 
-#include "SensorProxy.ph"
+// #include "SensorProxy.ph"
+
+class SensorProxy;
 
 parclass POPSensor {
 	classuid(1902);
@@ -24,22 +26,22 @@ public:
 	/// Search and create sensor proxys for communication with sensors
 	void Connect();
 
-	/// Subscribe to a sensor
-	void Subscribe(SensorProxy& x_sensorProxy);
-
-	/// Publish data (called by SensorProxy)
-	void Publish(std::string x_data);
-
 	void StartListening();
 	void StopListening();
 
 	/// Send data to the remote sensors
 	async seq void SendData(POPString JSONData);
 
+	/// Publish data to this POPSensor
+	void Publish(POPString x_message); // TODO: send only relevant data
+
 	/// Retrieve data gathered 
 	std::string RetrieveData();
 
 private:
+	/// Subscribe to a sensor
+	void Subscribe(SensorProxy& x_sensorProxy);
+
 	std::string m_data;
 	std::vector<SensorProxy*> m_sensorsProxy;
 };

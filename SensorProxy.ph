@@ -13,8 +13,9 @@
 
 #include <vector>
 #include <string>
+#include "POPSensor.ph"
+#include "SensorProxy.ph"
 
-class POPSensor;
 
 parclass SensorProxy {
 	classuid(1903);
@@ -24,7 +25,7 @@ public:
 	~SensorProxy();
 
 	/// Subscribe to a sensor
-	void SubscribeMe(const std::string& x_link);
+	void SubscribeMe(POPSensor& xr_gateway);
 
 	/// Send data to the remote sensors
 	async seq void SendData(POPString JSONData);
