@@ -26,7 +26,8 @@ public:
 	/// Subscribe to a sensor
 	void SubscribeMe(const std::string& x_link);
 
-	void SendData(POPString JSONData);
+	/// Send data to the remote sensors
+	async seq void SendData(POPString JSONData);
 	async conc void StartListening();
 	async conc void StopListening();
 

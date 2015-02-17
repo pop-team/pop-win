@@ -79,7 +79,7 @@ typedef void (*FunctionCall)(struct jsonparse_state);
 int g_nbFunctions = 5;
 FunctionCall g_functions[]     = {&list_functions, &init_sensor, &destroy_object,&get_data,&set_data};
 const char* g_functionNames[]  = {"list_functions", "init_sensor", "destroy_object", "get_data", "set_data"};
-const char* g_functionInputs[] = {"{}", "{}", "{}", "{\"led\":%%d}", "{}"};
+const char* g_functionInputs[] = {"{}", "{}", "{}", "{}", "{\"led\":%%d}"};
 
 
 //--------------------------------------------------------------- 

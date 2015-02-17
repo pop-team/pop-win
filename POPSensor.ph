@@ -32,7 +32,9 @@ public:
 
 	void StartListening();
 	void StopListening();
-	void SendData(POPString JSONData);
+
+	/// Send data to the remote sensors
+	async seq void SendData(POPString JSONData);
 
 	/// Retrieve data gathered 
 	std::string RetrieveData();
