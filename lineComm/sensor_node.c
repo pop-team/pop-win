@@ -38,7 +38,11 @@
 #define PRINTFDEBUG(...)
 #endif
 
-#define BUFFERSIZE 200
+#define BUFFERSIZE 256
+
+
+// Note: to send data via serial line, simply use a printf
+#define SEND(...) printf(__VA_ARGS__)
 
 //--------------------------------------------------------------- 
 
@@ -75,7 +79,7 @@ typedef void (*FunctionCall)(struct jsonparse_state);
 int g_nbFunctions = 5;
 FunctionCall g_functions[]     = {&list_functions, &init_sensor, &destroy_object,&get_data,&set_data};
 const char* g_functionNames[]  = {"list_functions", "init_sensor", "destroy_object", "get_data", "set_data"};
-const char* g_functionInputs[] = {"{}", "{}", "{}", "{\"led\":%d}", "{}"};
+const char* g_functionInputs[] = {"{}", "{}", "{}", "{\"led\":%%d}", "{}"};
 
 
 //--------------------------------------------------------------- 
@@ -103,7 +107,6 @@ PROCESS_THREAD(init_com_process, ev, data)
 	while(1) {
 		/* Do the rest of the stuff here. */ 
 		PROCESS_YIELD();
-		// PRINTF("Temp = %s\n", data);
 		// Wait for an incoming message
 		if(ev == serial_line_event_message && data!=NULL) {
 			struct jsonparse_state parser;
@@ -120,7 +123,7 @@ PROCESS_THREAD(init_com_process, ev, data)
 						}
 						else
 						{
-							PRINTF( "{\"status\":\"NOK\", \"infos\":\"Wrong function number\"}}");
+							SEND( "{\"status\":\"NOK\", \"infos\":\"Wrong function number\"}}\n");
 						}
 						break;
 					} 
@@ -144,18 +147,18 @@ exit:
  */
 void list_functions(struct jsonparse_state parser)
 {
-	PRINTF( "{\"status\":\"OK\",");
-	PRINTF("\"functions\":[");
+	SEND( "{\"status\":\"OK\",");
+	SEND("\"functions\":[");
 	int i;
 	for( i = 0 ; i < g_nbFunctions - 1 ; i++)
 	{
-		PRINTF("{\"id\":%d,\"description\":\"%s\",\"inputs\":%s},", i, g_functionNames[i], g_functionInputs[i]);
+		SEND("{\"id\":%d,\"description\":\"%s\",\"inputs\":%s},", i, g_functionNames[i], g_functionInputs[i]);
 	}
 	if(i == g_nbFunctions - 1)
 	{
-		PRINTF("{\"id\":%d,\"description\":\"%s\",\"inputs\":%s}", i, g_functionNames[i], g_functionInputs[i]);
+		SEND("{\"id\":%d,\"description\":\"%s\",\"inputs\":%s}", i, g_functionNames[i], g_functionInputs[i]);
 	}
-	PRINTF( "}");
+	SEND( "}\n");
 } 
 
 
@@ -166,7 +169,7 @@ void init_sensor(struct jsonparse_state parser){
 	// connected=1;
 	leds_init();
 	tmp102_init();
-	PRINTF( "{\"status\":\"OK\"}");
+	SEND( "{\"status\":\"OK\"}\n");
 } 
 
 /*
@@ -174,7 +177,7 @@ void init_sensor(struct jsonparse_state parser){
  */
 void destroy_object(struct jsonparse_state parser){
 	// connected=0;
-	PRINTF( "{\"status\":\"OK\"}");
+	SEND( "{\"status\":\"OK\"}\n");
 }
 
 /*
@@ -201,10 +204,10 @@ void get_data(struct jsonparse_state parser){
 		tempint = ((absraw >> 8) * sign)-3;
 		tempfrac = ((absraw >> 4) % 16) * 625;	
 		minus = ((tempint == 0) & (sign == -1)) ? '-' : ' ';
-		PRINTF( "{\"status\":\"OK\", \"infos\":{\"temperature\":\"%c%d.%04d\"}}", minus, tempint, tempfrac);
+		SEND( "{\"status\":\"OK\", \"infos\":{\"temperature\":\"%c%d.%04d\"}}\n", minus, tempint, tempfrac);
 	}
 	// else{
-	// PRINTF( "{\"status\":\"NOK\", \"Infos\":\"Not connected\"}}");
+	// PRINTF( "{\"status\":\"NOK\", \"Infos\":\"Not connected\"}}\n");
 	// }
 }
 
@@ -227,23 +230,23 @@ void set_data(struct jsonparse_state parser){
 		}   
 		if(led==0){
 			leds_toggle(LEDS_BLUE);
-			PRINTF( "{\"status\":\"OK\"}");
+			SEND( "{\"status\":\"OK\"}\n");
 		}
 		if(led==1){
 			leds_toggle(LEDS_GREEN);
-			PRINTF( "{\"status\":\"OK\"}");
+			SEND( "{\"status\":\"OK\"}\n");
 		}
 		if(led==2){
 			leds_toggle(LEDS_RED);
-			PRINTF( "{\"status\":\"OK\"}");
+			SEND( "{\"status\":\"OK\"}\n");
 		}
 		if(led==3){
-			PRINTF( "{\"status\":\"NOK\", \"infos\":\"No leds for this ID\"}}");
+			SEND( "{\"status\":\"NOK\", \"infos\":\"No leds for this ID\"}}\n");
 		}
 
 	}
 	else{
-		PRINTF( "{\"status\":\"NOK\", \"infos\":\"Not connected\"}}");
+		SEND( "{\"status\":\"NOK\", \"infos\":\"Not connected\"}}\n");
 	}
 }
 

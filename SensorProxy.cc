@@ -173,28 +173,34 @@ void SensorProxy::SendData(POPString JSONData)
 	}
 
 }
-POPString SensorProxy::ReadData()
+
+void SensorProxy::ReadData(std::ostream& xr_ostream)
 {
-	char buf[BUFSIZE];
-	//printf("BufferReadData:\n");
-	//usleep(10*1000);  // TODO remove
-	int n=-1;
-	while(n != 0) {   
-		// i=0;
-		// j=0;
-		//i,j, 
-		n = read(m_fd, buf, sizeof(buf));
-		printf("n=%d\n", n);
+	while(m_listening == true) {   
+		char buf[BUFSIZE+1];
+		int n = read(m_fd, buf, BUFSIZE);
+		// printf("n=%d\n", n);
+		/*
 		for(int i = 0; i < n; i++) {
 			printf("%c", buf[i]);
 		}
-	}
-	// TODO: Can we manage an overflow of the buffer ?
-	printf("received buffer %s\n", buf);
-	POPString result = buf;
-	printf("received buffer 2: %s\n", result.c_str());
+		*/
+		if(n==0)
+		{
+			// read(...) is not blocking. Add a sleep to reduce the charge when inactive // TODO: Improve ?
+			usleep(100000); // sleep 100 ms
+			continue;
+		}
+		// note: buffer should be null terminated to be concatenated to string
+		buf[n] = '\0';
 
-	return result;
+		// printf("%s\n", buf);
+		xr_ostream << buf;
+
+		// Carriage return means end of message
+		if(buf[n-1] == '\n')
+			break;
+	}
 }
 
 void SensorProxy::StartListening()
@@ -203,10 +209,21 @@ void SensorProxy::StartListening()
 	m_listening = true;
 	while(m_listening == true)
 	{
-		POPString received = ReadData();
-		if(received.Length() != 0 && strcmp(received.c_str(), "(null)"))
+		stringstream received;
+		ReadData(received);
+		if(received.str().size() != 0) // && received.str() != "(null)")
 		{
-			printf("Message received: %s \n", received.c_str());
+			// We need to split the message with the character \n to avoid the case where
+			// several messages arrive in the same call
+			std::string msg;
+
+			while(std::getline(received,msg,'\n')){
+				cout << "received:" << msg <<popcendl;
+			}
+		}
+		else
+		{
+			printf("Received an empty message\n");
 		}
 	}
 	printf("End of SensorProxy::StartListening\n");

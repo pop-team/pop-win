@@ -18,15 +18,20 @@ int main(int argc, char** argv)
 	cout<<"Connect"<<popcendl;
 	sensorGroup.Connect();
 	cout<<"Sleep"<<popcendl;
-	sleep(2);
-
-	cout<<"Send {\"function\":0}"<<popcendl;
-	sensorGroup.SendData("{\"function\":0}\n");
 
 	sleep(2);
 
 	cout<<"Read the available functions:"<<popcendl;
 	sensorGroup.StartListening();
+
+	sleep(2);
+
+	for(int i = 0 ; i < 5 ; i++)
+	{
+		// cout<<"Send {\"function\":0}"<<popcendl;
+		sensorGroup.SendData("{\"function\":0}\n");
+	}
+
 
 /*
 	cout<<"Send {\"function\":3,\"led\":1}"<<popcendl;
@@ -39,7 +44,7 @@ int main(int argc, char** argv)
 
 	cout<<"main sleep"<<popcendl;
 
-	sleep(200);
+	sleep(2);
 	cout<<"End of main sleep"<<popcendl;
 	sensorGroup.StopListening();
 

@@ -31,7 +31,7 @@ public:
 	async conc void StopListening();
 
 private:
-	POPString ReadData();
+	void ReadData(std::ostream& xr_ostream);
 
 	int m_fd;
 	bool m_listening;
