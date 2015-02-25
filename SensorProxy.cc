@@ -66,20 +66,16 @@ SensorProxy::SensorProxy(POPString x_url)
 	m_fd = open(device, O_RDWR | O_NOCTTY | O_NDELAY | O_SYNC );
 
 	if (m_fd <0) {
-		fprintf(stderr, "Cannot open device\n");
-		perror(device);
-		exit(-1);
+		throw POPException("Cannot open device", device);
 	}
 
 	if (fcntl(m_fd, F_SETFL, 0) < 0) {
-		perror("SENSOR: could not set fcntl");
-		exit(-1);
+		throw POPException("Could not set fcntl");
 	}
 
 	struct termios options;
 	if (tcgetattr(m_fd, &options) < 0) {
-		perror("SENSOR: could not get options");
-		exit(-1);
+		throw POPException("Could not get options");
 	}
 
 	cfsetispeed(&options, speed);
@@ -97,8 +93,7 @@ SensorProxy::SensorProxy(POPString x_url)
 	options.c_oflag &= ~OPOST;
 
 	if (tcsetattr(m_fd, TCSANOW, &options) < 0) {
-		perror("could not set options");
-		exit(-1);
+		throw POPException("could not set options");
 	}
 
 	FD_ZERO(&mask);
@@ -107,8 +102,7 @@ SensorProxy::SensorProxy(POPString x_url)
 
 	if(m_fd <= 0)
 	{
-		perror("Fail to open "MODEMDEVICE);
-		exit(-1);
+		throw POPException("Fail to open "MODEMDEVICE);
 	}
 
 	printf("port is open on %d\n", m_fd);
@@ -117,6 +111,7 @@ SensorProxy::SensorProxy(POPString x_url)
 SensorProxy::~SensorProxy()
 {
 	// Destroy object
+	cout<<"Destroy sensor proxy." << popcendl;
 	close(m_fd);
 }
 
@@ -135,18 +130,23 @@ int SensorProxy::SetData(const char* JSONData)
 void SensorProxy::SubscribeMe(POPSensor& xr_gateway)
 {
 	m_subscribed.push_back(&xr_gateway);
+	xr_gateway.Publish();
+	for(auto elem : m_subscribed)
+	{
+		elem->Publish(/*msg*/);
+	}
 }
 
 
 
 void SensorProxy::SendData(POPString JSONData)
 {
+
 	const char* data = JSONData.c_str();
 	// printf("Sending %s on %d\n", data, m_fd);
 	int n = strlen(data);
 	if (n < 0) {
-		perror("could not read");
-		exit(-1);
+		throw POPException("could not read");
 	}
 	else if (n > 0)
 	{
@@ -156,11 +156,11 @@ void SensorProxy::SendData(POPString JSONData)
 			{
 				if (write(m_fd, &data[i], 1) <= 0)
 				{
-					perror("write");
-					exit(1);
+					throw POPException("Failed to write data while sending to sensor");
 				}
 				else
 				{
+					// printf("write successfull\n");
 					fflush(NULL);
 					usleep(6000);
 				}
@@ -170,7 +170,7 @@ void SensorProxy::SendData(POPString JSONData)
 	else
 	{
 		/* End of input, exit. */
-		exit(0);
+		printf("End of input\n");
 	}
 
 }
@@ -222,7 +222,8 @@ void SensorProxy::StartListening()
 				cout << "received:" << msg << ", publish to "<< m_subscribed.size() <<popcendl;
 				for(auto elem : m_subscribed)
 				{
-					elem->Publish(msg);
+					// A bug happens here
+					// elem->Publish(/*msg*/);
 				}
 			}
 		}

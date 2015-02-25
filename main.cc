@@ -11,7 +11,6 @@
 
 using namespace std;
 
-
 /// Blink all leds 3 times
 void blinkLeds(POPSensor& xr_gateway)
 {
@@ -44,28 +43,55 @@ void askSensorReadings(POPSensor& xr_gateway)
 
 int main(int argc, char** argv)
 {
-	POPSensor gateway("localhost");
-	gateway.Connect();
-	gateway.StartListening();
-
-	blinkLeds(gateway);
-
-	sleep(2);
-
-
-	cout<<"Ask the available functions"<<popcendl;
-	gateway.SendData("{\"function\":0}\n");
-
-	for(int i = 0 ; i < 5 ; i++)
+	try
 	{
-		gateway.SendData("{\"function\":3,\"led\":1}\n");
+		POPSensor gateway("localhost");
+		gateway.Connect();
+		gateway.StartListening();
+
+		//blinkLeds(gateway);
+
+		sleep(2);
+
+		cout<<"Ask for the available functions"<<popcendl;
+		gateway.SendData("{\"function\":0}\n");
+
+		// for(int i = 0 ; i < 5 ; i++)
+		// {
+			// gateway.SendData("{\"function\":3,\"led\":1}\n");
+		// }
+		sleep(2);
+
+		cout<<"Ask sensor readings"<<popcendl;
+
+		askSensorReadings(gateway);
+
+
+		cout<<"Stop listening"<<popcendl;
+		gateway.StopListening();
+
+		cout<<"End of popwin main"<<popcendl;
 	}
-
-	askSensorReadings(gateway);
-
-
-	cout<<"Stop listening"<<popcendl;
-	gateway.StopListening();
+	catch(std::exception &e)
+	{
+		cerr<<"Exception caught in popwin main loop: " << e.what() << popcendl;
+		return 1;
+	}
+	catch(std::exception *e)
+	{
+		cerr<<"Exception caught in popwin main loop (*excep): " << e->what() << popcendl;
+		return 1;
+	}
+	catch(int e)
+	{
+		cerr<<"Exception caught in popwin main loop (int): " << e << popcendl;
+		return 1;
+	}
+	catch(...)
+	{
+		cerr<<"Exception caught in popwin main loop" << popcendl;
+		return 1;
+	}
 
 
 	return 0;

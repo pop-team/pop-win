@@ -23,10 +23,9 @@ POPSensor::POPSensor(POPString x_url)
 
 POPSensor::~POPSensor()
 {
-	cout<<"Destroying sensor proxyAAAAA "<<m_sensorsProxy.size()<<popcendl;
+	cout<<"Destroying POPSensor and its "<<m_sensorsProxy.size() << " SensorProxy." <<popcendl;
 	for(auto it : m_sensorsProxy)
 	{
-		cout<<"Destroying sensor proxy"<<popcendl;
 		delete(it);
 	}
 }
@@ -44,7 +43,7 @@ void POPSensor::Connect()
 		// m_sensorsProxy.back()->SubscribeMe(*this);
 		// POPSensor tmp(GetAccessPointForThis()); // TODO
 		// m_sensorsProxy.back()->SubscribeMe(tmp);
-		m_sensorsProxy.back()->SubscribeMe(*__POPThis_POPSensor);
+		// m_sensorsProxy.back()->SubscribeMe(*__POPThis_POPSensor);
 	}
 }
 
@@ -72,10 +71,17 @@ void POPSensor::SendData(POPString JSONData)
 void POPSensor::Publish(POPString x_message)
 {
 	LOG_DEBUG("gagne !!!!!!");
+	/*
 	cout<<"m0:"<<x_message<<popcendl;
 	m_data += x_message.c_str();
 	m_data += ",";
+	*/
 
+}
+
+void POPSensor::Publish()
+{
+	printf("gagne !!!!!!\n");
 }
 
 void POPSensor::StartListening()

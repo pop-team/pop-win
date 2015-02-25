@@ -25,10 +25,10 @@ public:
 	~SensorProxy();
 
 	/// Subscribe to a sensor
-	void SubscribeMe(POPSensor& xr_gateway);
+	async conc void SubscribeMe(POPSensor& xr_gateway);
 
 	/// Send data to the remote sensors
-	async seq void SendData(POPString JSONData);
+	sync seq void SendData(POPString JSONData);
 	async conc void StartListening();
 	async conc void StopListening();
 

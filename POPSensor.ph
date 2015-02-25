@@ -30,10 +30,11 @@ public:
 	void StopListening();
 
 	/// Send data to the remote sensors
-	async seq void SendData(POPString JSONData);
+	sync seq void SendData(POPString JSONData);
 
 	/// Publish data to this POPSensor
 	void Publish(POPString x_message); // TODO: send only relevant data
+	void Publish(); // TODO: send only relevant data
 
 	/// Retrieve data gathered 
 	std::string RetrieveData();
