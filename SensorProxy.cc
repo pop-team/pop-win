@@ -123,18 +123,23 @@ int SensorProxy::SetData(const char* JSONData)
 	fflush(stdout);
 	return 0;
 }
+
+void SensorProxy::Publish()
+{
+	for(auto elem : m_subscribed)
+	{
+		elem->Publish("new publisher !!");
+	}
+}
 */
 
 
 /// A gateway subscribes to a sensor to be sent the data
 void SensorProxy::SubscribeMe(POPSensor& xr_gateway)
 {
+	cout<<"SubscribeMe" <<popcendl;
 	m_subscribed.push_back(&xr_gateway);
-	xr_gateway.Publish();
-	for(auto elem : m_subscribed)
-	{
-		elem->Publish(/*msg*/);
-	}
+	// xr_gateway.Publish();
 }
 
 
@@ -212,11 +217,16 @@ void SensorProxy::StartListening()
 
 			while(std::getline(received,msg,'\n')){
 				cout << "received:" << msg << ", publish to "<< m_subscribed.size() <<popcendl;
+				// Store data in table
+				m_data.push_back(msg);
+
+				/*
 				for(auto elem : m_subscribed)
 				{
 					// A bug happens here
-					// elem->Publish(/*msg*/);
+					// elem->Publish();
 				}
+				*/
 			}
 		}
 		else
@@ -233,5 +243,16 @@ void SensorProxy::StopListening()
 	m_listening = false; // TODO: See if we must protect this var
 }
 
+vector<string> SensorProxy::RetrieveData()
+{
+	cout << "Retrieve " << m_data.size() << " records" <<popcendl;
+	return m_data;
+}
+
+
+void SensorProxy::ClearData()
+{
+	m_data.clear();
+}
 
 @pack(SensorProxy);

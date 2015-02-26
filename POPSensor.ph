@@ -33,17 +33,18 @@ public:
 	sync seq void SendData(const std::string& JSONData);
 
 	/// Publish data to this POPSensor
-	void Publish(const std::string& x_message); // TODO: send only relevant data
-	void Publish(); // TODO: send only relevant data
+	// void Publish(const std::string& x_message); // TODO: send only relevant data
+	// void Publish(); // TODO: send only relevant data
 
 	/// Retrieve data gathered 
-	std::string RetrieveData();
+	void RetrieveData();
 
+	/// Clear data gathered 
+	void ClearData();
 private:
 	/// Subscribe to a sensor
-	void Subscribe(SensorProxy& x_sensorProxy);
+	// void Subscribe(SensorProxy& x_sensorProxy);
 
-	std::string m_data;
 	std::vector<SensorProxy*> m_sensorsProxy;
 };
 

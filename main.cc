@@ -49,7 +49,7 @@ int main(int argc, char** argv)
 		gateway.Connect();
 		gateway.StartListening();
 
-		//blinkLeds(gateway);
+		blinkLeds(gateway);
 
 		sleep(2);
 
@@ -69,6 +69,12 @@ int main(int argc, char** argv)
 
 		cout<<"Stop listening"<<popcendl;
 		gateway.StopListening();
+
+		cout<<"Print the data gathered"<< popcendl;
+		gateway.RetrieveData();
+
+		cout<<"Clear the data gathered"<< popcendl;
+		gateway.ClearData();
 
 		cout<<"End of popwin main"<<popcendl;
 	}

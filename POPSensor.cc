@@ -48,17 +48,12 @@ void POPSensor::Connect()
 }
 
 /// Subscribe to a sensor
+/*
 void POPSensor::Subscribe(SensorProxy& x_sensorProxy)
 {
 	// x_sensorProxy.SubscribeMe(this);
 }
-
-
-/// Retrieve data that was published here
-std::string POPSensor::RetrieveData()
-{
-	return m_data;	
-}
+*/
 
 void POPSensor::SendData(const std::string& JSONData)
 {
@@ -68,25 +63,8 @@ void POPSensor::SendData(const std::string& JSONData)
 	}
 }
 
-void POPSensor::Publish(const std::string& x_message)
-{
-	LOG_DEBUG("gagne !!!!!!");
-	/*
-	cout<<"m0:"<<x_message<<popcendl;
-	m_data += x_message.c_str();
-	m_data += ",";
-	*/
-
-}
-
-void POPSensor::Publish()
-{
-	printf("gagne !!!!!!\n");
-}
-
 void POPSensor::StartListening()
 {
-	printf("POPSensor::StartListening\n");
 	for(auto it : m_sensorsProxy)
 	{
 		it->StartListening();
@@ -95,12 +73,31 @@ void POPSensor::StartListening()
 
 void POPSensor::StopListening()
 {
-	printf("POPSensor::StopListening\n");
 	for(auto it : m_sensorsProxy)
 	{
 		it->StopListening();
 	}
 }
 
+void POPSensor::RetrieveData()
+{
+	for(auto it : m_sensorsProxy)
+	{
+		vector<string> gatheredData(it->RetrieveData());
+		cout << "Records found on proxy: "<< gatheredData.size() << popcendl;
+		for(auto elem : gatheredData)
+		{
+			cout<< ">> " << elem << popcendl;
+		}
+	}
+}
+
+void POPSensor::ClearData()
+{
+	for(auto it : m_sensorsProxy)
+	{
+		it->ClearData();
+	}
+}
 
 @pack(POPSensor);

@@ -17,6 +17,7 @@
 #include "SensorProxy.ph"
 
 
+
 parclass SensorProxy {
 	classuid(1903);
 
@@ -31,13 +32,16 @@ public:
 	sync seq void SendData(const std::string& JSONData);
 	async conc void StartListening();
 	async conc void StopListening();
+	// async conc void Publish();
+	sync seq std::vector<std::string> RetrieveData();
+	sync seq void ClearData();
 
 private:
 	void ReadData(std::ostream& xr_ostream);
 
 	int m_fd;
 	bool m_listening;
-	std::string m_data;
+	std::vector<std::string> m_data;
 	std::vector<POPSensor*> m_subscribed;
 };
 
