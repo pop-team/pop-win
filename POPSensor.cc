@@ -16,7 +16,7 @@
 
 using namespace std;
 
-POPSensor::POPSensor(POPString x_url)
+POPSensor::POPSensor(const std::string& x_url)
 {
 	
 }
@@ -60,7 +60,7 @@ std::string POPSensor::RetrieveData()
 	return m_data;	
 }
 
-void POPSensor::SendData(POPString JSONData)
+void POPSensor::SendData(const std::string& JSONData)
 {
 	for(auto it : m_sensorsProxy)
 	{
@@ -68,7 +68,7 @@ void POPSensor::SendData(POPString JSONData)
 	}
 }
 
-void POPSensor::Publish(POPString x_message)
+void POPSensor::Publish(const std::string& x_message)
 {
 	LOG_DEBUG("gagne !!!!!!");
 	/*

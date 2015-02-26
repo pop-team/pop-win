@@ -21,14 +21,14 @@ parclass SensorProxy {
 	classuid(1903);
 
 public:
-	SensorProxy(POPString x_url) @{ od.url(x_url); };
+	SensorProxy(const std::string& x_url) @{ od.url(x_url); };
 	~SensorProxy();
 
 	/// Subscribe to a sensor
 	async conc void SubscribeMe(POPSensor& xr_gateway);
 
 	/// Send data to the remote sensors
-	sync seq void SendData(POPString JSONData);
+	sync seq void SendData(const std::string& JSONData);
 	async conc void StartListening();
 	async conc void StopListening();
 

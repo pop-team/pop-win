@@ -58,7 +58,7 @@
 
 using namespace std;
 
-SensorProxy::SensorProxy(POPString x_url)
+SensorProxy::SensorProxy(const std::string& x_url)
 {
 	fd_set mask;
 	speed_t speed = BAUDRATE;
@@ -139,38 +139,30 @@ void SensorProxy::SubscribeMe(POPSensor& xr_gateway)
 
 
 
-void SensorProxy::SendData(POPString JSONData)
+void SensorProxy::SendData(const std::string& JSONData)
 {
 
 	const char* data = JSONData.c_str();
 	// printf("Sending %s on %d\n", data, m_fd);
 	int n = strlen(data);
-	if (n < 0) {
+	if (n <= 0) {
 		throw POPException("could not read");
 	}
 	else if (n > 0)
 	{
-		if(n > 0)
+		for (int i = 0; i < n; i++)
 		{
-			for (int i = 0; i < n; i++)
+			if (write(m_fd, &data[i], 1) <= 0)
 			{
-				if (write(m_fd, &data[i], 1) <= 0)
-				{
-					throw POPException("Failed to write data while sending to sensor");
-				}
-				else
-				{
-					// printf("write successfull\n");
-					fflush(NULL);
-					usleep(6000);
-				}
+				throw POPException("Failed to write data while sending to sensor");
+			}
+			else
+			{
+				// printf("write successfull\n");
+				fflush(NULL);
+				// usleep(6000);
 			}
 		}
-	}
-	else
-	{
-		/* End of input, exit. */
-		printf("End of input\n");
 	}
 
 }

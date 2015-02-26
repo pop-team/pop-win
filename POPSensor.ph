@@ -20,7 +20,7 @@ parclass POPSensor {
 
 public:
 	// POPSensor(int newID, int wanted, int minp) @{ od.search(0, 3, 0); };
-	POPSensor(POPString x_url) @{ od.url(x_url); };
+	POPSensor(const std::string& x_url) @{ od.url(x_url); };
 	~POPSensor();
 
 	/// Search and create sensor proxys for communication with sensors
@@ -30,10 +30,10 @@ public:
 	void StopListening();
 
 	/// Send data to the remote sensors
-	sync seq void SendData(POPString JSONData);
+	sync seq void SendData(const std::string& JSONData);
 
 	/// Publish data to this POPSensor
-	void Publish(POPString x_message); // TODO: send only relevant data
+	void Publish(const std::string& x_message); // TODO: send only relevant data
 	void Publish(); // TODO: send only relevant data
 
 	/// Retrieve data gathered 
