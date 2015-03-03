@@ -25,6 +25,8 @@
 #include "jsontree.h"
 #include "jsonparse.h"
 
+#include "popwin_messages.h"
+
 #if 1
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
@@ -45,28 +47,6 @@
 // #define SEND(...) send(__VA_ARGS__)
 
 
-// Different types of messages
-enum MessageType
-{
-	MSG_SUBSCRIBE=0,
-	MSG_NOTIFY=1
-};
-
-struct SubscribeMessage
-{
-	char measurementType;
-	char dataType;
-};
-
-struct NotifyMessage
-{
-	char measurementType;
-	char dataType;
-	char id;
-	// note: apparently the %f format of contiki requires a double not float
-	double data;
-	char unit;
-};
 
 /*
 void send(const char *format,...)

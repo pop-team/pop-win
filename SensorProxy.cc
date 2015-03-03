@@ -26,6 +26,8 @@
 #include <time.h>
 #include <regex.h>
 
+#include "lineComm/popwin_messages.h"
+
 #define BAUDRATE B115200
 #define BAUDRATE_S "115200"
 #ifdef linux
