@@ -5,18 +5,23 @@ all: POPSensor.obj SensorProxy.obj main objects.map
 clean:
 	rm -f *.o *.obj main objects.map
 
-POPSensor.obj: POPSensor.ph SensorProxy.ph SensorProxy.cc
-	${POPCC} -parclass-nobroker -c SensorProxy.ph
-	${POPCC} -object POPSensor.ph POPSensor.cc -o POPSensor.obj SensorProxy.stub.o
+%.stub.o: %.ph
+	${POPCC} -parclass-nobroker -c $< -o $@
 
-SensorProxy.obj: POPSensor.ph POPSensor.cc SensorProxy.ph SensorProxy.cc
-	${POPCC} -parclass-nobroker -c POPSensor.ph
-	${POPCC} -object SensorProxy.ph SensorProxy.cc -o SensorProxy.obj POPSensor.stub.o
+%.phstub.o: %.ph
+	${POPCC} -c $< -o $@
 
-main: POPSensor.ph SensorProxy.ph SensorProxy.cc main.cc
-	${POPCC} -parclass-nobroker -c POPSensor.ph
-	${POPCC} -parclass-nobroker -c SensorProxy.ph SensorProxy.cc
-	${POPCC} -o main main.cc POPSensor.ph POPSensor.o SensorProxy.ph SensorProxy.o
+%.obj.o: %.cc
+	${POPCC} -c $< -o $@
+
+POPSensor.obj: POPSensor.obj.o POPSensor.phstub.o SensorProxy.stub.o
+	${POPCC} -object -o POPSensor.obj POPSensor.obj.o POPSensor.phstub.o SensorProxy.stub.o
+
+SensorProxy.obj: SensorProxy.obj.o SensorProxy.phstub.o POPSensor.stub.o
+	${POPCC} -object -o SensorProxy.obj SensorProxy.obj.o SensorProxy.phstub.o POPSensor.stub.o
+
+main: main.obj.o POPSensor.stub.o SensorProxy.stub.o 
+	${POPCC} -o main main.obj.o POPSensor.stub.o SensorProxy.stub.o
 
 objects.map: POPSensor.obj SensorProxy.obj
 	./POPSensor.obj -listlong > objects.map
