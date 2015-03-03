@@ -21,7 +21,6 @@
 #include <stdio.h>
 #include "dev/i2cmaster.h"
 #include "dev/tmp102.h"
-#include <string.h>
 
 #include "jsontree.h"
 #include "jsonparse.h"
@@ -38,11 +37,82 @@
 #define PRINTFDEBUG(...)
 #endif
 
-#define BUFFERSIZE 256
+#define BUFFERSIZE 512
 
 
 // Note: to send data via serial line, simply use a printf
 #define SEND(...) printf(__VA_ARGS__)
+// #define SEND(...) send(__VA_ARGS__)
+
+
+// Different types of messages
+enum MessageType
+{
+	MSG_SUBSCRIBE=0,
+	MSG_NOTIFY=1
+};
+
+struct SubscribeMessage
+{
+	char measurementType;
+	char dataType;
+};
+
+struct NotifyMessage
+{
+	char measurementType;
+	char dataType;
+	char id;
+	// note: apparently the %f format of contiki requires a double not float
+	double data;
+	char unit;
+};
+
+/*
+void send(const char *format,...)
+{
+	char msg[BUFFERSIZE];
+	va_list ap;
+	va_start(ap, format);
+	vsprintf(msg, format, ap);
+	va_end(ap);
+
+	printf("%s\n", msg);
+}
+*/
+
+void sendSubscription(const struct SubscribeMessage* msg)
+{
+	// char buf[BUFFERSIZE];
+	// printf("%s\n", buf);
+}
+
+void sendNotification(const struct NotifyMessage* msg)
+{
+	printf("%d %d %d %d %f %d\n",
+		MSG_NOTIFY,
+		msg->measurementType,
+		msg->dataType,
+		msg->id,
+		msg->data,
+		msg->unit
+	);
+}
+
+/*
+int send(const void* msg, size_t size)
+{
+	if(size > BUFFERSIZE - 2)
+		return 0;
+
+	char buf[BUFFERSIZE];
+	memcpy(buf, msg, size); // Cannot do this !
+	buf[size]   = '\0';
+	printf("%s\n", buf);
+
+	return 1;
+}
+*/
 
 //--------------------------------------------------------------- 
 
@@ -123,7 +193,7 @@ PROCESS_THREAD(init_com_process, ev, data)
 						}
 						else
 						{
-							SEND( "{\"status\":\"NOK\", \"infos\":\"Wrong function number\"}}\n");
+							SEND( "{\"status\":\"NOK\", \"infos\":\"Wrong function number\"}}");
 						}
 						break;
 					} 
@@ -158,7 +228,7 @@ void list_functions(struct jsonparse_state parser)
 	{
 		SEND("{\"id\":%d,\"description\":\"%s\",\"inputs\":%s}", i, g_functionNames[i], g_functionInputs[i]);
 	}
-	SEND( "}\n");
+	SEND( "}");
 } 
 
 
@@ -169,7 +239,7 @@ void init_sensor(struct jsonparse_state parser){
 	// connected=1;
 	leds_init();
 	tmp102_init();
-	SEND( "{\"status\":\"OK\"}\n");
+	SEND( "{\"status\":\"OK\"}");
 } 
 
 /*
@@ -177,7 +247,7 @@ void init_sensor(struct jsonparse_state parser){
  */
 void destroy_object(struct jsonparse_state parser){
 	// connected=0;
-	SEND( "{\"status\":\"OK\"}\n");
+	SEND( "{\"status\":\"OK\"}");
 }
 
 /*
@@ -204,10 +274,15 @@ void get_data(struct jsonparse_state parser){
 		tempint = ((absraw >> 8) * sign)-3;
 		tempfrac = ((absraw >> 4) % 16) * 625;	
 		minus = ((tempint == 0) & (sign == -1)) ? '-' : ' ';
-		SEND( "{\"status\":\"OK\", \"infos\":{\"temperature\":\"%c%d.%04d\"}}\n", minus, tempint, tempfrac);
+		// SEND( "{\"status\":\"OK\", \"infos\":{\"temperature\":\"%c%d.%04d\"}}", minus, tempint, tempfrac);
+		struct NotifyMessage msg;
+		msg.measurementType = 1;
+		msg.dataType        = 2;
+		msg.data            = minus ? - tempint - tempfrac / 10 : tempint + tempfrac / 10;
+		sendNotification(&msg);
 	}
 	// else{
-	// PRINTF( "{\"status\":\"NOK\", \"Infos\":\"Not connected\"}}\n");
+	// PRINTF( "{\"status\":\"NOK\", \"Infos\":\"Not connected\"}}");
 	// }
 }
 
@@ -230,23 +305,23 @@ void set_data(struct jsonparse_state parser){
 		}   
 		if(led==0){
 			leds_toggle(LEDS_BLUE);
-			SEND( "{\"status\":\"OK\"}\n");
+			SEND( "{\"status\":\"OK\"}");
 		}
 		if(led==1){
 			leds_toggle(LEDS_GREEN);
-			SEND( "{\"status\":\"OK\"}\n");
+			SEND( "{\"status\":\"OK\"}");
 		}
 		if(led==2){
 			leds_toggle(LEDS_RED);
-			SEND( "{\"status\":\"OK\"}\n");
+			SEND( "{\"status\":\"OK\"}");
 		}
 		if(led==3){
-			SEND( "{\"status\":\"NOK\", \"infos\":\"No leds for this ID\"}}\n");
+			SEND( "{\"status\":\"NOK\", \"infos\":\"No leds for this ID\"}}");
 		}
 
 	}
 	else{
-		SEND( "{\"status\":\"NOK\", \"infos\":\"Not connected\"}}\n");
+		SEND( "{\"status\":\"NOK\", \"infos\":\"Not connected\"}}");
 	}
 }
 
