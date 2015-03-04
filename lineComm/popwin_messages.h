@@ -17,36 +17,39 @@
 // Different types of messages
 enum MessageType
 {
-	MSG_UNKNOWN   = 0,
-	MSG_SUBSCRIBE = 1,
-	MSG_NOTIFY    = 2
+	MSG_UNKNOWN   = 0, // only used for error handling
+	MSG_SUBSCRIBE = 1, // subscription message
+	MSG_NOTIFY    = 2  // notification message
 };
 
 // Different types of measurement
 enum MeasurementType
 {
-	MSR_LOG         = 0, // logging: for debug
-	MSR_TEMPERATURE = 1,
-	MSR_VIBRATION   = 2
+	MSR_LOG         = 0, // logging  can be seen as a notification. This is useful for debug but can be removed in the final version
+	MSR_COMMAND     = 1, // commands can be seen as a notification. This is useful for debug but can be removed in the final version 
+	MSR_TEMPERATURE = 2, // temperature measurement
+	MSR_VIBRATION   = 3  // vibration measurement
+	// ... //
 };
 
 // Different types of measurement
 enum MeasurementUnit
 {
-	UNT_CELSIUS     = 0,
-	UNT_KELVIN      = 1,
-	UNT_SECONDS     = 2,
-	UNT_METERS      = 3
+	UNT_UNKNOWN     = 0,
+	UNT_CELSIUS     = 1,
+	UNT_KELVIN      = 2,
+	UNT_SECONDS     = 3,
+	UNT_METERS      = 4
 	// ... // 
 };
 
 // Different types of measurement
 enum DataType
 {
-	TYPE_DOUBLE     = 0,
-	TYPE_INT        = 1,
-	TYPE_STRING     = 2,
-	TYPE_UNKNOWN    = 3 // TODO: move first pos
+	TYPE_UNKNOWN    = 0,
+	TYPE_DOUBLE     = 1,
+	TYPE_INT        = 2,
+	TYPE_STRING     = 3
 };
 
 
@@ -72,7 +75,6 @@ int bufferizeSubscribeMessage(const struct SubscribeMessage* msg, char* buffer, 
 	return ret > 0 && ret < size;
 }
 
-#ifndef POPWIN_MOTE // TODO: comment
 // Read message from buffer
 int unbufferizeSubscribeMessage(struct SubscribeMessage* msg, const char* buffer, size_t size)
 {
@@ -95,7 +97,6 @@ int unbufferizeSubscribeMessage(struct SubscribeMessage* msg, const char* buffer
 	}
 	else return 0;
 }
-#endif
 
 // Notification message
 struct NotifyMessage
@@ -125,7 +126,6 @@ int bufferizeNotifyMessage(const struct NotifyMessage* msg, char* buffer, size_t
 	return ret > 0 && ret < size;
 }
 
-#ifndef POPWIN_MOTE // TODO: comment
 // Read message from buffer
 int unbufferizeNotifyMessage(struct NotifyMessage* msg, char* data, const char* buffer, size_t size)
 {
@@ -157,7 +157,6 @@ int unbufferizeNotifyMessage(struct NotifyMessage* msg, char* data, const char* 
 	}
 	else return 0;
 }
-#endif
 
 // Retrieve the type of the message (first 2 bytes)
 enum MessageType getMessageType(const char* x_msg)
@@ -171,6 +170,7 @@ enum MessageType getMessageType(const char* x_msg)
 }
 
 // Retrieve the type of data (second position)
+/*
 enum DataType getDataType(const char* x_msg)
 {
 	int type     = 0;
@@ -180,7 +180,7 @@ enum DataType getDataType(const char* x_msg)
 	else
 		return (enum DataType) dataType;
 	
-}
+}*/
 
 
 #endif

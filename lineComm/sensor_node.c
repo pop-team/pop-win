@@ -22,8 +22,9 @@
 #include "dev/i2cmaster.h"
 #include "dev/tmp102.h"
 
-#include "jsontree.h"
-#include "jsonparse.h"
+
+// #include "jsontree.h"
+// #include "jsonparse.h"
 
 #if 1
 #define PRINTF(...) printf(__VA_ARGS__)
@@ -40,31 +41,26 @@
 
 
 // Our error message
-#define ERROR(__msg__) printf("Error in %s:%d: %s", __FILE__, __LINE__, __msg__)
+#define ERROR(__msg__) LOG("Error in %s:%d: %s", __FILE__, __LINE__, __msg__)
+#define LOG(...)       logging(__VA_ARGS__)
 
 
 // Declaration to avoid warnings at compilation
-int sscanf ( const char * s, const char * format, ...);
+int sscanf ( const char * s, const char * format, ...){} // TODO
 size_t strlen ( const char * str );
+int snprintf ( char * s, size_t n, const char * format, ... );
+int atoi (const char * str);
+double atof (const char* str);
 
-#define POPWIN_MOTE
 #include "popwin_messages.h" // Note: should be declared here
 
+// Declaration of local functions
+void logging(const char *format,...);
+void handleNotification();
 
-// Send an unformatted message (to use only for debug)
-// Note: to send data via serial line, simply use a printf
-#define SEND(...) send(__VA_ARGS__)
-void send(const char *format,...)
-{
-	char msg[BUFFERSIZE];
-	va_list ap;
-	va_start(ap, format);
-	vsprintf(msg, format, ap);
-	va_end(ap);
 
-	printf("%s\n", msg);
-}
 
+// Send a subscribtion message
 void sendSubscription(const struct SubscribeMessage* msg)
 {
 	char buf[BUFFERSIZE];
@@ -75,6 +71,7 @@ void sendSubscription(const struct SubscribeMessage* msg)
 	printf(buf);
 }
 
+// send a notification message
 void sendNotification(const struct NotifyMessage* msg)
 {
 	char buf[BUFFERSIZE];
@@ -85,20 +82,23 @@ void sendNotification(const struct NotifyMessage* msg)
 	printf(buf);
 }
 
-/*
-int send(const void* msg, size_t size)
+/// Log message (handled as a notification of type string)
+void logging(const char *format,...)
 {
-	if(size > BUFFERSIZE - 2)
-		return 0;
-
 	char buf[BUFFERSIZE];
-	memcpy(buf, msg, size); // Cannot do this !
-	buf[size]   = '\0';
-	printf("%s\n", buf);
+	va_list ap;
+	va_start(ap, format);
+	vsprintf(buf, format, ap);
+	va_end(ap);
 
-	return 1;
+	struct NotifyMessage msg;
+	msg.measurementType = MSR_LOG;
+	msg.dataType        = UNT_UNKNOWN;
+	msg.id              = 333; // TODO ID
+	msg.data            = buf;
+	msg.dataSize        = strlen(buf);
+	sendNotification(&msg);
 }
-*/
 
 //--------------------------------------------------------------- 
 
@@ -107,35 +107,15 @@ int send(const void* msg, size_t size)
 /*** FUNCTIONS TO BE CALLED */
 /****************************/
 
-void list_functions(struct jsonparse_state parser); // Function : 0
-void init_sensor   (struct jsonparse_state parser); // Function : 1
-void destroy_object(struct jsonparse_state parser); // Function : 2
-void get_data      (struct jsonparse_state parser); // Function : 3
-void set_data      (struct jsonparse_state parser); // Function : 4
+void list_functions();
+void get_data      ();
 
-// Utility functions: TODO: What to do ?
-	static void
-json_copy_string(struct jsonparse_state *parser, char *string, int len)
-{
-	jsonparse_next(parser);
-	jsonparse_next(parser);
-	jsonparse_copy_value(parser, string, len);
-}
-
-	static int
-json_copy_int(struct jsonparse_state *parser)
-{
-	jsonparse_next(parser);
-	jsonparse_next(parser);
-	return jsonparse_get_value_as_int(parser);
-}
 
 // All functions are stored in a table
-typedef void (*FunctionCall)(struct jsonparse_state);
+typedef void (*FunctionCall)(void);
 int g_nbFunctions = 5;
-FunctionCall g_functions[]     = {&list_functions, &init_sensor, &destroy_object,&get_data,&set_data};
-const char* g_functionNames[]  = {"list_functions", "init_sensor", "destroy_object", "get_data", "set_data"};
-const char* g_functionInputs[] = {"{}", "{}", "{}", "{}", "{\"led\":%%d}"};
+const char* g_commandNames[]  = {"list_functions", "notify",                                       "publish"};
+const char* g_commandInputs[] = {"{}",             "{\"temperature\":%%f,\"vibration\":%%f}",       "{\"led\":%%d}"};
 
 
 //--------------------------------------------------------------- 
@@ -163,8 +143,35 @@ PROCESS_THREAD(init_com_process, ev, data)
 	while(1) {
 		/* Do the rest of the stuff here. */ 
 		PROCESS_YIELD();
-		// Wait for an incoming message
+		// Wait for an incoming command
 		if(ev == serial_line_event_message && data!=NULL) {
+
+			// We received a message from gateway:
+			// switch on the different types of message
+			switch(getMessageType(data))
+			{
+				case MSG_SUBSCRIBE:
+				{
+					struct SubscribeMessage msg;
+					unbufferizeSubscribeMessage(&msg, data, BUFFERSIZE);
+
+					// Define here what to do on reception 
+					// ...
+				}
+
+				break;
+				case MSG_NOTIFY:
+				{
+					handleNotification(data);
+				}
+
+					break;
+				default:
+					// Unknown message: print
+					ERROR("Unknown message type");
+			}
+
+			/*
 			struct jsonparse_state parser;
 			jsonparse_setup(&parser, data, strlen(data));
 			int type;
@@ -179,12 +186,13 @@ PROCESS_THREAD(init_com_process, ev, data)
 						}
 						else
 						{
-							SEND( "{\"status\":\"NOK\", \"infos\":\"Wrong function number\"}}");
+							ERROR("Error: Wrong function number");
 						}
 						break;
 					} 
 				}
 			}
+			*/
 		}	
 	}		
 exit:
@@ -201,45 +209,50 @@ exit:
 /*
  * List the available functionalities on sensor
  */
-void list_functions(struct jsonparse_state parser)
+void list_functions()
 {
-	SEND( "{\"status\":\"OK\",");
-	SEND("\"functions\":[");
 	int i;
+	char buf[BUFFERSIZE];
+	snprintf(buf, BUFFERSIZE, "{\"functions\":[");
 	for( i = 0 ; i < g_nbFunctions - 1 ; i++)
 	{
-		SEND("{\"id\":%d,\"description\":\"%s\",\"inputs\":%s},", i, g_functionNames[i], g_functionInputs[i]);
+		snprintf(buf, BUFFERSIZE, "%s{\"id\":%d,\"description\":\"%s\",\"inputs\":%s},", buf, i, g_commandNames[i], g_commandInputs[i]);
 	}
 	if(i == g_nbFunctions - 1)
 	{
-		SEND("{\"id\":%d,\"description\":\"%s\",\"inputs\":%s}", i, g_functionNames[i], g_functionInputs[i]);
+		snprintf(buf, BUFFERSIZE, "%s{\"id\":%d,\"description\":\"%s\",\"inputs\":%s}", buf, i, g_commandNames[i], g_commandInputs[i]);
 	}
-	SEND( "}");
+	snprintf(buf, BUFFERSIZE, "%s}", buf);
+	LOG(buf, strlen(buf));
 } 
 
 
 /*
  * Init sensor and search other node for the request
  */
+ /*
 void init_sensor(struct jsonparse_state parser){
 	// connected=1;
 	leds_init();
 	tmp102_init();
 	SEND( "{\"status\":\"OK\"}");
 } 
+*/
 
 /*
  * Remove connexion with other nodes and stop to send data
  */
+ /*
 void destroy_object(struct jsonparse_state parser){
 	// connected=0;
 	SEND( "{\"status\":\"OK\"}");
 }
+*/
 
 /*
  * Return data to the gateway
  */
-void get_data(struct jsonparse_state parser){
+void get_data(){
 	int16_t sign    = 1;
 	int16_t  raw    = tmp102_read_temp_raw();
 	uint16_t absraw = raw;
@@ -268,39 +281,48 @@ void get_data(struct jsonparse_state parser){
 /*
  * Set data like turn on/off leds
  */
-void set_data(struct jsonparse_state parser){
-	if(1/*connected==1*/)
-	{
-		int type;
-		int update = 0;
-		int led= 3;
-		while((type = jsonparse_next(&parser)) != 0 && update == 0) {
-			if(type == JSON_TYPE_PAIR_NAME) {
-				if(jsonparse_strcmp_value(&parser, "led") == 0) {
-					led = json_copy_int(&parser);
-					update=1;  
-				}  
-			}
-		}   
-		if(led==0){
-			leds_toggle(LEDS_BLUE);
-			SEND( "{\"status\":\"OK\"}");
-		}
-		if(led==1){
-			leds_toggle(LEDS_GREEN);
-			SEND( "{\"status\":\"OK\"}");
-		}
-		if(led==2){
-			leds_toggle(LEDS_RED);
-			SEND( "{\"status\":\"OK\"}");
-		}
-		if(led==3){
-			SEND( "{\"status\":\"NOK\", \"infos\":\"No leds for this ID\"}}");
-		}
+void handleNotification(const char* data)
+{
+	struct NotifyMessage msg;
+	char dataBuffer[32];
+	unbufferizeNotifyMessage(&msg, dataBuffer, data, BUFFERSIZE);
 
-	}
-	else{
-		SEND( "{\"status\":\"NOK\", \"infos\":\"Not connected\"}}");
+
+	switch(msg.dataType)
+	{
+		case TYPE_DOUBLE:
+		{
+			// double d = atof(dataBuffer);
+			ERROR("no notification TYPE_DOUBLE");
+		}
+		break;
+		case TYPE_INT:
+		{
+			// TODO: publication not notification + type=LED
+			int led = atoi(dataBuffer);
+			switch(led)
+			{
+				case 0:
+					leds_toggle(LEDS_BLUE);
+					break;
+				case 1:
+					leds_toggle(LEDS_GREEN);
+					break;
+				case 2:
+					leds_toggle(LEDS_RED);
+					break;
+				default:
+					ERROR("Unknown led number");
+			}
+		}
+		break;
+		case TYPE_STRING:
+		{
+			ERROR("no notification TYPE_STRING");
+		}
+		break;
+		default:
+			ERROR("Unknown data type");
 	}
 }
 
