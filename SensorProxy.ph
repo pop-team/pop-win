@@ -26,23 +26,34 @@ public:
 	~SensorProxy();
 
 	/// Subscribe to a sensor
-	async conc void SubscribeMe(POPSensor& xr_gateway);
+	// async conc void SubscribeMe(POPSensor& xr_gateway);
 
 	/// Send data to the remote sensors
 	sync seq void SendData(const std::string& JSONData);
 	async conc void StartListening();
 	async conc void StopListening();
 	// async conc void Publish();
-	sync seq std::vector<std::string> RetrieveData();
+	sync seq std::vector<double>      RetrieveDataDouble();
+	sync seq std::vector<int>         RetrieveDataInt();
+	sync seq std::vector<std::string> RetrieveDataString();
 	sync seq void ClearData();
 
 private:
 	void ReadData(std::ostream& xr_ostream);
+	void HandleIncomingMessage(const std::string& x_msg);
+	// void HandleIncomingMessage(const SubsribeMessage& x_msg);
+	// void HandleIncomingMessage(const NotifyMessage& x_msg);
 
 	int m_fd;
 	bool m_listening;
-	std::vector<std::string> m_data;
-	std::vector<POPSensor*> m_subscribed;
+
+	// Different containers of data
+	std::vector<std::string> m_stringData;
+	std::vector<int>         m_intData;
+	std::vector<double>      m_doubleData;
+	std::vector<bool>        m_boolData;
+
+	// std::vector<POPSensor*> m_subscribed;
 };
 
 #endif

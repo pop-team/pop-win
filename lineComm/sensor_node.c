@@ -25,8 +25,6 @@
 #include "jsontree.h"
 #include "jsonparse.h"
 
-#include "popwin_messages.h"
-
 #if 1
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
@@ -39,16 +37,23 @@
 #define PRINTFDEBUG(...)
 #endif
 
-#define BUFFERSIZE 512
 
 
+// Our error message
+#define ERROR(__msg__) printf("Error in %s:%d: %s", __FILE__, __LINE__, __msg__)
+
+
+// Declaration to avoid warnings at compilation
+int sscanf ( const char * s, const char * format, ...);
+size_t strlen ( const char * str );
+
+#define POPWIN_MOTE
+#include "popwin_messages.h" // Note: should be declared here
+
+
+// Send an unformatted message (to use only for debug)
 // Note: to send data via serial line, simply use a printf
-#define SEND(...) printf(__VA_ARGS__)
-// #define SEND(...) send(__VA_ARGS__)
-
-
-
-/*
+#define SEND(...) send(__VA_ARGS__)
 void send(const char *format,...)
 {
 	char msg[BUFFERSIZE];
@@ -59,24 +64,25 @@ void send(const char *format,...)
 
 	printf("%s\n", msg);
 }
-*/
 
 void sendSubscription(const struct SubscribeMessage* msg)
 {
-	// char buf[BUFFERSIZE];
-	// printf("%s\n", buf);
+	char buf[BUFFERSIZE];
+	if(bufferizeSubscribeMessage(msg, buf, BUFFERSIZE) <= 0)
+		ERROR("Cannot write message to buffer");
+
+	// Send message via serial line on contiki
+	printf(buf);
 }
 
 void sendNotification(const struct NotifyMessage* msg)
 {
-	printf("%d %d %d %d %f %d\n",
-		MSG_NOTIFY,
-		msg->measurementType,
-		msg->dataType,
-		msg->id,
-		msg->data,
-		msg->unit
-	);
+	char buf[BUFFERSIZE];
+	if(bufferizeNotifyMessage(msg, buf, BUFFERSIZE) <= 0)
+		ERROR("Cannot write message to buffer");
+
+	// Send message via serial line on contiki
+	printf(buf);
 }
 
 /*
@@ -234,36 +240,29 @@ void destroy_object(struct jsonparse_state parser){
  * Return data to the gateway
  */
 void get_data(struct jsonparse_state parser){
-	//if(connected==1)
-	{
-
-
-		int16_t tempint;
-		uint16_t tempfrac;
-		int16_t raw;
-		uint16_t absraw;
-		int16_t sign;
-		char minus = ' ';
-		sign = 1;
-		raw = tmp102_read_temp_raw();
-		absraw = raw;
-		if(raw < 0) {		
-			absraw = (raw ^ 0xFFFF) + 1;
-			sign = -1;
-		}
-		tempint = ((absraw >> 8) * sign)-3;
-		tempfrac = ((absraw >> 4) % 16) * 625;	
-		minus = ((tempint == 0) & (sign == -1)) ? '-' : ' ';
-		// SEND( "{\"status\":\"OK\", \"infos\":{\"temperature\":\"%c%d.%04d\"}}", minus, tempint, tempfrac);
-		struct NotifyMessage msg;
-		msg.measurementType = 1;
-		msg.dataType        = 2;
-		msg.data            = minus ? - tempint - tempfrac / 10 : tempint + tempfrac / 10;
-		sendNotification(&msg);
+	int16_t sign    = 1;
+	int16_t  raw    = tmp102_read_temp_raw();
+	uint16_t absraw = raw;
+	if(raw < 0) {
+		absraw = (raw ^ 0xFFFF) + 1;
+		sign = -1;
 	}
-	// else{
-	// PRINTF( "{\"status\":\"NOK\", \"Infos\":\"Not connected\"}}");
-	// }
+	int16_t  tempint  = ((absraw >> 8) * sign)-3;
+	uint16_t tempfrac = ((absraw >> 4) % 16) * 625;	
+	char     minus    = ((tempint == 0) & (sign == -1)) ? '-' : ' ';
+
+	// Create a temperature notification and send
+	// SEND( "{\"status\":\"OK\", \"infos\":{\"temperature\":\"%c%d.%04d\"}}", minus, tempint, tempfrac);
+
+	char data[32];
+	sprintf(data, "%c%d.%04d", minus, tempint, tempfrac);
+	struct NotifyMessage msg;
+	msg.measurementType = MSR_TEMPERATURE;
+	msg.dataType        = UNT_CELSIUS;
+	msg.id              = 333; // TODO ID
+	msg.data            = data;
+	msg.dataSize        = strlen(data);
+	sendNotification(&msg);
 }
 
 /*

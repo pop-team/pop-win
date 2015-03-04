@@ -79,11 +79,37 @@ void POPSensor::StopListening()
 	}
 }
 
-void POPSensor::RetrieveData()
+void POPSensor::RetrieveDataDouble()
 {
 	for(auto it : m_sensorsProxy)
 	{
-		vector<string> gatheredData(it->RetrieveData());
+		vector<double> gatheredData(it->RetrieveDataDouble());
+		cout << "Records found on proxy: "<< gatheredData.size() << popcendl;
+		for(auto elem : gatheredData)
+		{
+			cout<< ">> " << elem << popcendl;
+		}
+	}
+}
+
+void POPSensor::RetrieveDataInt()
+{
+	for(auto it : m_sensorsProxy)
+	{
+		vector<int> gatheredData(it->RetrieveDataInt());
+		cout << "Records found on proxy: "<< gatheredData.size() << popcendl;
+		for(auto elem : gatheredData)
+		{
+			cout<< ">> " << elem << popcendl;
+		}
+	}
+}
+
+void POPSensor::RetrieveDataString()
+{
+	for(auto it : m_sensorsProxy)
+	{
+		vector<string> gatheredData(it->RetrieveDataString());
 		cout << "Records found on proxy: "<< gatheredData.size() << popcendl;
 		for(auto elem : gatheredData)
 		{

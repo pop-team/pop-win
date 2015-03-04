@@ -137,12 +137,14 @@ void SensorProxy::Publish()
 
 
 /// A gateway subscribes to a sensor to be sent the data
+/*
 void SensorProxy::SubscribeMe(POPSensor& xr_gateway)
 {
 	cout<<"SubscribeMe" <<popcendl;
 	m_subscribed.push_back(&xr_gateway);
 	// xr_gateway.Publish();
 }
+*/
 
 
 
@@ -218,17 +220,7 @@ void SensorProxy::StartListening()
 			std::string msg;
 
 			while(std::getline(received,msg,'\n')){
-				cout << "received:" << msg << ", publish to "<< m_subscribed.size() <<popcendl;
-				// Store data in table
-				m_data.push_back(msg);
-
-				/*
-				for(auto elem : m_subscribed)
-				{
-					// A bug happens here
-					// elem->Publish();
-				}
-				*/
+				HandleIncomingMessage(msg);
 			}
 		}
 		else
@@ -245,16 +237,73 @@ void SensorProxy::StopListening()
 	m_listening = false; // TODO: See if we must protect this var
 }
 
-vector<string> SensorProxy::RetrieveData()
+vector<double> SensorProxy::RetrieveDataDouble()
 {
-	cout << "Retrieve " << m_data.size() << " records" <<popcendl;
-	return m_data;
+	cout << "Retrieve " << m_doubleData.size() << " records of type double" <<popcendl;
+	return m_doubleData;
+}
+
+vector<int> SensorProxy::RetrieveDataInt()
+{
+	cout << "Retrieve " << m_intData.size() << " records of type int" <<popcendl;
+	return m_intData;
+}
+
+vector<string> SensorProxy::RetrieveDataString()
+{
+	cout << "Retrieve " << m_stringData.size() << " records of type string" <<popcendl;
+	return m_stringData;
 }
 
 
 void SensorProxy::ClearData()
 {
-	m_data.clear();
+	m_doubleData.clear();
+	m_intData.clear();
+	m_stringData.clear();
+}
+
+/// Handle all incoming messages
+void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
+{
+	switch(getMessageType(x_rawMsg.c_str()))
+	{
+		case MSG_SUBSCRIBE:
+		{
+			SubscribeMessage msg;
+			unbufferizeSubscribeMessage(&msg, x_rawMsg.c_str(), x_rawMsg.size());
+
+			// Define here what to do on reception 
+			// ...
+			
+		}
+
+		break;
+		case MSG_NOTIFY:
+			NotifyMessage msg;
+			char data[32];
+			unbufferizeNotifyMessage(&msg, data, x_rawMsg.c_str(), x_rawMsg.size());
+			switch(msg.dataType)
+			{
+				case TYPE_DOUBLE:
+					m_doubleData.push_back(atof(data));
+				break;
+				case TYPE_INT:
+					m_intData.push_back(atoi(data));
+				break;
+				case TYPE_STRING:
+					m_stringData.push_back(data);
+				break;
+				default:
+					printf("Unknown data type %d in %s\n", msg.dataType, x_rawMsg.c_str());
+			}
+
+		break;
+		default:
+			// Unknown message: print
+			cout << "Received raw message: " << x_rawMsg << popcendl;
+	}
+	
 }
 
 @pack(SensorProxy);

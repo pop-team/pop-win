@@ -12,18 +12,22 @@
 
 #include <stdio.h>
 
+#define BUFFERSIZE 512
+
 // Different types of messages
 enum MessageType
 {
-	MSG_SUBSCRIBE = 0,
-	MSG_NOTIFY    = 1
+	MSG_UNKNOWN   = 0,
+	MSG_SUBSCRIBE = 1,
+	MSG_NOTIFY    = 2
 };
 
 // Different types of measurement
 enum MeasurementType
 {
-	MSR_TEMPERATURE = 0,
-	MSR_VIBRATION   = 1
+	MSR_LOG         = 0, // logging: for debug
+	MSR_TEMPERATURE = 1,
+	MSR_VIBRATION   = 2
 };
 
 // Different types of measurement
@@ -33,6 +37,7 @@ enum MeasurementUnit
 	UNT_KELVIN      = 1,
 	UNT_SECONDS     = 2,
 	UNT_METERS      = 3
+	// ... // 
 };
 
 // Different types of measurement
@@ -40,7 +45,8 @@ enum DataType
 {
 	TYPE_DOUBLE     = 0,
 	TYPE_INT        = 1,
-	TYPE_STRING     = 2
+	TYPE_STRING     = 2,
+	TYPE_UNKNOWN    = 3 // TODO: move first pos
 };
 
 
@@ -66,6 +72,7 @@ int bufferizeSubscribeMessage(const struct SubscribeMessage* msg, char* buffer, 
 	return ret > 0 && ret < size;
 }
 
+#ifndef POPWIN_MOTE // TODO: comment
 // Read message from buffer
 int unbufferizeSubscribeMessage(struct SubscribeMessage* msg, const char* buffer, size_t size)
 {
@@ -88,6 +95,7 @@ int unbufferizeSubscribeMessage(struct SubscribeMessage* msg, const char* buffer
 	}
 	else return 0;
 }
+#endif
 
 // Notification message
 struct NotifyMessage
@@ -96,50 +104,83 @@ struct NotifyMessage
 	enum DataType        dataType;
 	unsigned short       id;
 	// note: apparently the %f format of contiki requires a double not float
-	double               data;
+	char*                data;
+	size_t               dataSize;
 	enum MeasurementUnit unit;
 };
 
 // Print message to buffer
 int bufferizeNotifyMessage(const struct NotifyMessage* msg, char* buffer, size_t size)
 {
-	int ret = snprintf(buffer, size, "%02x %02x %02x %02x %02x %f\n",
+	// note: sizeof(size_t) = 2 for contiki but we use 4 for compatibility
+	int ret = snprintf(buffer, size, "%02x %02x %02x %04x %02x %04x %s\n",
 		MSG_NOTIFY,
-		msg->measurementType,
 		msg->dataType,
+		msg->measurementType,
 		msg->id,
 		msg->unit,
+		(int)msg->dataSize,
 		msg->data
 	);
 	return ret > 0 && ret < size;
 }
 
+#ifndef POPWIN_MOTE // TODO: comment
 // Read message from buffer
-int unbufferizeNotifyMessage(struct NotifyMessage* msg, const char* buffer, size_t size)
+int unbufferizeNotifyMessage(struct NotifyMessage* msg, char* data, const char* buffer, size_t size)
 {
 	int mtype = -1;
 	int id    = -1;
 	int mt    = -1;
 	int dt    = -1;
 	int un    = -1;
-	int ret = sscanf(buffer, "%02x %02x %02x %02x %02x %f\n",
+	int dataSize = 0;
+
+	int ret = sscanf(buffer, "%02x %02x %02x %04x %02x %04x %s\n",
 		&mtype,
-		&mt,
 		&dt,
+		&mt,
 		&id,
 		&un,
-		&msg->data
+		&dataSize,
+		data
 	);
+	// printf("data %s --> %02x %02x %02x %04x %02x %04d %s\n", buffer, mtype, dt,mt,id,un,dataSize,data);
 	if(ret == 6 && mtype == MSG_NOTIFY)
 	{
 		msg->measurementType = (enum MeasurementType) mt;
 		msg->dataType        = (enum DataType) dt;
 		msg->id              = id;
 		msg->unit            = (enum MeasurementUnit) un;
+		msg->dataSize        = (size_t) dataSize;
+		return 1;
 	}
 	else return 0;
 }
+#endif
 
+// Retrieve the type of the message (first 2 bytes)
+enum MessageType getMessageType(const char* x_msg)
+{
+	int type = 0;
+	if(sscanf(x_msg, "%02d", &type) != 1)
+		return MSG_UNKNOWN;
+	else
+		return (enum MessageType) type;
+	
+}
+
+// Retrieve the type of data (second position)
+enum DataType getDataType(const char* x_msg)
+{
+	int type     = 0;
+	int dataType = 0;
+	if(sscanf(x_msg, "%02d %02d", &type, &dataType) != 2)
+		return TYPE_UNKNOWN;
+	else
+		return (enum DataType) dataType;
+	
+}
 
 
 #endif

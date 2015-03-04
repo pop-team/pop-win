@@ -37,7 +37,9 @@ public:
 	// void Publish(); // TODO: send only relevant data
 
 	/// Retrieve data gathered 
-	void RetrieveData();
+	void RetrieveDataDouble();
+	void RetrieveDataInt();
+	void RetrieveDataString();
 
 	/// Clear data gathered 
 	void ClearData();

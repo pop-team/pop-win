@@ -7,6 +7,8 @@
  *
  *
  */
+
+// TODO LW: Check that exceptions are correctly handled. E.g. sensor disconnected
 #include "POPSensor.ph"
 
 using namespace std;
@@ -71,7 +73,9 @@ int main(int argc, char** argv)
 		gateway.StopListening();
 
 		cout<<"Print the data gathered"<< popcendl;
-		gateway.RetrieveData();
+		gateway.RetrieveDataDouble();
+		gateway.RetrieveDataInt();
+		gateway.RetrieveDataString();
 
 		cout<<"Clear the data gathered"<< popcendl;
 		gateway.ClearData();
