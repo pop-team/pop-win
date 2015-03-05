@@ -207,7 +207,6 @@ void SensorProxy::ReadData(std::ostream& xr_ostream)
 
 void SensorProxy::StartListening()
 {
-	printf("SensorProxy::StartListening\n");
 	m_listening = true;
 	while(m_listening == true)
 	{
@@ -228,12 +227,10 @@ void SensorProxy::StartListening()
 			printf("Received an empty message\n");
 		}
 	}
-	printf("End of SensorProxy::StartListening\n");
 }
 
 void SensorProxy::StopListening()
 {
-	printf("SensorProxy::StopListening\n");
 	m_listening = false; // TODO: See if we must protect this var
 }
 
