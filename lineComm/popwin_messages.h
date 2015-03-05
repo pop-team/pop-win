@@ -146,7 +146,7 @@ int unbufferizeNotifyMessage(struct NotifyMessage* msg, char* data, const char* 
 		data
 	);
 	// printf("data %s --> %02x %02x %02x %04x %02x %04d %s\n", buffer, mtype, dt,mt,id,un,dataSize,data);
-	if(ret == 6 && mtype == MSG_NOTIFY)
+	if(ret == 7 && mtype == MSG_NOTIFY)
 	{
 		msg->measurementType = (enum MeasurementType) mt;
 		msg->dataType        = (enum DataType) dt;

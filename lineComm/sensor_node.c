@@ -46,11 +46,12 @@
 
 
 // Declaration to avoid warnings at compilation
-int sscanf ( const char * s, const char * format, ...){} // TODO
+int sscanf ( const char * s, const char * format, ...); // {} // TODO
 size_t strlen ( const char * str );
 int snprintf ( char * s, size_t n, const char * format, ... );
 int atoi (const char * str);
 double atof (const char* str);
+void * memset ( void * ptr, int value, size_t num );
 
 #include "popwin_messages.h" // Note: should be declared here
 
@@ -92,8 +93,9 @@ void logging(const char *format,...)
 	va_end(ap);
 
 	struct NotifyMessage msg;
+	memset(&msg, 0, sizeof(msg));
 	msg.measurementType = MSR_LOG;
-	msg.dataType        = UNT_UNKNOWN;
+	msg.dataType        = TYPE_STRING;
 	msg.id              = 333; // TODO ID
 	msg.data            = buf;
 	msg.dataSize        = strlen(buf);
@@ -148,12 +150,15 @@ PROCESS_THREAD(init_com_process, ev, data)
 
 			// We received a message from gateway:
 			// switch on the different types of message
+			LOG("Handle msg type %d", getMessageType(data));
 			switch(getMessageType(data))
 			{
 				case MSG_SUBSCRIBE:
 				{
 					struct SubscribeMessage msg;
-					unbufferizeSubscribeMessage(&msg, data, BUFFERSIZE);
+					memset(&msg, 0, sizeof(msg));
+					if(unbufferizeSubscribeMessage(&msg, data, BUFFERSIZE) <= 0)
+						ERROR("Cannot read message from buffer");
 
 					// Define here what to do on reception 
 					// ...
@@ -270,8 +275,9 @@ void get_data(){
 	char data[32];
 	sprintf(data, "%c%d.%04d", minus, tempint, tempfrac);
 	struct NotifyMessage msg;
+	memset(&msg, 0, sizeof(msg));
 	msg.measurementType = MSR_TEMPERATURE;
-	msg.dataType        = UNT_CELSIUS;
+	msg.dataType        = TYPE_INT;
 	msg.id              = 333; // TODO ID
 	msg.data            = data;
 	msg.dataSize        = strlen(data);
@@ -284,9 +290,12 @@ void get_data(){
 void handleNotification(const char* data)
 {
 	struct NotifyMessage msg;
+	memset(&msg, 0, sizeof(msg));
 	char dataBuffer[32];
-	unbufferizeNotifyMessage(&msg, dataBuffer, data, BUFFERSIZE);
+	if(unbufferizeNotifyMessage(&msg, dataBuffer, data, BUFFERSIZE) <= 0)
+		ERROR("Cannot read message from buffer");
 
+	LOG("Handle notification dataType=%d", msg.dataType);
 
 	switch(msg.dataType)
 	{
@@ -300,6 +309,7 @@ void handleNotification(const char* data)
 		{
 			// TODO: publication not notification + type=LED
 			int led = atoi(dataBuffer);
+			LOG("Blink led %d", led);
 			switch(led)
 			{
 				case 0:
@@ -328,3 +338,5 @@ void handleNotification(const char* data)
 
 /*---------------------------------------------------------------------------*/
 
+// Include the sources for sscanf. Not in Contiki
+#include "scanf.c"

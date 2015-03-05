@@ -273,6 +273,8 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 			SubscribeMessage msg;
 			unbufferizeSubscribeMessage(&msg, x_rawMsg.c_str(), x_rawMsg.size());
 
+			cout << "Subscribtion messages not handled yet" << endl;
+
 			// Define here what to do on reception 
 			// ...
 			
@@ -280,6 +282,7 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 
 		break;
 		case MSG_NOTIFY:
+		{
 			NotifyMessage msg;
 			char data[32];
 			unbufferizeNotifyMessage(&msg, data, x_rawMsg.c_str(), x_rawMsg.size());
@@ -292,12 +295,12 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 					m_intData.push_back(atoi(data));
 				break;
 				case TYPE_STRING:
-					m_stringData.push_back(data);
+					m_stringData.push_back(/*data*/x_rawMsg);
 				break;
 				default:
 					printf("Unknown data type %d in %s\n", msg.dataType, x_rawMsg.c_str());
 			}
-
+		}
 		break;
 		default:
 			// Unknown message: print
