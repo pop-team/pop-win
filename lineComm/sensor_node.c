@@ -42,7 +42,12 @@
 
 // Our error message
 #define ERROR(__msg__) LOG("Error in %s:%d: %s", __FILE__, __LINE__, __msg__)
+#if 0 // Set to 1 to enable logging
 #define LOG(...)       logging(__VA_ARGS__)
+#else
+#define LOG(...)
+#endif
+#define ABS(x) ((x) < 0 ? (-x) : (x))
 
 
 // Declaration to avoid warnings at compilation
@@ -57,6 +62,7 @@ void * memset ( void * ptr, int value, size_t num );
 
 // Declaration of local functions
 void logging(const char *format,...);
+void handlePublication();
 void handleNotification();
 
 
@@ -110,14 +116,17 @@ void logging(const char *format,...)
 /****************************/
 
 void list_functions();
-void get_data      ();
+void read_temperature();
+void generate_test_data_double();
+void generate_test_data_int();
+void generate_test_data_string();
 
 
 // All functions are stored in a table
 typedef void (*FunctionCall)(void);
-int g_nbFunctions = 5;
-const char* g_commandNames[]  = {"list_functions", "notify",                                       "publish"};
-const char* g_commandInputs[] = {"{}",             "{\"temperature\":%%f,\"vibration\":%%f}",       "{\"led\":%%d}"};
+#define NB_COMMANDS 5
+const FunctionCall g_commands[NB_COMMANDS] = {list_functions, read_temperature, generate_test_data_double, generate_test_data_int, generate_test_data_string};
+const char* g_commandNames[NB_COMMANDS]    = {"list_functions", "read_temperature", "generate_test_data_double", "generate_test_data_int", "generate_test_data_string"};
 
 
 //--------------------------------------------------------------- 
@@ -163,16 +172,19 @@ PROCESS_THREAD(init_com_process, ev, data)
 					// Define here what to do on reception 
 					// ...
 				}
-
+				break;
+				case MSG_PUBLISH:
+				{
+					handlePublication(data);
+				}
 				break;
 				case MSG_NOTIFY:
 				{
 					handleNotification(data);
 				}
-
-					break;
+				break;
 				default:
-					// Unknown message: print
+					// Unknown message type
 					ERROR("Unknown message type");
 			}
 
@@ -185,9 +197,9 @@ PROCESS_THREAD(init_com_process, ev, data)
 					if(jsonparse_strcmp_value(&parser, "function") == 0) {
 						// Call the function that was asked
 						int id = json_copy_int(&parser);
-						if(id >= 0 && id < g_nbFunctions)
+						if(id >= 0 && id < NB_COMMANDS)
 						{
-							g_functions[id](parser);
+							g_commands[id](parser);
 						}
 						else
 						{
@@ -217,18 +229,10 @@ exit:
 void list_functions()
 {
 	int i;
-	char buf[BUFFERSIZE];
-	snprintf(buf, BUFFERSIZE, "{\"functions\":[");
-	for( i = 0 ; i < g_nbFunctions - 1 ; i++)
+	for( i = 0 ; i < NB_COMMANDS ; i++)
 	{
-		snprintf(buf, BUFFERSIZE, "%s{\"id\":%d,\"description\":\"%s\",\"inputs\":%s},", buf, i, g_commandNames[i], g_commandInputs[i]);
+		LOG("Command %d: %s", i, g_commandNames[i]);
 	}
-	if(i == g_nbFunctions - 1)
-	{
-		snprintf(buf, BUFFERSIZE, "%s{\"id\":%d,\"description\":\"%s\",\"inputs\":%s}", buf, i, g_commandNames[i], g_commandInputs[i]);
-	}
-	snprintf(buf, BUFFERSIZE, "%s}", buf);
-	LOG(buf, strlen(buf));
 } 
 
 
@@ -257,7 +261,7 @@ void destroy_object(struct jsonparse_state parser){
 /*
  * Return data to the gateway
  */
-void get_data(){
+void read_temperature(){
 	int16_t sign    = 1;
 	int16_t  raw    = tmp102_read_temp_raw();
 	uint16_t absraw = raw;
@@ -285,17 +289,92 @@ void get_data(){
 }
 
 /*
- * Set data like turn on/off leds
+ * Generate data for testing purposes
+ */
+void generate_test_data_double(){
+
+	int d = 100;
+	int i = 0;
+	for(i = 0 ; i < 10 ; i++)
+	{
+		// Due to a bug of Contiki we cannot print doubles
+		d *= 3;
+		char data[32];
+		sprintf(data, "%d.%02d", d / 100, ABS(d % 100));
+		struct NotifyMessage msg;
+		memset(&msg, 0, sizeof(msg));
+		msg.measurementType = MSR_TEMPERATURE;
+		msg.dataType        = TYPE_DOUBLE;
+		msg.id              = 333; // TODO ID
+		msg.data            = data;
+		msg.dataSize        = strlen(data);
+		sendNotification(&msg);
+	}
+}
+
+/*
+ * Generate data for testing purposes
+ */
+void generate_test_data_int(){
+	int n = -32000;
+	int i = 0;
+	for(i = 0 ; i < 10 ; i++)
+	{
+		n += 1e4;
+		char data[32];
+		sprintf(data, "%d", n);
+		struct NotifyMessage msg;
+		memset(&msg, 0, sizeof(msg));
+		msg.measurementType = MSR_TEMPERATURE;
+		msg.dataType        = TYPE_INT;
+		msg.id              = 333; // TODO ID
+		msg.data            = data;
+		msg.dataSize        = strlen(data);
+		sendNotification(&msg);
+	}
+}
+
+/*
+ * Generate data for testing purposes
+ */
+void generate_test_data_string(){
+	int i = 0;
+	for(i = 0 ; i < 10 ; i++)
+	{
+		char data[32];
+		sprintf(data, "Test string number %d !", i);
+		struct NotifyMessage msg;
+		memset(&msg, 0, sizeof(msg));
+		msg.measurementType = MSR_TEMPERATURE;
+		msg.dataType        = TYPE_STRING;
+		msg.id              = 333; // TODO ID
+		msg.data            = data;
+		msg.dataSize        = strlen(data);
+		sendNotification(&msg);
+	}
+}
+
+/*
+ * Handle notification messages from gateway
  */
 void handleNotification(const char* data)
 {
-	struct NotifyMessage msg;
+	// To be written
+	
+}
+
+/*
+ * Handle publication messages from gateway
+ */
+void handlePublication(const char* data)
+{
+	struct PublishMessage msg;
 	memset(&msg, 0, sizeof(msg));
 	char dataBuffer[32];
-	if(unbufferizeNotifyMessage(&msg, dataBuffer, data, BUFFERSIZE) <= 0)
+	if(unbufferizePublishMessage(&msg, dataBuffer, data, BUFFERSIZE) <= 0)
 		ERROR("Cannot read message from buffer");
 
-	LOG("Handle notification dataType=%d", msg.dataType);
+	LOG("Handle publication dataType=%d", msg.dataType);
 
 	switch(msg.dataType)
 	{
@@ -307,28 +386,46 @@ void handleNotification(const char* data)
 		break;
 		case TYPE_INT:
 		{
-			// TODO: publication not notification + type=LED
-			int led = atoi(dataBuffer);
-			LOG("Blink led %d", led);
-			switch(led)
+			int dataInt = atoi(dataBuffer);
+			switch(msg.publicationType)
 			{
-				case 0:
-					leds_toggle(LEDS_BLUE);
-					break;
-				case 1:
-					leds_toggle(LEDS_GREEN);
-					break;
-				case 2:
-					leds_toggle(LEDS_RED);
-					break;
+				case PUB_LED:
+				{
+					LOG("Blink led %d", dataInt);
+					switch(dataInt)
+					{
+						case 0:
+							leds_toggle(LEDS_BLUE);
+							break;
+						case 1:
+							leds_toggle(LEDS_GREEN);
+							break;
+						case 2:
+							leds_toggle(LEDS_RED);
+							break;
+						default:
+							leds_toggle(LEDS_ALL);
+					}
+				}
+				break;
+				case PUB_COMMAND:
+				{
+					// Commands can be seen as a type of publication
+					LOG("Call command %d", dataInt);
+					if(dataInt >= 0 && dataInt < NB_COMMANDS)
+						g_commands[dataInt]();
+					else
+						ERROR("Unknown command number");
+				}
+				break;
 				default:
-					ERROR("Unknown led number");
+					ERROR("Unknown publication type");
 			}
 		}
 		break;
 		case TYPE_STRING:
 		{
-			ERROR("no notification TYPE_STRING");
+			ERROR("no publication TYPE_STRING");
 		}
 		break;
 		default:
@@ -340,3 +437,4 @@ void handleNotification(const char* data)
 
 // Include the sources for sscanf. Not in Contiki
 #include "scanf.c"
+#include "popwin_messages.c"

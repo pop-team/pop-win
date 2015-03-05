@@ -148,7 +148,7 @@ void SensorProxy::SubscribeMe(POPSensor& xr_gateway)
 
 
 
-void SensorProxy::SendData(const std::string& JSONData)
+void SensorProxy::SendRawData(const std::string& JSONData)
 {
 
 	const char* data = JSONData.c_str();
@@ -266,6 +266,7 @@ void SensorProxy::ClearData()
 /// Handle all incoming messages
 void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 {
+	// cout << "received" << x_rawMsg << popcendl;
 	switch(getMessageType(x_rawMsg.c_str()))
 	{
 		case MSG_SUBSCRIBE:
@@ -295,7 +296,16 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 					m_intData.push_back(atoi(data));
 				break;
 				case TYPE_STRING:
-					m_stringData.push_back(/*data*/x_rawMsg);
+				{
+					if(msg.measurementType == MSR_LOG)
+					{
+						cout<< "Remote log message: " << x_rawMsg << popcendl;
+					}
+					else
+					{
+						m_stringData.push_back(/*data*/x_rawMsg); // TODO: handle spaces
+					}
+				}
 				break;
 				default:
 					printf("Unknown data type %d in %s\n", msg.dataType, x_rawMsg.c_str());
@@ -307,6 +317,27 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 			cout << "Received raw message: " << x_rawMsg << popcendl;
 	}
 	
+}
+
+void SensorProxy::Publish(int x_publicationType, int x_data)
+{
+	char dataBuffer[32];
+	char buf[BUFFERSIZE];
+	sprintf(dataBuffer, "%d", x_data);
+	// sprintf(message, "{\"function\":4,\"led\":%d}\n", led);
+
+	struct PublishMessage msg;
+	memset(&msg, 0, sizeof(struct PublishMessage));
+	msg.publicationType = (PublicationType) x_publicationType;
+	msg.dataType        = TYPE_INT;
+	// msg.unit            = UNT_UNKNOWN;
+	msg.id              = 111; // TODO ID
+	msg.dataSize        = strlen(dataBuffer);
+	msg.data            = dataBuffer;
+
+	bufferizePublishMessage(&msg, buf, BUFFERSIZE);
+	// cout<< "Sending " << buf << popcendl;
+	SendRawData(buf);
 }
 
 @pack(SensorProxy);

@@ -11,7 +11,7 @@
 #ifndef POPSENSOR_H
 #define POPSENSOR_H
 
-// #include "SensorProxy.ph"
+#include "popwin_messages.h"
 
 class SensorProxy;
 
@@ -29,12 +29,12 @@ public:
 	void StartListening();
 	void StopListening();
 
-	/// Send data to the remote sensors
-	sync seq void SendData(const std::string& JSONData);
-
 	/// Publish data to this POPSensor
 	// void Publish(const std::string& x_message); // TODO: send only relevant data
 	// void Publish(); // TODO: send only relevant data
+	// void Publish(int x_publicationType, double x_data);
+	void Publish(int x_publicationType, int x_data);
+	// void Publish(int x_publicationType, const std::string& x_data);
 
 	/// Retrieve data gathered 
 	void RetrieveDataDouble();

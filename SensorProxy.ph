@@ -28,17 +28,20 @@ public:
 	/// Subscribe to a sensor
 	// async conc void SubscribeMe(POPSensor& xr_gateway);
 
+	// sync seq void Publish(int x_publicationType, double x_data);
+	sync seq void Publish(int x_publicationType, int x_data);
+	// sync seq void Publish(int x_publicationType, const std::string& x_data);
+
 	/// Send data to the remote sensors
-	sync seq void SendData(const std::string& JSONData);
 	async conc void StartListening();
 	async conc void StopListening();
-	// async conc void Publish();
 	sync seq std::vector<double>      RetrieveDataDouble();
 	sync seq std::vector<int>         RetrieveDataInt();
 	sync seq std::vector<std::string> RetrieveDataString();
 	sync seq void ClearData();
 
 private:
+	void SendRawData(const std::string& JSONData);
 	void ReadData(std::ostream& xr_ostream);
 	void HandleIncomingMessage(const std::string& x_msg);
 	// void HandleIncomingMessage(const SubsribeMessage& x_msg);

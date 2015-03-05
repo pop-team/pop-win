@@ -17,28 +17,12 @@ using namespace std;
 /// Blink all leds 3 times
 void blinkLeds(POPSensor& xr_gateway)
 {
-	static const int usecs = 100 * 1000;
+	static const int usecs = 500 * 1000;
 	for(int led = 0 ; led < 3 ; led++)
 	{
 		for(int i = 0 ; i < 2*3 ; i++)
 		{
-			char dataBuffer[32];
-			char buf[BUFFERSIZE];
-			sprintf(dataBuffer, "%d", led);
-			// sprintf(message, "{\"function\":4,\"led\":%d}\n", led);
-
-			struct NotifyMessage msg;
-			memset(&msg, 0, sizeof(struct NotifyMessage));
-			msg.measurementType = MSR_TEMPERATURE;
-			msg.dataType        = TYPE_INT;
-			msg.unit            = UNT_UNKNOWN;
-			msg.id              = 111; // TODO ID
-			msg.data            = dataBuffer;
-			msg.dataSize        = strlen(dataBuffer);
-
-			bufferizeNotifyMessage(&msg, buf, BUFFERSIZE);
-			cout<< "Sending " << buf << popcendl;
-			xr_gateway.SendData(buf);
+			xr_gateway.Publish(PUB_LED, led);
 			usleep(usecs);
 		}
 	}
@@ -51,9 +35,7 @@ void askSensorReadings(POPSensor& xr_gateway)
 	static const int usecs = 100 * 1000;
 	for(int i = 0 ; i < 10 ; i++)
 	{
-		char message[64];
-		sprintf(message, "{\"function\":3}\n");
-		xr_gateway.SendData(message);
+		xr_gateway.Publish(PUB_COMMAND, 1);
 		usleep(usecs);
 	}
 }
@@ -66,26 +48,37 @@ int main(int argc, char** argv)
 		gateway.Connect();
 		gateway.StartListening();
 
+		cout<<"Ask to send the list of commands"<<popcendl;
+		gateway.Publish(PUB_COMMAND, 0);
+
+		cout<<"Blink leds on device"<<popcendl;
 		blinkLeds(gateway);
 
 		sleep(2);
 
-		// cout<<"Ask for the available functions"<<popcendl;
-		// gateway.SendData("{\"function\":0}\n");
+		cout<<"Ask sensor readings"<<popcendl;
+		askSensorReadings(gateway);
 
-		// for(int i = 0 ; i < 5 ; i++)
-		// {
-			// gateway.SendData("{\"function\":3,\"led\":1}\n");
-		// }
 		sleep(2);
 
-		// cout<<"Ask sensor readings"<<popcendl;
+		cout<<"Generate test data"<<popcendl;
+		for(int i = 0 ; i < 10 ; i++)
+		{
+			// Each command generates 10 sanples of data (types: double, int, string)
+			gateway.Publish(PUB_COMMAND, 2);
+			gateway.Publish(PUB_COMMAND, 3);
+			gateway.Publish(PUB_COMMAND, 4);
 
-		// askSensorReadings(gateway);
+			// Wait a bit to avoid overloading the mote
+			usleep(0.3 * 1000000);
+		}
 
+		sleep(2);
 
 		cout<<"Stop listening"<<popcendl;
 		gateway.StopListening();
+
+		sleep(2);
 
 		cout<<"Print the data gathered"<< popcendl;
 		gateway.RetrieveDataDouble();

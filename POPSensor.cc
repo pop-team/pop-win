@@ -55,14 +55,6 @@ void POPSensor::Subscribe(SensorProxy& x_sensorProxy)
 }
 */
 
-void POPSensor::SendData(const std::string& JSONData)
-{
-	for(auto it : m_sensorsProxy)
-	{
-		it->SendData(JSONData);
-	}
-}
-
 void POPSensor::StartListening()
 {
 	for(auto it : m_sensorsProxy)
@@ -123,6 +115,14 @@ void POPSensor::ClearData()
 	for(auto it : m_sensorsProxy)
 	{
 		it->ClearData();
+	}
+}
+
+void POPSensor::Publish(int x_publicationType, int x_data)
+{
+	for(auto it : m_sensorsProxy)
+	{
+		it->Publish(x_publicationType, x_data);
 	}
 }
 
