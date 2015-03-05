@@ -42,10 +42,11 @@
 
 // Our error message
 #define ERROR(__msg__) LOG("Error in %s:%d: %s", __FILE__, __LINE__, __msg__)
-#if 0 // Set to 1 to enable logging
 #define LOG(...)       logging(__VA_ARGS__)
+#if 0 // Set to 1 to enable debug logs
+#define DEBUG(...)       logging(__VA_ARGS__)
 #else
-#define LOG(...)
+#define DEBUG(...)
 #endif
 #define ABS(x) ((x) < 0 ? (-x) : (x))
 
@@ -159,7 +160,7 @@ PROCESS_THREAD(init_com_process, ev, data)
 
 			// We received a message from gateway:
 			// switch on the different types of message
-			LOG("Handle msg type %d", getMessageType(data));
+			DEBUG("Handle msg type %d", getMessageType(data));
 			switch(getMessageType(data))
 			{
 				case MSG_SUBSCRIBE:
@@ -374,7 +375,7 @@ void handlePublication(const char* data)
 	if(unbufferizePublishMessage(&msg, dataBuffer, data, BUFFERSIZE) <= 0)
 		ERROR("Cannot read message from buffer");
 
-	LOG("Handle publication dataType=%d", msg.dataType);
+	DEBUG("Handle publication dataType=%d", msg.dataType);
 
 	switch(msg.dataType)
 	{
@@ -391,7 +392,7 @@ void handlePublication(const char* data)
 			{
 				case PUB_LED:
 				{
-					LOG("Blink led %d", dataInt);
+					DEBUG("Blink led %d", dataInt);
 					switch(dataInt)
 					{
 						case 0:
@@ -411,7 +412,7 @@ void handlePublication(const char* data)
 				case PUB_COMMAND:
 				{
 					// Commands can be seen as a type of publication
-					LOG("Call command %d", dataInt);
+					DEBUG("Call command %d", dataInt);
 					if(dataInt >= 0 && dataInt < NB_COMMANDS)
 						g_commands[dataInt]();
 					else

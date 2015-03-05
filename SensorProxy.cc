@@ -299,11 +299,11 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 				{
 					if(msg.measurementType == MSR_LOG)
 					{
-						cout<< "Remote log message: " << x_rawMsg << popcendl;
+						cout<< "Remote log message: " << data << popcendl;
 					}
 					else
 					{
-						m_stringData.push_back(/*data*/x_rawMsg); // TODO: handle spaces
+						m_stringData.push_back(data); 
 					}
 				}
 				break;

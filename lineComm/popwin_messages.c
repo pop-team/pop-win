@@ -8,6 +8,7 @@
 /// This file contains all messages and format that are common to both the PC and the remote sensor
 
 #include <stdio.h>
+#include <string.h>
 #include "popwin_messages.h"
 
 /// TYPES OF MESSAGES ///
@@ -34,7 +35,7 @@ int unbufferizeSubscribeMessage(struct SubscribeMessage* msg, const char* buffer
 	int id    = -1;
 	int mt    = -1;
 	int dt    = -1;
-	int ret = sscanf(buffer, "%02x %02x %02x %02x\n",
+	int ret = sscanf(buffer, "%02x %02x %02x %02x",
 		&mtype,
 		&id,
 		&mt,
@@ -79,23 +80,23 @@ int unbufferizeNotifyMessage(struct NotifyMessage* msg, char* data, const char* 
 	int un    = -1;
 	int dataSize = 0;
 
-	int ret = sscanf(buffer, "%02x %02x %02x %04x %02x %04x %s\n",
+	int ret = sscanf(buffer, "%02x %02x %02x %04x %02x %04x",
 		&mtype,
 		&dt,
 		&mt,
 		&id,
 		&un,
-		&dataSize,
-		data
+		&dataSize
 	);
 	// printf("data %s --> %02x %02x %02x %04x %02x %04d %s\n", buffer, mtype, dt,mt,id,un,dataSize,data);
-	if(ret == 7 && mtype == MSG_NOTIFY)
+	if(ret == 6 && mtype == MSG_NOTIFY)
 	{
 		msg->measurementType = (enum MeasurementType) mt;
 		msg->dataType        = (enum DataType) dt;
 		msg->id              = id;
 		msg->unit            = (enum MeasurementUnit) un;
 		msg->dataSize        = (size_t) dataSize;
+		strcpy(data, buffer + 21 + 1);
 		return 1;
 	}
 	else return 0;
@@ -130,23 +131,23 @@ int unbufferizePublishMessage(struct PublishMessage* msg, char* data, const char
 	// int un    = -1;
 	int dataSize = 0;
 
-	int ret = sscanf(buffer, "%02x %02x %02x %04x %04x %s\n",
+	int ret = sscanf(buffer, "%02x %02x %02x %04x %04x",
 		&mtype,
 		&dt,
 		&mt,
 		&id,
 		// &un,
-		&dataSize,
-		data
+		&dataSize
 	);
 	// printf("data %s --> %02x %02x %02x %04x %02x %04d %s\n", buffer, mtype, dt,mt,id,un,dataSize,data);
-	if(ret == 6 && mtype == MSG_PUBLISH)
+	if(ret == 5 && mtype == MSG_PUBLISH)
 	{
 		msg->publicationType = (enum PublicationType) mt;
 		msg->dataType        = (enum DataType) dt;
 		msg->id              = id;
 		// msg->unit            = (enum PublicationUnit) un;
 		msg->dataSize        = (size_t) dataSize;
+		strcpy(data, buffer + 18 + 1);
 		return 1;
 	}
 	else return 0;
@@ -177,4 +178,3 @@ enum MessageType getMessageType(const char* x_msg)
 		return (enum MessageType) type;
 	
 }
-
