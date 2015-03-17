@@ -18,28 +18,6 @@
 
 using namespace std;
 
-// Get an input key from user
-char getch()
-{
-	char buf = 0;
-	struct termios old = {0};
-	if (tcgetattr(0, &old) < 0)
-		perror("tcsetattr()");
-	old.c_lflag &= ~ICANON;
-	old.c_lflag &= ~ECHO;
-	old.c_cc[VMIN] = 1;
-	old.c_cc[VTIME] = 0;
-	if (tcsetattr(0, TCSANOW, &old) < 0)
-		perror("tcsetattr ICANON");
-	if (read(0, &buf, 1) < 0)
-		perror ("read()");
-	old.c_lflag |= ICANON;
-	old.c_lflag |= ECHO;
-	if (tcsetattr(0, TCSADRAIN, &old) < 0)
-		perror ("tcsetattr ~ICANON");
-	return (buf);
-}
-
 // -------------------------------------------------------------------------------- //
 //                                COMMANDS
 // -------------------------------------------------------------------------------- //
@@ -126,7 +104,7 @@ int main(int argc, char** argv)
 	cout << "b: Make leds blink on sensor" <<popcendl;
 	commands['b'] = blinkLeds;
 
-	cout << "c: Send a custom command to sensor" <<popcendl;
+	cout << "c + <nb>: Send a custom command to sensor. 'c0' should list the available commands." <<popcendl;
 	commands['c'] = customCommand;
 
 	cout << "g: Generate test data" <<popcendl;
@@ -148,21 +126,25 @@ int main(int argc, char** argv)
 		//cout<<"Ask to send the list of commands"<<popcendl;
 		//gateway.Publish(PUB_COMMAND, 0);
 
-		char c = '0';
-		while(c != 'q')
+		char c = '\n';
+		while(true)
 		{
-			cout << ">>" << popcendl;
-			c = getchar();
+			cout << "Enter selection:" << popcendl;
+			while(c == '\n')
+				c = getchar();
+			if(c == 'q')
+				break;
 			auto cmd = commands.find(c);
 			if(cmd != commands.end())
 			{
 				(*cmd->second)(gateway);
+				c = '\n';
 			}
 			else
 			{
 				cout << "No command for " << c << popcendl;
+				c = '\n';
 			}
-
 		}
 
 		cout<<"Stop listening"<<popcendl;

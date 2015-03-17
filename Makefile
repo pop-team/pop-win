@@ -1,4 +1,4 @@
-POPCC=popcc --std=c++11 -g -IlineComm -noclean
+POPCC=popcc --std=c++11 -g -IlineComm
 
 all: POPSensor.obj SensorProxy.obj main objects.map
 

@@ -75,11 +75,11 @@ void POPSensor::RetrieveDataDouble()
 {
 	for(auto it : m_sensorsProxy)
 	{
-		vector<double> gatheredData(it->RetrieveDataDouble());
+		map<RecordHeader, double> gatheredData(it->RetrieveDataDouble());
 		cout << "Records found on proxy: "<< gatheredData.size() << popcendl;
 		for(auto elem : gatheredData)
 		{
-			cout<< ">> " << elem << popcendl;
+			cout<< ">> id:" << elem.first.id << " type:" << elem.first.measurementType << " unit:" << elem.first.unit << ": " << elem.second << popcendl;
 		}
 	}
 }
@@ -88,11 +88,11 @@ void POPSensor::RetrieveDataInt()
 {
 	for(auto it : m_sensorsProxy)
 	{
-		vector<int> gatheredData(it->RetrieveDataInt());
+		map<RecordHeader, int> gatheredData(it->RetrieveDataInt());
 		cout << "Records found on proxy: "<< gatheredData.size() << popcendl;
 		for(auto elem : gatheredData)
 		{
-			cout<< ">> " << elem << popcendl;
+			cout<< ">> id:" << elem.first.id << " type:" << elem.first.measurementType << " unit:" << elem.first.unit << ": " << elem.second << popcendl;
 		}
 	}
 }
@@ -101,11 +101,11 @@ void POPSensor::RetrieveDataString()
 {
 	for(auto it : m_sensorsProxy)
 	{
-		vector<string> gatheredData(it->RetrieveDataString());
+		map<RecordHeader, string> gatheredData(it->RetrieveDataString());
 		cout << "Records found on proxy: "<< gatheredData.size() << popcendl;
 		for(auto elem : gatheredData)
 		{
-			cout<< ">> " << elem << popcendl;
+			cout<< ">> id:" << elem.first.id << " type:" << elem.first.measurementType << " unit:" << elem.first.unit << ": " << elem.second << popcendl;
 		}
 	}
 }

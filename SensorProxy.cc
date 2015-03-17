@@ -26,8 +26,6 @@
 #include <time.h>
 #include <regex.h>
 
-#include "lineComm/popwin_messages.h"
-
 #define BAUDRATE B115200
 #define BAUDRATE_S "115200"
 #ifdef linux
@@ -234,19 +232,19 @@ void SensorProxy::StopListening()
 	m_listening = false; // TODO: See if we must protect this var
 }
 
-vector<double> SensorProxy::RetrieveDataDouble()
+map<RecordHeader, double> SensorProxy::RetrieveDataDouble()
 {
 	cout << "Retrieve " << m_doubleData.size() << " records of type double" <<popcendl;
 	return m_doubleData;
 }
 
-vector<int> SensorProxy::RetrieveDataInt()
+map<RecordHeader, int> SensorProxy::RetrieveDataInt()
 {
 	cout << "Retrieve " << m_intData.size() << " records of type int" <<popcendl;
 	return m_intData;
 }
 
-vector<string> SensorProxy::RetrieveDataString()
+map<RecordHeader, string> SensorProxy::RetrieveDataString()
 {
 	cout << "Retrieve " << m_stringData.size() << " records of type string" <<popcendl;
 	return m_stringData;
@@ -287,10 +285,10 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 			switch(msg.dataType)
 			{
 				case TYPE_DOUBLE:
-					m_doubleData.push_back(atof(data));
+					m_doubleData.insert(std::pair<RecordHeader, double>(RecordHeader(msg), atof(data))); 
 				break;
 				case TYPE_INT:
-					m_intData.push_back(atoi(data));
+					m_intData.insert(std::pair<RecordHeader, int>(RecordHeader(msg), atoi(data))); 
 				break;
 				case TYPE_STRING:
 				{
@@ -300,7 +298,8 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 					}
 					else
 					{
-						m_stringData.push_back(data); 
+						std::string str(data);
+						m_stringData.insert(std::pair<RecordHeader, std::string>(RecordHeader(msg), str)); 
 					}
 				}
 				break;
