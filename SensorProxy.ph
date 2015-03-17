@@ -20,8 +20,9 @@
 
 
 // Data structure to store a record that comes from a notification message
-struct RecordHeader : POPBase
+class RecordHeader : POPBase
 {
+public:
 	RecordHeader()
 	{
 		measurementType = MSR_LOG;
@@ -33,6 +34,7 @@ struct RecordHeader : POPBase
 		measurementType = x_msg.measurementType;
 		id              = x_msg.id;
 		unit            = x_msg.unit;
+			cout<<(int)unit<<" x "<<(int)measurementType<<popcendl;
 	}
 	void Serialize(POPBuffer &buf, bool pack)
 	{
@@ -57,6 +59,7 @@ struct RecordHeader : POPBase
 			int mu = -1;
 			buf.UnPack(&mu,1);
 			unit = static_cast<enum MeasurementUnit>(mu);
+			cout<<mt<<" "<<mu<<popcendl;
 		}
 	}
 	// We need to define this operator to use this structure as key for maps

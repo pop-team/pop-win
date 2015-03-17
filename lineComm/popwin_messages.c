@@ -178,3 +178,32 @@ enum MessageType getMessageType(const char* x_msg)
 		return (enum MessageType) type;
 	
 }
+
+// -------------------------------------------------------------------------------- //
+
+// String to explain measurement type
+const char* explainMeasurementType(enum MeasurementType x)
+{
+	switch(x)
+	{
+		case MSR_LOG:         return "logging";
+		case MSR_COMMAND:     return "command";
+		case MSR_TEMPERATURE: return "temperature";
+		case MSR_VIBRATION:   return "vibration";
+		default:              return "unknown";
+	}
+}
+
+// String to explain measurement units
+const char* explainMeasurementUnit(enum MeasurementUnit x)
+{
+	switch(x)
+	{
+		case UNT_UNKNOWN:     return "";
+		case UNT_CELSIUS:     return "celsius";
+		case UNT_KELVIN:      return "kelvin";
+		case UNT_SECONDS:     return "seconds";
+		case UNT_METERS:      return "meters";
+		default:              return "unknown";
+	}
+}

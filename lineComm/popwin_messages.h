@@ -30,6 +30,7 @@ enum MeasurementType
 	MSR_VIBRATION   = 3  // vibration measurement
 	// ... //
 };
+const char* explainMeasurementType(enum MeasurementType x);
 
 // Different types of measurement
 enum MeasurementUnit
@@ -41,6 +42,7 @@ enum MeasurementUnit
 	UNT_METERS      = 4
 	// ... // 
 };
+const char* explainMeasurementUnit(enum MeasurementUnit x);
 
 // Different types of publication
 enum PublicationType

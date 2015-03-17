@@ -79,7 +79,7 @@ void POPSensor::RetrieveDataDouble()
 		cout << "Records found on proxy: "<< gatheredData.size() << popcendl;
 		for(auto elem : gatheredData)
 		{
-			cout<< ">> id:" << elem.first.id << " type:" << elem.first.measurementType << " unit:" << elem.first.unit << ": " << elem.second << popcendl;
+			cout<< ">> id:" << elem.first.id << " type:" << explainMeasurementType(elem.first.measurementType) << " unit:" << explainMeasurementUnit(elem.first.unit) << ": " << elem.second << popcendl;
 		}
 	}
 }
@@ -92,7 +92,7 @@ void POPSensor::RetrieveDataInt()
 		cout << "Records found on proxy: "<< gatheredData.size() << popcendl;
 		for(auto elem : gatheredData)
 		{
-			cout<< ">> id:" << elem.first.id << " type:" << elem.first.measurementType << " unit:" << elem.first.unit << ": " << elem.second << popcendl;
+			cout<< ">> id:" << elem.first.id << " type:" << explainMeasurementType(elem.first.measurementType) << " unit:" << explainMeasurementUnit(elem.first.unit) << ": " << elem.second << popcendl;
 		}
 	}
 }
@@ -105,7 +105,7 @@ void POPSensor::RetrieveDataString()
 		cout << "Records found on proxy: "<< gatheredData.size() << popcendl;
 		for(auto elem : gatheredData)
 		{
-			cout<< ">> id:" << elem.first.id << " type:" << elem.first.measurementType << " unit:" << elem.first.unit << ": " << elem.second << popcendl;
+			cout<< ">> id:" << elem.first.id << " type:" << explainMeasurementType(elem.first.measurementType) << " unit:" << explainMeasurementUnit(elem.first.unit) << ": " << elem.second << popcendl;
 		}
 	}
 }

@@ -17,8 +17,8 @@ popwin_messages.o: lineComm/popwin_messages.c
 %.obj.o: %.cc
 	${POPCC} -c $< -o $@
 
-POPSensor.obj: POPSensor.obj.o POPSensor.phstub.o SensorProxy.stub.o
-	${POPCC} -object -o POPSensor.obj POPSensor.obj.o POPSensor.phstub.o SensorProxy.stub.o
+POPSensor.obj: POPSensor.obj.o POPSensor.phstub.o SensorProxy.stub.o popwin_messages.o
+	${POPCC} -object -o POPSensor.obj POPSensor.obj.o POPSensor.phstub.o SensorProxy.stub.o popwin_messages.o
 
 SensorProxy.obj: SensorProxy.obj.o SensorProxy.phstub.o POPSensor.stub.o popwin_messages.o
 	${POPCC} -object -o SensorProxy.obj SensorProxy.obj.o SensorProxy.phstub.o POPSensor.stub.o popwin_messages.o

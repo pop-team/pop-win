@@ -234,6 +234,10 @@ void SensorProxy::StopListening()
 
 map<RecordHeader, double> SensorProxy::RetrieveDataDouble()
 {
+	for(auto elem : m_doubleData)
+	{
+		cout<<"AAA" << elem.first.measurementType  << popcendl;
+	}
 	cout << "Retrieve " << m_doubleData.size() << " records of type double" <<popcendl;
 	return m_doubleData;
 }
@@ -261,7 +265,7 @@ void SensorProxy::ClearData()
 /// Handle all incoming messages
 void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 {
-	// cout << "received" << x_rawMsg << popcendl;
+	cout << "received" << x_rawMsg << popcendl;
 	switch(getMessageType(x_rawMsg.c_str()))
 	{
 		case MSG_SUBSCRIBE:
