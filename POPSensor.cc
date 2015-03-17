@@ -36,8 +36,8 @@ void POPSensor::Connect()
 	// TODO: Handle resource description files
 	for(int i = 0 ; i < 1 ; i++)
 	{
-		cout<<"Creating sensor proxy"<<popcendl;
-		m_sensorsProxy.push_back(new SensorProxy("localhost"));
+		cout<<"Creating sensor proxy with id="<<(1000+i)<<popcendl;
+		m_sensorsProxy.push_back(new SensorProxy(1000 + i, "localhost"));
 
 		// Subscribe to sensor
 		// m_sensorsProxy.back()->SubscribeMe(*this);
@@ -79,7 +79,7 @@ void POPSensor::RetrieveDataDouble()
 		cout << "Records found on proxy: "<< gatheredData.size() << popcendl;
 		for(auto elem : gatheredData)
 		{
-			cout<< ">> id:" << elem.first.id << " type:" << explainMeasurementType(elem.first.measurementType) << " unit:" << explainMeasurementUnit(elem.first.unit) << ": " << elem.second << popcendl;
+			cout<< ">>" << elem.first.timeStamp << " id:" << elem.first.id << " type:" << explainMeasurementType(elem.first.measurementType) << " unit:" << explainMeasurementUnit(elem.first.unit) << ": " << elem.second << popcendl;
 		}
 	}
 }
@@ -92,7 +92,7 @@ void POPSensor::RetrieveDataInt()
 		cout << "Records found on proxy: "<< gatheredData.size() << popcendl;
 		for(auto elem : gatheredData)
 		{
-			cout<< ">> id:" << elem.first.id << " type:" << explainMeasurementType(elem.first.measurementType) << " unit:" << explainMeasurementUnit(elem.first.unit) << ": " << elem.second << popcendl;
+			cout<< ">>" << elem.first.timeStamp << " id:" << elem.first.id << " type:" << explainMeasurementType(elem.first.measurementType) << " unit:" << explainMeasurementUnit(elem.first.unit) << ": " << elem.second << popcendl;
 		}
 	}
 }
@@ -105,7 +105,7 @@ void POPSensor::RetrieveDataString()
 		cout << "Records found on proxy: "<< gatheredData.size() << popcendl;
 		for(auto elem : gatheredData)
 		{
-			cout<< ">> id:" << elem.first.id << " type:" << explainMeasurementType(elem.first.measurementType) << " unit:" << explainMeasurementUnit(elem.first.unit) << ": " << elem.second << popcendl;
+			cout<< ">>" << elem.first.timeStamp << " id:" << elem.first.id << " type:" << explainMeasurementType(elem.first.measurementType) << " unit:" << explainMeasurementUnit(elem.first.unit) << ": " << elem.second << popcendl;
 		}
 	}
 }

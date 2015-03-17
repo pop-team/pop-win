@@ -23,23 +23,6 @@
 #include "dev/tmp102.h"
 
 
-// #include "jsontree.h"
-// #include "jsonparse.h"
-
-#if 1
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
-
-#if 0
-#define PRINTFDEBUG(...) printf(__VA_ARGS__)
-#else
-#define PRINTFDEBUG(...)
-#endif
-
-
-
 // Our error message
 #define ERROR(__msg__) LOG("Error in %s:%d: %s", __FILE__, __LINE__, __msg__)
 #define LOG(...)       logging(__VA_ARGS__)
@@ -52,7 +35,7 @@
 
 
 // Declaration to avoid warnings at compilation
-int sscanf ( const char * s, const char * format, ...); // {} // TODO
+int sscanf ( const char * s, const char * format, ...);
 size_t strlen ( const char * str );
 int snprintf ( char * s, size_t n, const char * format, ... );
 int atoi (const char * str);
@@ -66,6 +49,8 @@ void logging(const char *format,...);
 void handlePublication();
 void handleNotification();
 
+// Id of the mote
+int   g_id = 444;
 
 
 // Send a subscribtion message
@@ -103,7 +88,7 @@ void logging(const char *format,...)
 	memset(&msg, 0, sizeof(msg));
 	msg.measurementType = MSR_LOG;
 	msg.dataType        = TYPE_STRING;
-	msg.id              = 333; // TODO ID
+	msg.id              = g_id;
 	msg.data            = buf;
 	msg.dataSize        = strlen(buf);
 	sendNotification(&msg);
@@ -283,7 +268,8 @@ void read_temperature(){
 	memset(&msg, 0, sizeof(msg));
 	msg.measurementType = MSR_TEMPERATURE;
 	msg.dataType        = TYPE_INT;
-	msg.id              = 333; // TODO ID
+	msg.unit            = UNT_CELSIUS;
+	msg.id              = g_id;
 	msg.data            = data;
 	msg.dataSize        = strlen(data);
 	sendNotification(&msg);
@@ -306,7 +292,7 @@ void generate_test_data_double(){
 		memset(&msg, 0, sizeof(msg));
 		msg.measurementType = MSR_TEMPERATURE;
 		msg.dataType        = TYPE_DOUBLE;
-		msg.id              = 333; // TODO ID
+		msg.id              = g_id;
 		msg.data            = data;
 		msg.dataSize        = strlen(data);
 		sendNotification(&msg);
@@ -328,7 +314,7 @@ void generate_test_data_int(){
 		memset(&msg, 0, sizeof(msg));
 		msg.measurementType = MSR_TEMPERATURE;
 		msg.dataType        = TYPE_INT;
-		msg.id              = 333; // TODO ID
+		msg.id              = g_id;
 		msg.data            = data;
 		msg.dataSize        = strlen(data);
 		sendNotification(&msg);
@@ -348,7 +334,7 @@ void generate_test_data_string(){
 		memset(&msg, 0, sizeof(msg));
 		msg.measurementType = MSR_TEMPERATURE;
 		msg.dataType        = TYPE_STRING;
-		msg.id              = 333; // TODO ID
+		msg.id              = g_id;
 		msg.data            = data;
 		msg.dataSize        = strlen(data);
 		sendNotification(&msg);

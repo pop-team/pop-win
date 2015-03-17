@@ -58,8 +58,9 @@
 
 using namespace std;
 
-SensorProxy::SensorProxy(const std::string& x_url)
+SensorProxy::SensorProxy(int x_id, const std::string& x_url)
 {
+	m_id = x_id;
 	fd_set mask;
 	speed_t speed = BAUDRATE;
 	const char *device = MODEMDEVICE;
@@ -102,7 +103,7 @@ SensorProxy::SensorProxy(const std::string& x_url)
 
 	if(m_fd <= 0)
 	{
-		throw POPException("Fail to open "MODEMDEVICE);
+		throw POPException("Fail to open " MODEMDEVICE);
 	}
 
 	printf("port is open on %d\n", m_fd);
@@ -234,10 +235,6 @@ void SensorProxy::StopListening()
 
 map<RecordHeader, double> SensorProxy::RetrieveDataDouble()
 {
-	for(auto elem : m_doubleData)
-	{
-		cout<<"AAA" << elem.first.measurementType  << popcendl;
-	}
 	cout << "Retrieve " << m_doubleData.size() << " records of type double" <<popcendl;
 	return m_doubleData;
 }
@@ -265,7 +262,13 @@ void SensorProxy::ClearData()
 /// Handle all incoming messages
 void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 {
-	cout << "received" << x_rawMsg << popcendl;
+	// cout << "received" << x_rawMsg << popcendl;
+	struct timeval time_now;
+	gettimeofday(&time_now, NULL);
+	unsigned int ms = time_now.tv_sec * 1000 + time_now.tv_usec / 1000;
+	ms = ms % 1000000; // TODO: Fix buffering problem with int, short, long
+	// cout << "ms" << ms << popcendl;
+
 	switch(getMessageType(x_rawMsg.c_str()))
 	{
 		case MSG_SUBSCRIBE:
@@ -289,10 +292,10 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 			switch(msg.dataType)
 			{
 				case TYPE_DOUBLE:
-					m_doubleData.insert(std::pair<RecordHeader, double>(RecordHeader(msg), atof(data))); 
+					m_doubleData.insert(std::pair<RecordHeader, double>(RecordHeader(ms, msg), atof(data))); 
 				break;
 				case TYPE_INT:
-					m_intData.insert(std::pair<RecordHeader, int>(RecordHeader(msg), atoi(data))); 
+					m_intData.insert(std::pair<RecordHeader, int>(RecordHeader(ms, msg), atoi(data))); 
 				break;
 				case TYPE_STRING:
 				{
@@ -303,7 +306,7 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 					else
 					{
 						std::string str(data);
-						m_stringData.insert(std::pair<RecordHeader, std::string>(RecordHeader(msg), str)); 
+						m_stringData.insert(std::pair<RecordHeader, std::string>(RecordHeader(ms, msg), str)); 
 					}
 				}
 				break;
@@ -331,7 +334,7 @@ void SensorProxy::Publish(int x_publicationType, int x_data)
 	msg.publicationType = (PublicationType) x_publicationType;
 	msg.dataType        = TYPE_INT;
 	// msg.unit            = UNT_UNKNOWN;
-	msg.id              = 111; // TODO ID
+	msg.id              = m_id;
 	msg.dataSize        = strlen(dataBuffer);
 	msg.data            = dataBuffer;
 

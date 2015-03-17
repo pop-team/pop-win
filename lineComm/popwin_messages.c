@@ -199,7 +199,7 @@ const char* explainMeasurementUnit(enum MeasurementUnit x)
 {
 	switch(x)
 	{
-		case UNT_UNKNOWN:     return "";
+		case UNT_UNKNOWN:     return "none";
 		case UNT_CELSIUS:     return "celsius";
 		case UNT_KELVIN:      return "kelvin";
 		case UNT_SECONDS:     return "seconds";

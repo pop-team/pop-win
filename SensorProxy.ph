@@ -28,13 +28,15 @@ public:
 		measurementType = MSR_LOG;
 		id              = 0;
 		unit            = UNT_UNKNOWN;
+		timeStamp       = 0;
 	}
-	RecordHeader(const NotifyMessage& x_msg)
+	RecordHeader(unsigned int x_timeStamp, const NotifyMessage& x_msg)
 	{
+		// cout << "Create record header id:" << x_msg.id << " units " << x_msg.unit << popcendl;
 		measurementType = x_msg.measurementType;
 		id              = x_msg.id;
 		unit            = x_msg.unit;
-			cout<<(int)unit<<" x "<<(int)measurementType<<popcendl;
+		timeStamp       = x_timeStamp;
 	}
 	void Serialize(POPBuffer &buf, bool pack)
 	{
@@ -47,6 +49,9 @@ public:
 
 			int mu = static_cast<int>(unit);
 			buf.Pack(&mu,1);
+
+			int ts = (int)timeStamp;
+			buf.Pack(&timeStamp,1);
 		}
 		else
 		{
@@ -59,19 +64,20 @@ public:
 			int mu = -1;
 			buf.UnPack(&mu,1);
 			unit = static_cast<enum MeasurementUnit>(mu);
-			cout<<mt<<" "<<mu<<popcendl;
+
+			buf.UnPack(&timeStamp,1);
 		}
 	}
 	// We need to define this operator to use this structure as key for maps
 	bool operator<(RecordHeader const& n2) const
 	{
-		//TODO use time
-		return (id != n2.id) ? id < n2.id : this < &n2;
+		return timeStamp != n2.timeStamp ? timeStamp < n2.timeStamp : this < &n2;
 	}
 
+	unsigned int         timeStamp;
 	enum MeasurementType measurementType;
 	// enum DataType        dataType;
-	unsigned short       id;
+	int                  id;
 	enum MeasurementUnit unit;
 };
 
@@ -79,7 +85,7 @@ parclass SensorProxy {
 	classuid(1903);
 
 public:
-	SensorProxy(const std::string& x_url) @{ od.url(x_url); };
+	SensorProxy(int x_id, const std::string& x_url) @{ od.url(x_url); };
 	~SensorProxy();
 
 	/// Subscribe to a sensor
@@ -105,6 +111,7 @@ private:
 	// void HandleIncomingMessage(const NotifyMessage& x_msg);
 
 	int m_fd;
+	int m_id;
 	bool m_listening;
 
 	// Different containers of data
