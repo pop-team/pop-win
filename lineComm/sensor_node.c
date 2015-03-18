@@ -57,7 +57,7 @@ int   g_id = 444;
 void sendSubscription(const struct SubscribeMessage* msg)
 {
 	char buf[BUFFERSIZE];
-	if(bufferizeSubscribeMessage(msg, buf, BUFFERSIZE) <= 0)
+	if(bufferizeSubscribeMessage(msg, buf, sizeof(buf)) <= 0)
 		ERROR("Cannot write message to buffer");
 
 	// Send message via serial line on contiki
@@ -68,7 +68,7 @@ void sendSubscription(const struct SubscribeMessage* msg)
 void sendNotification(const struct NotifyMessage* msg)
 {
 	char buf[BUFFERSIZE];
-	if(bufferizeNotifyMessage(msg, buf, BUFFERSIZE) <= 0)
+	if(bufferizeNotifyMessage(msg, buf, sizeof(buf)) <= 0)
 		ERROR("Cannot write message to buffer");
 
 	// Send message via serial line on contiki
@@ -81,7 +81,7 @@ void logging(const char *format,...)
 	char buf[BUFFERSIZE];
 	va_list ap;
 	va_start(ap, format);
-	vsprintf(buf, format, ap);
+	vsnprintf(buf, sizeof(buf), format, ap);
 	va_end(ap);
 
 	struct NotifyMessage msg;
@@ -152,7 +152,7 @@ PROCESS_THREAD(init_com_process, ev, data)
 				{
 					struct SubscribeMessage msg;
 					memset(&msg, 0, sizeof(msg));
-					if(unbufferizeSubscribeMessage(&msg, data, BUFFERSIZE) <= 0)
+					if(unbufferizeSubscribeMessage(&msg, data) <= 0)
 						ERROR("Cannot read message from buffer");
 
 					// Define here what to do on reception 
@@ -292,7 +292,7 @@ void generate_test_data_double(){
 		sprintf(data, "%d.%02d", d / 100, ABS(d % 100));
 		struct NotifyMessage msg;
 		memset(&msg, 0, sizeof(msg));
-		msg.measurementType = MSR_TEMPERATURE;
+		msg.measurementType = MSR_TEST;
 		msg.dataType        = TYPE_DOUBLE;
 		msg.id              = g_id;
 		msg.data            = data;
@@ -314,7 +314,7 @@ void generate_test_data_int(){
 		sprintf(data, "%d", n);
 		struct NotifyMessage msg;
 		memset(&msg, 0, sizeof(msg));
-		msg.measurementType = MSR_TEMPERATURE;
+		msg.measurementType = MSR_TEST;
 		msg.dataType        = TYPE_INT;
 		msg.id              = g_id;
 		msg.data            = data;
@@ -334,7 +334,7 @@ void generate_test_data_string(){
 		sprintf(data, "Test string number %d !", i);
 		struct NotifyMessage msg;
 		memset(&msg, 0, sizeof(msg));
-		msg.measurementType = MSR_TEMPERATURE;
+		msg.measurementType = MSR_TEST;
 		msg.dataType        = TYPE_STRING;
 		msg.id              = g_id;
 		msg.data            = data;
@@ -360,7 +360,7 @@ void handlePublication(const char* data)
 	struct PublishMessage msg;
 	memset(&msg, 0, sizeof(msg));
 	char dataBuffer[32];
-	if(unbufferizePublishMessage(&msg, dataBuffer, data, BUFFERSIZE) <= 0)
+	if(unbufferizePublishMessage(&msg, dataBuffer, data, sizeof(dataBuffer)) <= 0)
 		ERROR("Cannot read message from buffer");
 
 	DEBUG("Handle publication dataType=%d", msg.dataType);

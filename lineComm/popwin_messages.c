@@ -17,25 +17,25 @@
 // Subscription message
 
 // Print message to buffer
-int bufferizeSubscribeMessage(const struct SubscribeMessage* msg, char* buffer, size_t size)
+int bufferizeSubscribeMessage(const struct SubscribeMessage* x_msg, char* xp_buffer, size_t x_bufferSize)
 {
-	int ret = snprintf(buffer, size, "%02x %02x %02x %02x\n",
+	int ret = snprintf(xp_buffer, x_bufferSize, "%02x %02x %02x %02x\n",
 		MSG_SUBSCRIBE,
-		msg->id,
-		msg->measurementType,
-		msg->dataType
+		x_msg->id,
+		x_msg->measurementType,
+		x_msg->dataType
 	);
-	return ret > 0 && ret < size;
+	return ret > 0 && ret < x_bufferSize;
 }
 
 // Read message from buffer
-int unbufferizeSubscribeMessage(struct SubscribeMessage* msg, const char* buffer, size_t size)
+int unbufferizeSubscribeMessage(struct SubscribeMessage* xp_msg, const char* x_buffer)
 {
 	int mtype = -1;
 	int id    = -1;
 	int mt    = -1;
 	int dt    = -1;
-	int ret = sscanf(buffer, "%02x %02x %02x %02x",
+	int ret = sscanf(x_buffer, "%02x %02x %02x %02x",
 		&mtype,
 		&id,
 		&mt,
@@ -43,9 +43,9 @@ int unbufferizeSubscribeMessage(struct SubscribeMessage* msg, const char* buffer
 	);
 	if(ret == 4 && mtype == MSG_SUBSCRIBE)
 	{
-		msg->id              = id;
-		msg->measurementType = (enum MeasurementType) mt;
-		msg->dataType        = (enum DataType)        dt;
+		xp_msg->id              = id;
+		xp_msg->measurementType = (enum MeasurementType) mt;
+		xp_msg->dataType        = (enum DataType)        dt;
 		return 1;
 	}
 	else return 0;
@@ -118,23 +118,23 @@ int unbufferizeNotifyMessage(struct NotifyMessage* xp_msg, char* xp_data, const 
 // Publication message
 
 // Print message to buffer
-int bufferizePublishMessage(const struct PublishMessage* msg, char* buffer, size_t size)
+int bufferizePublishMessage(const struct PublishMessage* x_msg, char* xp_buffer, size_t x_bufferSize)
 {
 	// note: sizeof(size_t) = 2 for contiki but we use 4 for compatibility
-	int ret = snprintf(buffer, size, "%02x %02x %02x %04x %04x %s\n",
+	int ret = snprintf(xp_buffer, x_bufferSize, "%02x %02x %02x %04x %04x %s\n",
 		MSG_PUBLISH,
-		msg->dataType,
-		msg->publicationType,
-		msg->id,
+		x_msg->dataType,
+		x_msg->publicationType,
+		x_msg->id,
 		// msg->unit,
-		(int)msg->dataSize,
-		msg->data
+		(int)x_msg->dataSize,
+		x_msg->data
 	);
-	return ret > 0 && ret < size;
+	return ret > 0 && ret < x_bufferSize;
 }
 
 // Read message from buffer
-int unbufferizePublishMessage(struct PublishMessage* msg, char* data, const char* buffer, size_t size)
+int unbufferizePublishMessage(struct PublishMessage* xp_msg, char* xp_data, const char* x_buffer, size_t x_dataSize)
 {
 	int mtype = -1;
 	int id    = -1;
@@ -143,7 +143,7 @@ int unbufferizePublishMessage(struct PublishMessage* msg, char* data, const char
 	// int un    = -1;
 	int dataSize = 0;
 
-	int ret = sscanf(buffer, "%02x %02x %02x %04x %04x",
+	int ret = sscanf(x_buffer, "%02x %02x %02x %04x %04x",
 		&mtype,
 		&dt,
 		&mt,
@@ -154,13 +154,25 @@ int unbufferizePublishMessage(struct PublishMessage* msg, char* data, const char
 	// printf("data %s --> %02x %02x %02x %04x %02x %04d %s\n", buffer, mtype, dt,mt,id,un,dataSize,data);
 	if(ret == 5 && mtype == MSG_PUBLISH)
 	{
-		msg->publicationType = (enum PublicationType) mt;
-		msg->dataType        = (enum DataType) dt;
-		msg->id              = id;
+		xp_msg->publicationType = (enum PublicationType) mt;
+		xp_msg->dataType        = (enum DataType) dt;
+		xp_msg->id              = id;
 		// msg->unit            = (enum PublicationUnit) un;
-		msg->dataSize        = (size_t) dataSize;
-		strcpy(data, buffer + 18 + 1);
-		return 1;
+		xp_msg->dataSize        = (size_t) dataSize;
+		if(dataSize + 1 > x_dataSize)
+		{
+			printf("ERROR: Buffer has insufficient size %d > %d\n", dataSize + 1, (int)x_dataSize);
+			return 0;
+		}
+		if(snprintf(xp_data, x_dataSize, "%s", x_buffer + 18 + 1) == dataSize)
+		{
+			return 1;
+		}
+		else
+		{
+			printf("ERROR: Data has the wrong size\n");
+			return 0;
+		}
 	}
 	else return 0;
 }
@@ -202,6 +214,7 @@ const char* explainMeasurementType(enum MeasurementType x)
 		case MSR_COMMAND:     return "command";
 		case MSR_TEMPERATURE: return "temperature";
 		case MSR_VIBRATION:   return "vibration";
+		case MSR_TEST:        return "test";
 		default:              return "unknown";
 	}
 }

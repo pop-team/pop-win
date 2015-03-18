@@ -278,7 +278,7 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 			case MSG_SUBSCRIBE:
 			{
 				SubscribeMessage msg;
-				if(unbufferizeSubscribeMessage(&msg, x_rawMsg.c_str(), x_rawMsg.size()) <= 0)
+				if(unbufferizeSubscribeMessage(&msg, x_rawMsg.c_str()) <= 0)
 					throw POPException("Cannot unbufferize subscribe message");
 
 				throw POPException("Subscribtion messages not handled yet"); //TODO

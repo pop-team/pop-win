@@ -27,7 +27,8 @@ enum MeasurementType
 	MSR_LOG         = 0, // logging  can be seen as a notification. This is useful for debug but can be removed in the final version
 	MSR_COMMAND     = 1, // commands can be seen as a notification. This is useful for debug but can be removed in the final version 
 	MSR_TEMPERATURE = 2, // temperature measurement
-	MSR_VIBRATION   = 3  // vibration measurement
+	MSR_VIBRATION   = 3, // vibration measurement
+	MSR_TEST        = 4  // vibration measurement
 	// ... //
 };
 const char* explainMeasurementType(enum MeasurementType x);
@@ -75,10 +76,10 @@ struct SubscribeMessage
 };
 
 // Print message to buffer
-int bufferizeSubscribeMessage(const struct SubscribeMessage* msg, char* buffer, size_t size);
+int bufferizeSubscribeMessage(const struct SubscribeMessage* x_msg, char* xp_buffer, size_t x_bufferSize);
 
 // Read message from buffer
-int unbufferizeSubscribeMessage(struct SubscribeMessage* msg, const char* buffer, size_t size);
+int unbufferizeSubscribeMessage(struct SubscribeMessage* xp_msg, const char* x_buffer);
 
 // -------------------------------------------------------------------------------- //
 // Notification message
@@ -113,10 +114,10 @@ struct PublishMessage
 };
 
 // Print message to buffer
-int bufferizePublishMessage(const struct PublishMessage* msg, char* buffer, size_t size);
+int bufferizePublishMessage(const struct PublishMessage* x_msg, char* xp_buffer, size_t x_bufferSize);
 
 // Read message from buffer
-int unbufferizePublishMessage(struct PublishMessage* msg, char* data, const char* buffer, size_t size);
+int unbufferizePublishMessage(struct PublishMessage* xp_msg, char* xp_data, const char* x_buffer, size_t x_dataSize);
 
 // -------------------------------------------------------------------------------- //
 
