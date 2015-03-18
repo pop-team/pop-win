@@ -35,7 +35,7 @@ const char* explainMeasurementType(enum MeasurementType x);
 // Different types of measurement
 enum MeasurementUnit
 {
-	UNT_UNKNOWN     = 0,
+	UNT_NONE        = 0,
 	UNT_CELSIUS     = 1,
 	UNT_KELVIN      = 2,
 	UNT_SECONDS     = 3,
@@ -94,10 +94,10 @@ struct NotifyMessage
 };
 
 // Print message to buffer
-int bufferizeNotifyMessage(const struct NotifyMessage* msg, char* buffer, size_t size);
+int bufferizeNotifyMessage(const struct NotifyMessage* x_msg, char* xp_buffer, size_t x_bufferSize);
 
 // Read message from buffer
-int unbufferizeNotifyMessage(struct NotifyMessage* msg, char* data, const char* buffer, size_t size);
+int unbufferizeNotifyMessage(struct NotifyMessage* x_msg, char* xp_data, const char* x_buffer, size_t x_dataSize);
 
 // -------------------------------------------------------------------------------- //
 // Publication message

@@ -27,7 +27,7 @@ public:
 	{
 		measurementType = MSR_LOG;
 		id              = 0;
-		unit            = UNT_UNKNOWN;
+		unit            = UNT_NONE;
 		timeStamp       = 0;
 	}
 	RecordHeader(unsigned int x_timeStamp, const NotifyMessage& x_msg)
@@ -85,7 +85,7 @@ parclass SensorProxy {
 	classuid(1903);
 
 public:
-	SensorProxy(int x_id, const std::string& x_url) @{ od.url(x_url); };
+	SensorProxy(int x_id, const std::string& x_url, const std::string& x_device) @{ od.url(x_url); };
 	~SensorProxy();
 
 	/// Subscribe to a sensor

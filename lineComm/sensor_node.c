@@ -259,6 +259,8 @@ void read_temperature(){
 	uint16_t tempfrac = ((absraw >> 4) % 16) * 625;	
 	char     minus    = ((tempint == 0) & (sign == -1)) ? '-' : ' ';
 
+	DEBUG("Temp %d %d %d  --> %d %d %d", sign, raw, absraw, tempint, tempfrac, (int)minus);
+
 	// Create a temperature notification and send
 	// SEND( "{\"status\":\"OK\", \"infos\":{\"temperature\":\"%c%d.%04d\"}}", minus, tempint, tempfrac);
 

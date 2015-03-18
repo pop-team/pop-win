@@ -27,6 +27,7 @@
 #include <regex.h>
 
 #define BAUDRATE B115200
+/*
 #define BAUDRATE_S "115200"
 #ifdef linux
 #define MODEMDEVICE "/dev/ttyUSB0"
@@ -46,6 +47,7 @@
 #define HCOLS 20
 #define ICOLS 18
 
+
 #define MODE_START_DATE	0
 #define MODE_DATE	1
 #define MODE_START_TEXT	2
@@ -55,19 +57,19 @@
 #define MODE_SLIP_AUTO	6
 #define MODE_SLIP	7
 #define MODE_SLIP_HIDE	8
+*/
 
 using namespace std;
 
-SensorProxy::SensorProxy(int x_id, const std::string& x_url)
+SensorProxy::SensorProxy(int x_id, const std::string& x_url, const string& x_device)
 {
 	m_id = x_id;
 	fd_set mask;
 	speed_t speed = BAUDRATE;
-	const char *device = MODEMDEVICE;
-	m_fd = open(device, O_RDWR | O_NOCTTY | O_NDELAY | O_SYNC );
+	m_fd = open(x_device.c_str(), O_RDWR | O_NOCTTY | O_NDELAY | O_SYNC );
 
 	if (m_fd <0) {
-		throw POPException("Cannot open device", device);
+		throw POPException("Cannot open device", x_device);
 	}
 
 	if (fcntl(m_fd, F_SETFL, 0) < 0) {
@@ -103,7 +105,7 @@ SensorProxy::SensorProxy(int x_id, const std::string& x_url)
 
 	if(m_fd <= 0)
 	{
-		throw POPException("Fail to open " MODEMDEVICE);
+		throw POPException("Fail to open connection to sensor", x_device);
 	}
 
 	printf("port is open on %d\n", m_fd);
@@ -178,8 +180,8 @@ void SensorProxy::SendRawData(const std::string& JSONData)
 void SensorProxy::ReadData(std::ostream& xr_ostream)
 {
 	while(m_listening == true) {   
-		char buf[BUFSIZE+1];
-		int n = read(m_fd, buf, BUFSIZE);
+		char buf[BUFFERSIZE];
+		int n = read(m_fd, buf, sizeof(buf));
 		// printf("n=%d\n", n);
 		/*
 		for(int i = 0; i < n; i++) {
@@ -269,62 +271,71 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 	ms = ms % 1000000; // TODO: Fix buffering problem with int, short, long
 	// cout << "ms" << ms << popcendl;
 
-	switch(getMessageType(x_rawMsg.c_str()))
+	try
 	{
-		case MSG_SUBSCRIBE:
+		switch(getMessageType(x_rawMsg.c_str()))
 		{
-			SubscribeMessage msg;
-			unbufferizeSubscribeMessage(&msg, x_rawMsg.c_str(), x_rawMsg.size());
-
-			cout << "Subscribtion messages not handled yet" << endl;
-
-			// Define here what to do on reception 
-			// ...
-			
-		}
-
-		break;
-		case MSG_NOTIFY:
-		{
-			NotifyMessage msg;
-			char data[32];
-			unbufferizeNotifyMessage(&msg, data, x_rawMsg.c_str(), x_rawMsg.size());
-			switch(msg.dataType)
+			case MSG_SUBSCRIBE:
 			{
-				case TYPE_DOUBLE:
-					m_doubleData.insert(std::pair<RecordHeader, double>(RecordHeader(ms, msg), atof(data))); 
-				break;
-				case TYPE_INT:
-					m_intData.insert(std::pair<RecordHeader, int>(RecordHeader(ms, msg), atoi(data))); 
-				break;
-				case TYPE_STRING:
-				{
-					if(msg.measurementType == MSR_LOG)
-					{
-						cout<< "Remote log message: " << data << popcendl;
-					}
-					else
-					{
-						std::string str(data);
-						m_stringData.insert(std::pair<RecordHeader, std::string>(RecordHeader(ms, msg), str)); 
-					}
-				}
-				break;
-				default:
-					printf("Unknown data type %d in %s\n", msg.dataType, x_rawMsg.c_str());
+				SubscribeMessage msg;
+				if(unbufferizeSubscribeMessage(&msg, x_rawMsg.c_str(), x_rawMsg.size()) <= 0)
+					throw POPException("Cannot unbufferize subscribe message");
+
+				throw POPException("Subscribtion messages not handled yet"); //TODO
+
+				// Define here what to do on reception 
+				// ...
+				
 			}
+
+			break;
+			case MSG_NOTIFY:
+			{
+				NotifyMessage msg;
+				char data[BUFFERSIZE];
+				if(unbufferizeNotifyMessage(&msg, data, x_rawMsg.c_str(), sizeof(data)) <= 0)
+					throw POPException("Cannot unbufferize notify message");
+				switch(msg.dataType)
+				{
+					case TYPE_DOUBLE:
+						m_doubleData.insert(std::pair<RecordHeader, double>(RecordHeader(ms, msg), atof(data))); 
+					break;
+					case TYPE_INT:
+						m_intData.insert(std::pair<RecordHeader, int>(RecordHeader(ms, msg), atoi(data))); 
+					break;
+					case TYPE_STRING:
+					{
+						if(msg.measurementType == MSR_LOG)
+						{
+							cout<< "Remote log message: '" << data << "'" << popcendl;
+						}
+						else
+						{
+							std::string str(data);
+							m_stringData.insert(std::pair<RecordHeader, std::string>(RecordHeader(ms, msg), str)); 
+						}
+					}
+					break;
+					default:
+						printf("Unknown data type %d in %s\n", msg.dataType, x_rawMsg.c_str());
+				}
+			}
+			break;
+			default:
+				// Unknown message: print
+				cout << "Received raw message: '" << x_rawMsg << "'" << popcendl;
 		}
-		break;
-		default:
-			// Unknown message: print
-			cout << "Received raw message: " << x_rawMsg << popcendl;
+	}
+	catch(std::exception &e)
+	{
+		cout << "Error at reception of message '" << x_rawMsg << "': " << e.what() << popcendl;
 	}
 	
 }
 
 void SensorProxy::Publish(int x_publicationType, int x_data)
 {
-	char dataBuffer[32];
+	char dataBuffer[BUFFERSIZE];
 	char buf[BUFFERSIZE];
 	sprintf(dataBuffer, "%d", x_data);
 	// sprintf(message, "{\"function\":4,\"led\":%d}\n", led);
@@ -338,7 +349,8 @@ void SensorProxy::Publish(int x_publicationType, int x_data)
 	msg.dataSize        = strlen(dataBuffer);
 	msg.data            = dataBuffer;
 
-	bufferizePublishMessage(&msg, buf, BUFFERSIZE);
+	if(bufferizePublishMessage(&msg, buf, BUFFERSIZE) <= 0)
+		throw POPException("Cannot bufferize publish message", dataBuffer);
 	// cout<< "Sending " << buf << popcendl;
 	SendRawData(buf);
 }

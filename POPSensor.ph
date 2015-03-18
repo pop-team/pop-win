@@ -33,6 +33,8 @@ public:
 	// void Publish(const std::string& x_message); // TODO: send only relevant data
 	// void Publish(); // TODO: send only relevant data
 	// void Publish(int x_publicationType, double x_data);
+	/// TODO Comment
+	// TODO: Maybe handle enums in popc
 	void Publish(int x_publicationType, int x_data);
 	// void Publish(int x_publicationType, const std::string& x_data);
 

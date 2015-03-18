@@ -14,7 +14,6 @@
 #include <map>
 
 #include "POPSensor.ph"
-#include "lineComm/popwin_messages.h"
 
 using namespace std;
 
@@ -55,9 +54,11 @@ void customCommand(POPSensor& xr_gateway)
 {
 	// Note: for the moment, only temperature is available
 	static const int usecs = 100 * 1000;
-	cout << "input command number (0 to get the list of commands)>>" << popcendl;
+	cout << "Input command number (0 to get the list of commands):" << popcendl;
 	int num = getchar() - '0';
-	cout << "send command " << num << popcendl;
+	while(num == '\n' - '0')
+		num = getchar() - '0';
+	// cout << "send command " << num << popcendl;
 	xr_gateway.Publish(PUB_COMMAND, num);
 }
 
@@ -96,25 +97,31 @@ int main(int argc, char** argv)
 {
 	// Input a list of commands
 	map<char, Command> commands;
-	cout << "q: Quit" <<popcendl;
+	cout << popcendl;
+	cout << "=======================================================================================" <<popcendl;
+	cout << " POPWin demo: type a command to interact with your sensors                             " <<popcendl;
+	cout << "=======================================================================================" <<popcendl;
+	cout << " q: Quit" <<popcendl;
 
-	cout << "a: Ask the sensor to read temperature" <<popcendl;
+	cout << " a: Ask the sensor to read temperature" <<popcendl;
 	commands['a'] = askSensorReadings;
 
-	cout << "b: Make leds blink on sensor" <<popcendl;
+	cout << " b: Make leds blink on sensor" <<popcendl;
 	commands['b'] = blinkLeds;
 
-	cout << "c + <nb>: Send a custom command to sensor. 'c0' should list the available commands." <<popcendl;
+	cout << " c + <nb>: Send a custom command to sensor. 'c0' should list the available commands." <<popcendl;
 	commands['c'] = customCommand;
 
-	cout << "g: Generate test data" <<popcendl;
+	cout << " g: Generate test data" <<popcendl;
 	commands['g'] = generateTestData;
 
-	cout << "e: Clear stored data" <<popcendl;
+	cout << " e: Clear stored data" <<popcendl;
 	commands['e'] = clearData;
 
-	cout << "p: Print stored data" <<popcendl;
+	cout << " p: Print stored data" <<popcendl;
 	commands['p'] = printData;
+	cout << "---------------------------------------------------------------------------------------" <<popcendl;
+	cout << popcendl;
 
 
 	try

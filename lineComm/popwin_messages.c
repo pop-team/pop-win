@@ -55,23 +55,23 @@ int unbufferizeSubscribeMessage(struct SubscribeMessage* msg, const char* buffer
 // Notification message
 
 // Print message to buffer
-int bufferizeNotifyMessage(const struct NotifyMessage* msg, char* buffer, size_t size)
+int bufferizeNotifyMessage(const struct NotifyMessage* x_msg, char* xp_buffer, size_t x_bufferSize)
 {
 	// note: sizeof(size_t) = 2 for contiki but we use 4 for compatibility
-	int ret = snprintf(buffer, size, "%02x %02x %02x %04x %02x %04x %s\n",
+	int ret = snprintf(xp_buffer, x_bufferSize, "%02x %02x %02x %04x %02x %04x %s\n",
 		MSG_NOTIFY,
-		msg->dataType,
-		msg->measurementType,
-		msg->id,
-		msg->unit,
-		(int)msg->dataSize,
-		msg->data
+		x_msg->dataType,
+		x_msg->measurementType,
+		x_msg->id,
+		x_msg->unit,
+		(int)x_msg->dataSize,
+		x_msg->data
 	);
-	return ret > 0 && ret < size;
+	return ret > 0 && ret < x_bufferSize;
 }
 
 // Read message from buffer
-int unbufferizeNotifyMessage(struct NotifyMessage* msg, char* data, const char* buffer, size_t size)
+int unbufferizeNotifyMessage(struct NotifyMessage* xp_msg, char* xp_data, const char* x_buffer, size_t x_dataSize)
 {
 	int mtype = -1;
 	int id    = -1;
@@ -80,7 +80,7 @@ int unbufferizeNotifyMessage(struct NotifyMessage* msg, char* data, const char* 
 	int un    = -1;
 	int dataSize = 0;
 
-	int ret = sscanf(buffer, "%02x %02x %02x %04x %02x %04x",
+	int ret = sscanf(x_buffer, "%02x %02x %02x %04x %02x %04x", // TODO: See if we can handle hexadecimal !!
 		&mtype,
 		&dt,
 		&mt,
@@ -88,16 +88,28 @@ int unbufferizeNotifyMessage(struct NotifyMessage* msg, char* data, const char* 
 		&un,
 		&dataSize
 	);
-	// printf("data %s --> %02x %02x %02x %04x %02x %04d %s\n", buffer, mtype, dt,mt,id,un,dataSize,data);
+	// printf("data %s --> %02x %02x %02x %04x %02x %04d (data) (%d)\n", x_buffer, mtype, dt,mt,id,un,dataSize,/*data,*/ ret);
 	if(ret == 6 && mtype == MSG_NOTIFY)
 	{
-		msg->measurementType = (enum MeasurementType) mt;
-		msg->dataType        = (enum DataType) dt;
-		msg->id              = id;
-		msg->unit            = (enum MeasurementUnit) un;
-		msg->dataSize        = (size_t) dataSize;
-		strcpy(data, buffer + 21 + 1);
-		return 1;
+		xp_msg->measurementType = (enum MeasurementType) mt;
+		xp_msg->dataType        = (enum DataType) dt;
+		xp_msg->id              = id;
+		xp_msg->unit            = (enum MeasurementUnit) un;
+		xp_msg->dataSize        = (size_t) dataSize;
+		if(dataSize + 1 > x_dataSize)
+		{
+			printf("ERROR: Buffer has insufficient size %d > %d\n", dataSize + 1, (int)x_dataSize);
+			return 0;
+		}
+		if(snprintf(xp_data, x_dataSize, "%s", x_buffer + 21 + 1) == dataSize)
+		{
+			return 1;
+		}
+		else
+		{
+			printf("ERROR: Data has the wrong size\n");
+			return 0;
+		}
 	}
 	else return 0;
 }
@@ -199,7 +211,7 @@ const char* explainMeasurementUnit(enum MeasurementUnit x)
 {
 	switch(x)
 	{
-		case UNT_UNKNOWN:     return "none";
+		case UNT_NONE:        return "no unit";
 		case UNT_CELSIUS:     return "celsius";
 		case UNT_KELVIN:      return "kelvin";
 		case UNT_SECONDS:     return "seconds";

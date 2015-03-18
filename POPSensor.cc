@@ -37,7 +37,7 @@ void POPSensor::Connect()
 	for(int i = 0 ; i < 1 ; i++)
 	{
 		cout<<"Creating sensor proxy with id="<<(1000+i)<<popcendl;
-		m_sensorsProxy.push_back(new SensorProxy(1000 + i, "localhost"));
+		m_sensorsProxy.push_back(new SensorProxy(1000 + i, "localhost", "/dev/ttyUSB1"));
 
 		// Subscribe to sensor
 		// m_sensorsProxy.back()->SubscribeMe(*this);
