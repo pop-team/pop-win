@@ -237,19 +237,19 @@ void SensorProxy::StopListening()
 
 map<RecordHeader, double> SensorProxy::RetrieveDataDouble()
 {
-	cout << "Retrieve " << m_doubleData.size() << " records of type double" <<popcendl;
+	// cout << "Retrieve " << m_doubleData.size() << " records of type double" <<popcendl;
 	return m_doubleData;
 }
 
 map<RecordHeader, int> SensorProxy::RetrieveDataInt()
 {
-	cout << "Retrieve " << m_intData.size() << " records of type int" <<popcendl;
+	// cout << "Retrieve " << m_intData.size() << " records of type int" <<popcendl;
 	return m_intData;
 }
 
 map<RecordHeader, string> SensorProxy::RetrieveDataString()
 {
-	cout << "Retrieve " << m_stringData.size() << " records of type string" <<popcendl;
+	// cout << "Retrieve " << m_stringData.size() << " records of type string" <<popcendl;
 	return m_stringData;
 }
 

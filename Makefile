@@ -23,8 +23,8 @@ POPSensor.obj: POPSensor.obj.o POPSensor.phstub.o SensorProxy.stub.o popwin_mess
 SensorProxy.obj: SensorProxy.obj.o SensorProxy.phstub.o POPSensor.stub.o popwin_messages.o
 	${POPCC} -object -o SensorProxy.obj SensorProxy.obj.o SensorProxy.phstub.o POPSensor.stub.o popwin_messages.o
 
-main: main.obj.o POPSensor.stub.o SensorProxy.stub.o 
-	${POPCC} -o main main.obj.o POPSensor.stub.o SensorProxy.stub.o
+main: main.obj.o POPSensor.stub.o SensorProxy.stub.o popwin_messages.o
+	${POPCC} -o main main.obj.o POPSensor.stub.o SensorProxy.stub.o popwin_messages.o
 
 objects.map: POPSensor.obj SensorProxy.obj
 	./POPSensor.obj -listlong > objects.map

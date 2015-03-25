@@ -37,7 +37,7 @@ void POPSensor::Connect()
 	for(int i = 0 ; i < 1 ; i++)
 	{
 		cout<<"Creating sensor proxy with id="<<(1000+i)<<popcendl;
-		m_sensorsProxy.push_back(new SensorProxy(1000 + i, "localhost", "/dev/ttyUSB1"));
+		m_sensorsProxy.push_back(new SensorProxy(1000 + i, "localhost", "/dev/ttyUSB0"));
 
 		// Subscribe to sensor
 		// m_sensorsProxy.back()->SubscribeMe(*this);
@@ -71,43 +71,37 @@ void POPSensor::StopListening()
 	}
 }
 
-void POPSensor::RetrieveDataDouble()
+map<RecordHeader, double> POPSensor::RetrieveDataDouble()
 {
+	map<RecordHeader, double> records;
 	for(auto it : m_sensorsProxy)
 	{
-		map<RecordHeader, double> gatheredData(it->RetrieveDataDouble());
-		cout << "Records found on proxy: "<< gatheredData.size() << popcendl;
-		for(auto elem : gatheredData)
-		{
-			cout<< ">>" << elem.first.timeStamp << " id:" << elem.first.id << " type:" << explainMeasurementType(elem.first.measurementType) << " unit:" << explainMeasurementUnit(elem.first.unit) << ": " << elem.second << popcendl;
-		}
+		auto gatheredData(it->RetrieveDataDouble());
+		records.insert(gatheredData.begin(), gatheredData.end());
 	}
+	return records;
 }
 
-void POPSensor::RetrieveDataInt()
+map<RecordHeader, int> POPSensor::RetrieveDataInt()
 {
+	map<RecordHeader, int> records;
 	for(auto it : m_sensorsProxy)
 	{
-		map<RecordHeader, int> gatheredData(it->RetrieveDataInt());
-		cout << "Records found on proxy: "<< gatheredData.size() << popcendl;
-		for(auto elem : gatheredData)
-		{
-			cout<< ">>" << elem.first.timeStamp << " id:" << elem.first.id << " type:" << explainMeasurementType(elem.first.measurementType) << " unit:" << explainMeasurementUnit(elem.first.unit) << ": " << elem.second << popcendl;
-		}
+		auto gatheredData(it->RetrieveDataInt());
+		records.insert(gatheredData.begin(), gatheredData.end());
 	}
+	return records;
 }
 
-void POPSensor::RetrieveDataString()
+map<RecordHeader, string> POPSensor::RetrieveDataString()
 {
+	map<RecordHeader, string> records;
 	for(auto it : m_sensorsProxy)
 	{
-		map<RecordHeader, string> gatheredData(it->RetrieveDataString());
-		cout << "Records found on proxy: "<< gatheredData.size() << popcendl;
-		for(auto elem : gatheredData)
-		{
-			cout<< ">>" << elem.first.timeStamp << " id:" << elem.first.id << " type:" << explainMeasurementType(elem.first.measurementType) << " unit:" << explainMeasurementUnit(elem.first.unit) << ": " << elem.second << popcendl;
-		}
+		auto gatheredData(it->RetrieveDataString());
+		records.insert(gatheredData.begin(), gatheredData.end());
 	}
+	return records;
 }
 
 void POPSensor::ClearData()

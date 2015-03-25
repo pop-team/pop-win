@@ -49,7 +49,7 @@ void askSensorReadings(POPSensor& xr_gateway)
 	}
 }
 
-/// Ask temperature and acceleration readings 
+/// Send a custom command
 void customCommand(POPSensor& xr_gateway)
 {
 	// Note: for the moment, only temperature is available
@@ -88,9 +88,29 @@ void clearData(POPSensor& xr_gateway)
 /// Ask the remote to generate test data
 void printData(POPSensor& xr_gateway)
 {
-	xr_gateway.RetrieveDataDouble();
-	xr_gateway.RetrieveDataInt();
-	xr_gateway.RetrieveDataString();
+	// Print double data
+	auto gatheredDataDouble(xr_gateway.RetrieveDataDouble());
+	cout << "\nRecords found on proxy <double>: "<< gatheredDataDouble.size() << popcendl;
+	for(auto elem : gatheredDataDouble)
+	{
+		cout<< ">>" << elem.first << " -- " << elem.second << popcendl;
+	}
+
+	// Print int data
+	auto gatheredDataInt(xr_gateway.RetrieveDataInt());
+	cout << "\nRecords found on proxy <int>: "<< gatheredDataInt.size() << popcendl;
+	for(auto elem : gatheredDataInt)
+	{
+		cout<< ">>" << elem.first << " -- " << elem.second << popcendl;
+	}
+
+	// Print string data
+	auto gatheredDataString(xr_gateway.RetrieveDataString());
+	cout << "\nRecords found on proxy <string>: "<< gatheredDataString.size() << popcendl;
+	for(auto elem : gatheredDataString)
+	{
+		cout<< ">>" << elem.first << " -- " << elem.second << popcendl;
+	}
 }
 
 int main(int argc, char** argv)
