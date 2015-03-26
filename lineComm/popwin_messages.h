@@ -28,7 +28,9 @@ enum MeasurementType
 	MSR_COMMAND     = 1, // commands can be seen as a notification. This is useful for debug but can be removed in the final version 
 	MSR_TEMPERATURE = 2, // temperature measurement
 	MSR_VIBRATION   = 3, // vibration measurement
-	MSR_TEST        = 4  // vibration measurement
+	MSR_TEST        = 4, // test data
+	MSR_ACCELERATION= 5, // acceleration measurement
+	MSR_LIGHT       = 6  // acceleration measurement
 	// ... //
 };
 const char* explainMeasurementType(enum MeasurementType x);
@@ -49,7 +51,7 @@ const char* explainMeasurementUnit(enum MeasurementUnit x);
 enum PublicationType
 {
 	PUB_COMMAND     = 0, // commands can be seen as publications
-	PUB_LED         = 1 
+	PUB_LED         = 1  // blink a led
 	// ... //
 };
 
@@ -70,10 +72,12 @@ enum DataType
 
 struct SubscribeMessage
 {
-	unsigned short       id;
+	unsigned short       id;               // Id is not mandatory. Only for convenience
 	enum MeasurementType measurementType;
 	enum DataType        dataType;
 };
+
+// note: UnSubscribe message has the same structure as publish messages
 
 // Print message to buffer
 int bufferizeSubscribeMessage(const struct SubscribeMessage* x_msg, char* xp_buffer, size_t x_bufferSize);
@@ -107,11 +111,13 @@ struct PublishMessage
 {
 	enum PublicationType publicationType;
 	enum DataType        dataType;
-	unsigned short       id;
+	unsigned short       id;               // not mandatory, for convenience
 	// enum MeasurementUnit unit;
 	size_t               dataSize;
 	char*                data;
 };
+
+// Note: no unpublish message for the first version. The structure will be similar to publish messages
 
 // Print message to buffer
 int bufferizePublishMessage(const struct PublishMessage* x_msg, char* xp_buffer, size_t x_bufferSize);
