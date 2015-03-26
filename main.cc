@@ -70,11 +70,13 @@ void generateTestData(POPSensor& xr_gateway)
 	{
 		// Each command generates 10 sanples of data (types: double, int, string)
 		xr_gateway.Publish(PUB_COMMAND, 2);
+		usleep(0.1 * 1000000);
 		xr_gateway.Publish(PUB_COMMAND, 3);
+		usleep(0.1 * 1000000);
 		xr_gateway.Publish(PUB_COMMAND, 4);
 
 		// Wait a bit to avoid overloading the mote
-		usleep(0.3 * 1000000);
+		usleep(0.1 * 1000000);
 	}
 }
 
