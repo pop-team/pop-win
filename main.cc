@@ -66,17 +66,17 @@ void customCommand(POPSensor& xr_gateway)
 /// Ask the remote to generate test data
 void generateTestData(POPSensor& xr_gateway)
 {
-	for(int i = 0 ; i < 10 ; i++)
+	for(int i = 0 ; i < 5 ; i++)
 	{
 		// Each command generates 10 sanples of data (types: double, int, string)
 		xr_gateway.Publish(PUB_COMMAND, 2);
-		usleep(0.1 * 1000000);
+		usleep(0.3 * 1000000);
 		xr_gateway.Publish(PUB_COMMAND, 3);
-		usleep(0.1 * 1000000);
+		usleep(0.3 * 1000000);
 		xr_gateway.Publish(PUB_COMMAND, 4);
 
 		// Wait a bit to avoid overloading the mote
-		usleep(0.1 * 1000000);
+		usleep(0.3 * 1000000);
 	}
 }
 
@@ -163,16 +163,24 @@ int main(int argc, char** argv)
 				c = getchar();
 			if(c == 'q')
 				break;
-			auto cmd = commands.find(c);
-			if(cmd != commands.end())
+
+			try
 			{
-				(*cmd->second)(gateway);
-				c = '\n';
+				auto cmd = commands.find(c);
+				if(cmd != commands.end())
+				{
+					(*cmd->second)(gateway);
+					c = '\n';
+				}
+				else
+				{
+					cout << "No command for " << c << popcendl;
+					c = '\n';
+				}
 			}
-			else
+			catch(POPException &e)
 			{
-				cout << "No command for " << c << popcendl;
-				c = '\n';
+				cout<<"Cannot execute command. Received exception: " << e.what() << popcendl;
 			}
 		}
 

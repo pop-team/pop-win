@@ -139,6 +139,7 @@ const char* g_commandNames[NB_COMMANDS]    = {"list_functions", "read_temperatur
 
 void handlePublication();
 void handleNotification();
+void handleSubscription();
 
 int sscanf ( const char * s, const char * format, ...);
 size_t strlen ( const char * str );
@@ -150,6 +151,7 @@ void * memset ( void * ptr, int value, size_t num );
 void logging(const char *format,...);
 
 int g_id = 555; // TODO: The id should come from the mote itself
+char g_busy = 0;
 
 void sendSubscriptionSerial(const struct SubscribeMessage* msg)
 {
@@ -198,11 +200,11 @@ PROCESS(broadcast_process, "Broadcast process");
 PROCESS(unicast_process, "Unicast process");
 PROCESS(drw, "Directional Random Walk");
 PROCESS(init_com_process, "Init communication process");
-PROCESS(blink_process, "blink example");
+PROCESS(button_pressed, "blink example");
 
 /* The AUTOSTART_PROCESSES() definition specifices what processes to
    start when this module is loaded. We put our processes there. */
-AUTOSTART_PROCESSES(&broadcast_process, &unicast_process, &drw, &init_com_process, &blink_process);
+AUTOSTART_PROCESSES(&broadcast_process, &unicast_process, &drw, &init_com_process, &button_pressed);
 /*---------------------------------------------------------------------------*/
 
 
@@ -711,41 +713,45 @@ PROCESS_THREAD(init_com_process, ev, data)
 
 	while(1) {
 		/* Do the rest of the stuff here. */ 
-		PROCESS_YIELD();
-		PROCESS_WAIT_EVENT_UNTIL((ev==serial_line_event_message) && (data != NULL));
-		DEBUG("The mote received an interruption on serial line");
-
-		// We received a message from gateway:
-		// switch on the different types of message
-		DEBUG("Handle msg type %d", getMessageType(data));
-		switch(getMessageType(data))
+		PROCESS_WAIT_EVENT_UNTIL((ev==serial_line_event_message));
+		if(data == NULL)
 		{
-			case MSG_SUBSCRIBE:
-			{
-				struct SubscribeMessage msg;
-				memset(&msg, 0, sizeof(msg));
-				if(unbufferizeSubscribeMessage(&msg, data) <= 0)
-					ERROR("Cannot read message from buffer");
-
-				// Define here what to do on reception 
-				// ...
-				LOG("Gateway has subscribed");
-			}
-			break;
-			case MSG_PUBLISH:
-			{
-				handlePublication(data);
-			}
-			break;
-			case MSG_NOTIFY:
-			{
-				handleNotification(data);
-			}
-			break;
-			default:
-				// Unknown message type
-				ERROR("Unknown message type");
+			DEBUG("Received empty data");
+			continue;
 		}
+
+		if(g_busy == 0)
+		{
+			g_busy = 1;
+			DEBUG("The mote received an interruption on serial line: %s", data);
+
+			// We received a message from gateway:
+			// switch on the different types of message
+			DEBUG("Handle msg type %d", getMessageType(data));
+			switch(getMessageType(data))
+			{
+				case MSG_SUBSCRIBE:
+				{
+					handleSubscription();
+				}
+				break;
+				case MSG_PUBLISH:
+				{
+					handlePublication(data);
+				}
+				break;
+				case MSG_NOTIFY:
+				{
+					handleNotification(data);
+				}
+				break;
+				default:
+					// Unknown message type
+					ERROR("Unknown message type");
+			}
+			g_busy = 0;
+		}
+		else ERROR("Device is busy. Cannot process message");
 	}		
 exit:
 	leds_off(LEDS_ALL);
@@ -759,6 +765,21 @@ void handleNotification(const char* data)
 {
 	// To be written
 	
+}
+
+/*
+ * Handle notification messages from gateway
+ */
+void handleSubscription(const char* data)
+{
+	struct SubscribeMessage msg;
+	memset(&msg, 0, sizeof(msg));
+	if(unbufferizeSubscribeMessage(&msg, data) <= 0)
+		ERROR("Cannot read message from buffer");
+
+	// Define here what to do on reception 
+	// ...
+	LOG("Gateway has subscribed");
 }
 
 /*
@@ -832,7 +853,7 @@ void handlePublication(const char* data)
 }
 
 /****************************/
-/******** FUNCTIONS *********/
+/******** COMMANDS  *********/
 /****************************/
 
 /*
@@ -852,7 +873,7 @@ void list_functions()
  * Return data to the gateway
  */
 void read_temperature(){
-	/*
+	/* TODO
 	int16_t sign    = 1;
 	int16_t  raw    = tmp102_read_temp_raw();
 	uint16_t absraw = raw;
@@ -952,7 +973,7 @@ void generate_test_data_string(){
 //-----------------------------------------------------------------   
 // A simple thread to check that the mote is working: print a message and change led state
 //-----------------------------------------------------------------
-PROCESS_THREAD(blink_process, ev, data)
+PROCESS_THREAD(button_pressed, ev, data)
 {   
 	PROCESS_EXITHANDLER(goto exit);
 	PROCESS_BEGIN();
@@ -985,8 +1006,7 @@ exit:
 	PROCESS_END();
 }
 
-// TODO : use
-// Include the sources for sscanf. Not in Contiki
+// Include the sources of external files for compilation
 #include "scanf.c"
 #include "popwin_messages.c"
 

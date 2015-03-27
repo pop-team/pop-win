@@ -108,9 +108,6 @@ SensorProxy::SensorProxy(int x_id, const std::string& x_url, const string& x_dev
 	{
 		throw POPException("Fail to open connection to sensor", x_device);
 	}
-
-	printf("port is open on %d\n", m_fd);
-
 }
 
 SensorProxy::~SensorProxy()
@@ -182,7 +179,7 @@ void SensorProxy::SendRawData(const std::string& JSONData)
 void SensorProxy::ReadData(std::ostream& xr_ostream)
 {
 	while(m_listening == true) {   
-		char buf[BUFFERSIZE];
+		char buf[BUFFERSIZE+1];
 		int n = read(m_fd, buf, sizeof(buf));
 		// printf("n=%d\n", n);
 		/*
@@ -192,8 +189,8 @@ void SensorProxy::ReadData(std::ostream& xr_ostream)
 		*/
 		if(n==0)
 		{
-			// read(...) is not blocking. Add a sleep to reduce the charge when inactive // TODO: Improve ?
-			usleep(100000); // sleep 100 ms
+			// read(...) is not blocking. Add a sleep to reduce the charge when inactive
+			usleep(10000); // sleep 10 ms
 			continue;
 		}
 		// note: buffer should be null terminated to be concatenated to string
@@ -353,7 +350,7 @@ void SensorProxy::Publish(int x_publicationType, int x_data)
 
 	if(bufferizePublishMessage(&msg, buf, BUFFERSIZE) <= 0)
 		throw POPException("Cannot bufferize publish message", dataBuffer);
-	// cout<< "Sending " << buf << popcendl;
+	cout<< "Sending " << buf << popcendl;
 	SendRawData(buf);
 }
 

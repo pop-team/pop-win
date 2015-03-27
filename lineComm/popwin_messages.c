@@ -101,13 +101,14 @@ int unbufferizeNotifyMessage(struct NotifyMessage* xp_msg, char* xp_data, const 
 			printf("ERROR: Buffer has insufficient size %d > %d\n", dataSize + 1, (int)x_dataSize);
 			return 0;
 		}
-		if(snprintf(xp_data, x_dataSize, "%s", x_buffer + 21 + 1) == dataSize)
+		int s = snprintf(xp_data, x_dataSize, "%s", x_buffer + 21 + 1);
+		if(s == dataSize)
 		{
 			return 1;
 		}
 		else
 		{
-			printf("ERROR: Data has the wrong size\n");
+			printf("ERROR: Data has the wrong size %d!=%d\n", s, dataSize);
 			return 0;
 		}
 	}
@@ -154,8 +155,9 @@ int unbufferizePublishMessage(struct PublishMessage* xp_msg, char* xp_data, cons
 	// printf("data %s --> %02x %02x %02x %04x %02x %04d %s\n", buffer, mtype, dt,mt,id,un,dataSize,data);
 	if(ret == 5 && mtype == MSG_PUBLISH)
 	{
-		xp_msg->publicationType = (enum PublicationType) mt;
+		xp_msg->publicationType = (enum PublicationType) mtype;
 		xp_msg->dataType        = (enum DataType) dt;
+		xp_msg->publicationType = (enum PublicationType) mt;
 		xp_msg->id              = id;
 		// msg->unit            = (enum PublicationUnit) un;
 		xp_msg->dataSize        = (size_t) dataSize;
@@ -164,13 +166,14 @@ int unbufferizePublishMessage(struct PublishMessage* xp_msg, char* xp_data, cons
 			printf("ERROR: Buffer has insufficient size %d > %d\n", dataSize + 1, (int)x_dataSize);
 			return 0;
 		}
-		if(snprintf(xp_data, x_dataSize, "%s", x_buffer + 18 + 1) == dataSize)
+		int s = snprintf(xp_data, x_dataSize, "%s", x_buffer + 18 + 1);
+		if(s == dataSize)
 		{
 			return 1;
 		}
 		else
 		{
-			printf("ERROR: Data has the wrong size\n");
+			printf("ERROR: Data has the wrong size %d!=%d\n", s, dataSize);
 			return 0;
 		}
 	}
