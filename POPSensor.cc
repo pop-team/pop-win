@@ -13,8 +13,8 @@
 #include "SensorProxy.ph"
 #include <unistd.h>
 
-
 using namespace std;
+
 
 POPSensor::POPSensor(const std::string& x_url)
 {
@@ -34,10 +34,19 @@ POPSensor::~POPSensor()
 void POPSensor::Connect()
 {
 	// TODO: Handle resource description files
-	for(int i = 0 ; i < 1 ; i++)
+	for(int i = 0 ; i < 4 ; i++)
 	{
-		cout<<"Creating sensor proxy with id="<<(1000+i)<<popcendl;
-		m_sensorsProxy.push_back(new SensorProxy(1000 + i, "localhost", "/dev/ttyUSB0"));
+		stringstream port;
+		port << "/dev/ttyUSB" << i;
+		try
+		{
+			m_sensorsProxy.push_back(new SensorProxy(1000 + i, "localhost", port.str()));
+			cout<<"Creating sensor proxy with id="<<(1000+i)<<" on port "<<port.str()<<popcendl;
+		}
+		catch(...)
+		{
+			// cout<<"Cannot create a sensor proxy on port "<<port.str()<<popcendl;
+		}
 
 		// Subscribe to sensor
 		// m_sensorsProxy.back()->SubscribeMe(*this);
@@ -45,6 +54,10 @@ void POPSensor::Connect()
 		// m_sensorsProxy.back()->SubscribeMe(tmp);
 		// m_sensorsProxy.back()->SubscribeMe(*__POPThis_POPSensor);
 	}
+	cout<<"Created "<<m_sensorsProxy.size()<<" sensor proxy objects"<<popcendl;
+
+	if(m_sensorsProxy.empty())
+		throw POPException("No sensor proxy could be create. Did you connect the gateway mote via USB ?");
 }
 
 /// Subscribe to a sensor
