@@ -26,6 +26,7 @@
 #include <time.h>
 #include <regex.h>
 
+// Note: check baudrate of USB port with : stty -F /dev/ttyUSB0
 #define BAUDRATE B115200
 /*
 #define BAUDRATE_S "115200"
@@ -109,6 +110,7 @@ SensorProxy::SensorProxy(int x_id, const std::string& x_url, const string& x_dev
 	}
 
 	printf("port is open on %d\n", m_fd);
+
 }
 
 SensorProxy::~SensorProxy()

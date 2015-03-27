@@ -45,16 +45,29 @@ void * memset ( void * ptr, int value, size_t num );
 #include "popwin_messages.h" // Note: should be declared here
 
 // Declaration of local functions
+
+// Send a subscribtion message: Only for use on the remote sensor
+void sendSubscriptionSerial(const struct SubscribeMessage* msg);
+// send a notification message: Only for use on the remote sensor
+void sendNotificationSerial(const struct NotifyMessage* msg);
+/// Log message (handled as a notification of type string): Only for use on the remote sensor
 void logging(const char *format,...);
+/// Handle a publication message from serial line
 void handlePublication();
+/// Handle a notification message from serial line
 void handleNotification();
 
 // Id of the mote
 int   g_id = 444;
 
 
-// Send a subscribtion message
-void sendSubscription(const struct SubscribeMessage* msg)
+// -------------------------------------------------------------------------------- //
+//
+// Message functions for communication on serial line: mote -> PC
+//
+
+// Send a subscribtion message: Only for use on the remote sensor
+void sendSubscriptionSerial(const struct SubscribeMessage* msg)
 {
 	char buf[BUFFERSIZE];
 	if(bufferizeSubscribeMessage(msg, buf, sizeof(buf)) <= 0)
@@ -64,8 +77,8 @@ void sendSubscription(const struct SubscribeMessage* msg)
 	printf(buf);
 }
 
-// send a notification message
-void sendNotification(const struct NotifyMessage* msg)
+// send a notification message: Only for use on the remote sensor
+void sendNotificationSerial(const struct NotifyMessage* msg)
 {
 	char buf[BUFFERSIZE];
 	if(bufferizeNotifyMessage(msg, buf, sizeof(buf)) <= 0)
@@ -75,7 +88,7 @@ void sendNotification(const struct NotifyMessage* msg)
 	printf(buf);
 }
 
-/// Log message (handled as a notification of type string)
+/// Log message (handled as a notification of type string): Only for use on the remote sensor
 void logging(const char *format,...)
 {
 	char buf[BUFFERSIZE];
@@ -91,7 +104,7 @@ void logging(const char *format,...)
 	msg.id              = g_id;
 	msg.data            = buf;
 	msg.dataSize        = strlen(buf);
-	sendNotification(&msg);
+	sendNotificationSerial(&msg);
 }
 
 //--------------------------------------------------------------- 
@@ -269,12 +282,12 @@ void read_temperature(){
 	struct NotifyMessage msg;
 	memset(&msg, 0, sizeof(msg));
 	msg.measurementType = MSR_TEMPERATURE;
-	msg.dataType        = TYPE_INT;
+	msg.dataType        = TYPE_DOUBLE;
 	msg.unit            = UNT_CELSIUS;
 	msg.id              = g_id;
 	msg.data            = data;
 	msg.dataSize        = strlen(data);
-	sendNotification(&msg);
+	sendNotificationSerial(&msg);
 }
 
 /*
@@ -297,7 +310,7 @@ void generate_test_data_double(){
 		msg.id              = g_id;
 		msg.data            = data;
 		msg.dataSize        = strlen(data);
-		sendNotification(&msg);
+		sendNotificationSerial(&msg);
 	}
 }
 
@@ -319,7 +332,7 @@ void generate_test_data_int(){
 		msg.id              = g_id;
 		msg.data            = data;
 		msg.dataSize        = strlen(data);
-		sendNotification(&msg);
+		sendNotificationSerial(&msg);
 	}
 }
 
@@ -339,7 +352,7 @@ void generate_test_data_string(){
 		msg.id              = g_id;
 		msg.data            = data;
 		msg.dataSize        = strlen(data);
-		sendNotification(&msg);
+		sendNotificationSerial(&msg);
 	}
 }
 

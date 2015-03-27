@@ -232,3 +232,4 @@ const char* explainMeasurementUnit(enum MeasurementUnit x)
 		default:              return "unknown";
 	}
 }
+

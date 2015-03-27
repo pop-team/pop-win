@@ -47,7 +47,7 @@
 
 int isspace ( int c );
 int isdigit ( int c );
-char * strchr ( const char * str, int character );
+// char * strchr ( const char * str, int character );
 // char * strchr (       char * str, int character );
 
 	static char *
