@@ -350,7 +350,7 @@ void SensorProxy::Publish(int x_publicationType, int x_data)
 
 	if(bufferizePublishMessage(&msg, buf, BUFFERSIZE) <= 0)
 		throw POPException("Cannot bufferize publish message", dataBuffer);
-	cout<< "Sending " << buf << popcendl;
+	// cout<< "Sending " << buf << popcendl;
 	SendRawData(buf);
 }
 
