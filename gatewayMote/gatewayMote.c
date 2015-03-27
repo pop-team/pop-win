@@ -109,7 +109,7 @@ LIST(neighbors_list);
 static struct broadcast_conn broadcast;
 static struct unicast_conn unicast;
 
-// Our error message
+// Macros for messaging
 #define ERROR(__msg__) LOG("Error in %s:%d: %s", __FILE__, __LINE__, __msg__)
 #define LOG(...)       logging(__VA_ARGS__)
 #if 1 // Set to 1 to enable debug logs
@@ -150,9 +150,11 @@ void * memset ( void * ptr, int value, size_t num );
 
 void logging(const char *format,...);
 
+// Global variables for the gateway mote
 int g_id = 555; // TODO: The id should come from the mote itself
 char g_busy = 0;
 
+// send a subscription message
 void sendSubscriptionSerial(const struct SubscribeMessage* msg)
 {
 	char buf[BUFFERSIZE];
