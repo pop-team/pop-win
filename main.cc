@@ -8,7 +8,6 @@
  *
  */
 
-// TODO LW: Check that exceptions are correctly handled. E.g. sensor disconnected
 #include <unistd.h>
 #include <termios.h>
 #include <map>
