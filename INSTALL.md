@@ -110,14 +110,17 @@ In case of problem with the installation, please refer to the README file contai
 	sudo make install
 
 ```
-Type 'y' and enter and do not forget to add POPC_LOCATION to your path as specified at the end of the installation.
+Type 'y' and enter and do not forget to add POPC_LOCATION to your path as specified at the end of the installation. Then restart another shell.
 
 #### Installation of Contiki
 Contiki must be installed as mentionned above. The version to install is 2.6.
 
 ```
-	git clone git://github.com/contiki-os/contiki.git -b 2.6-rc0
+	git clone git://github.com/contiki-os/contiki.git
+	git checkout -b 2.6 2.6-rc0
 ```
+
+Do not forget to install the mentionned patch for **cpu/msp430/Makefile.msp430**
 
 #### Download and compile the sources of POPWin
 
@@ -129,6 +132,7 @@ Contiki must be installed as mentionned above. The version to install is 2.6.
 
 #### Install the application on the gateway mote
 - Connect the mote to your PC. In our setup we use a Zolertia z1 mote
+- Go to the **gatewayMote/** directory inside popwin
 - Modify the Makefile to point to your contiki directory
 
 Makefile:
@@ -203,13 +207,15 @@ Troubleshooting
 ### Problem
 The sensors outputs garbage characters with serialdump or nothing at all
 ### Solution
-The reset (using the sensor button) is not handled properly. You need to unplug the device of USB port and plug it back in after at least 5 seconds.
+- The reset (using the sensor button) is not handled properly. You need to unplug the device of USB port and plug it back in after at least 5 seconds.
 
-And also check that the baudrate of your port is set to 115200. You can get the current value with:
+- And also check that the baudrate of your port is set to 115200. You can get the current value with:
 
 	stty -F /dev/ttyUSB0
 
 The SensorProxy class of POPWin will try to reset the value to 115200 but this does apparently not work each time.
+
+- It seems that the upload of a program on the mote does not succeed each time (this problem appeared with contiki 2.6). The upload may have to be repeated many times ... annoying.
 
 ### Problem
 Cannot compile application with Contiki 2.6:
