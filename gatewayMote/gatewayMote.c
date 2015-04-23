@@ -35,7 +35,7 @@
 #define ERROR(__msg__) LOG("Error in %s:%d: %s", __FILE__, __LINE__, __msg__)
 #define LOG(...)       logging(__VA_ARGS__)
 #if 1 // Set to 1 to enable debug logs
-#define DEBUG(...)       logging(__VA_ARGS__)
+#define DEBUG(...)       {if(g_debug){logging(__VA_ARGS__);}}
 #else
 #define DEBUG(...)
 #endif
@@ -52,12 +52,13 @@ void generate_test_data_int();
 void generate_test_data_string();
 void print_id();
 void send_broadcast();
+void toggle_debug();
 
 // All functions are stored in a table
 typedef void (*FunctionCall)(void);
-#define NB_COMMANDS 7
-const FunctionCall g_commands[NB_COMMANDS] = {list_functions, read_temperature, generate_test_data_double, generate_test_data_int, generate_test_data_string, print_id, send_broadcast};
-const char* g_commandNames[NB_COMMANDS]    = {"list_functions", "read_temperature", "generate_test_data_double", "generate_test_data_int", "generate_test_data_string", "print_id", "send_broadcast"};
+#define NB_COMMANDS 8
+const FunctionCall g_commands[NB_COMMANDS] = {list_functions, read_temperature, generate_test_data_double, generate_test_data_int, generate_test_data_string, print_id, send_broadcast, toggle_debug};
+const char* g_commandNames[NB_COMMANDS]    = {"list_functions", "read_temperature", "generate_test_data_double", "generate_test_data_int", "generate_test_data_string", "print_id", "send_broadcast", "toggle_debug"};
 
 /****************************/
 /*** DECLARE FUNCTIONS      */
@@ -79,7 +80,8 @@ void logging(const char *format,...);
 /****************************/
 /*** GLOBAL VARIABLES       */
 /****************************/
-char g_busy = 0;
+char g_busy  = 0;
+char g_debug = 1;
 
 // send a subscription message
 void sendSubscriptionSerial(const struct SubscribeMessage* msg)
@@ -229,8 +231,18 @@ exit:
  */
 void handleNotification(const char* data)
 {
-	// To be written TODO
-	
+	struct NotifyMessage msg;
+	memset(&msg, 0, sizeof(msg));
+	char data2[BUFFERSIZE];
+	if(unbufferizeNotifyMessage(&msg, data2, data, sizeof(data2)) <= 0)
+		ERROR("Cannot read message from buffer");
+
+	// 
+	// Define here what to do on reception
+	// ...
+	LOG("Gateway has sent notification: %s", data);
+
+	// note: no action. See if it makes sense to handle notifications from gateway
 }
 
 /*
@@ -244,7 +256,7 @@ void handleSubscription(const char* data)
 		ERROR("Cannot read message from buffer");
 
 	// 
-	// Define here what to do on reception  TODO
+	// Define here what to do on reception  TODO for UNIGE
 	// ...
 	LOG("Gateway has subscribed");
 }
@@ -266,8 +278,7 @@ void handlePublication(const char* data)
 	{
 		case TYPE_DOUBLE:
 		{
-			// double d = atof(dataBuffer);
-			ERROR("no notification TYPE_DOUBLE");
+			ERROR("notifications of type TYPE_DOUBLE are not handled yet");
 		}
 		break;
 		case TYPE_INT:
@@ -311,7 +322,7 @@ void handlePublication(const char* data)
 		break;
 		case TYPE_STRING:
 		{
-			ERROR("no publication TYPE_STRING");
+			ERROR("notifications of type TYPE_STRING are not handled yet");
 		}
 		break;
 		default:
@@ -452,6 +463,15 @@ void send_broadcast(){
 	broadcast_send(&broadcast);
 	LOG("broadcast message sent");
 }
+
+/*
+ * Turn debug messages on/off
+ */
+void toggle_debug(){
+	g_debug = !g_debug;
+	LOG("Debug messages %s", g_debug ? "on" : "off");
+}
+
 
 //-----------------------------------------------------------------   
 // A simple thread to check that the mote is working: print a message and change led state

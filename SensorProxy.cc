@@ -178,7 +178,7 @@ void SensorProxy::SendRawData(const std::string& JSONData)
 
 void SensorProxy::ReadData(std::ostream& xr_ostream)
 {
-	while(m_listening == true) {   
+	while(m_listening.load()) {   
 		char buf[BUFFERSIZE+1];
 		int n = read(m_fd, buf, sizeof(buf));
 		// printf("n=%d\n", n);
@@ -207,8 +207,8 @@ void SensorProxy::ReadData(std::ostream& xr_ostream)
 
 void SensorProxy::StartListening()
 {
-	m_listening = true;
-	while(m_listening == true)
+	m_listening.store(true);
+	while(m_listening.load())
 	{
 		stringstream received;
 		ReadData(received);
@@ -231,7 +231,7 @@ void SensorProxy::StartListening()
 
 void SensorProxy::StopListening()
 {
-	m_listening = false; // TODO: See if we must protect this var
+	m_listening.store(false);
 }
 
 map<RecordHeader, double> SensorProxy::RetrieveDataDouble()
@@ -266,8 +266,7 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 	// cout << "received" << x_rawMsg << popcendl;
 	struct timeval time_now;
 	gettimeofday(&time_now, NULL);
-	unsigned int ms = time_now.tv_sec * 1000 + time_now.tv_usec / 1000;
-	ms = ms % 1000000; // TODO: Fix buffering problem with int, short, long
+	long ms = time_now.tv_sec * 1000 + time_now.tv_usec / 1000;
 	// cout << "ms" << ms << popcendl;
 
 	try
@@ -332,6 +331,31 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 	
 }
 
+
+
+void SensorProxy::Notify(int x_measurementType, int x_measurementUnit, const std::string& x_message)
+{
+	// note: only string messages are implemented. Other types can be trivially implemented
+	char dataBuffer[BUFFERSIZE];
+	char buf[BUFFERSIZE];
+	sprintf(dataBuffer, "%s", x_message.c_str());
+
+	struct NotifyMessage msg;
+	memset(&msg, 0, sizeof(struct NotifyMessage));
+	msg.measurementType = static_cast<MeasurementType>(x_measurementType);
+	msg.dataType        = TYPE_STRING;
+	msg.unit            = static_cast<MeasurementUnit>(x_measurementUnit);
+	msg.id              = m_id;
+	msg.dataSize        = strlen(dataBuffer);
+	msg.data            = dataBuffer;
+
+	if(bufferizeNotifyMessage(&msg, buf, BUFFERSIZE) <= 0)
+		throw POPException("Cannot bufferize publish message", dataBuffer);
+	// cout<< "Sending " << buf << popcendl;
+	SendRawData(buf);
+	
+}
+
 void SensorProxy::Publish(int x_publicationType, int x_data)
 {
 	char dataBuffer[BUFFERSIZE];
@@ -341,7 +365,7 @@ void SensorProxy::Publish(int x_publicationType, int x_data)
 
 	struct PublishMessage msg;
 	memset(&msg, 0, sizeof(struct PublishMessage));
-	msg.publicationType = (PublicationType) x_publicationType;
+	msg.publicationType = static_cast<PublicationType>(x_publicationType);
 	msg.dataType        = TYPE_INT;
 	// msg.unit            = UNT_UNKNOWN;
 	msg.id              = m_id;
@@ -356,7 +380,18 @@ void SensorProxy::Publish(int x_publicationType, int x_data)
 
 void SensorProxy::Subscribe(int x_measurementType, int x_dataType)
 {
-	// TODO
+	char buf[BUFFERSIZE];
+
+	struct SubscribeMessage msg;
+	memset(&msg, 0, sizeof(struct SubscribeMessage));
+	msg.measurementType = static_cast<MeasurementType>(x_measurementType);
+	msg.dataType        = static_cast<DataType>(x_dataType);
+	msg.id              = m_id;
+
+	if(bufferizeSubscribeMessage(&msg, buf, BUFFERSIZE) <= 0)
+		throw POPException("Cannot bufferize publish message");
+	// cout<< "Sending " << buf << popcendl;
+	SendRawData(buf);
 }
 
 @pack(SensorProxy);

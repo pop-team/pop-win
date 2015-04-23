@@ -45,12 +45,6 @@ void POPSensor::Connect(const std::string& x_connectionType)
 			{
 				// cout<<"Cannot create a sensor proxy on port "<<port.str()<<popcendl;
 			}
-
-			// Subscribe to sensor
-			// m_sensorsProxy.back()->SubscribeMe(*this);
-			// POPSensor tmp(GetAccessPointForThis()); // TODO
-			// m_sensorsProxy.back()->SubscribeMe(tmp);
-			// m_sensorsProxy.back()->SubscribeMe(*__POPThis_POPSensor);
 		}
 	}
 	else throw POPException("Only \"usb\" connection is supported for gateway");
@@ -97,6 +91,7 @@ void POPSensor::StopListening()
 	for(auto it : m_sensorsProxy)
 	{
 		it->StopListening();
+		it->Notify(MSR_LOG, UNT_NONE, "This is the end");
 	}
 }
 
@@ -140,6 +135,15 @@ void POPSensor::ClearData()
 		it->ClearData();
 	}
 }
+
+void POPSensor::Notify(int x_measurementType, int x_measurementUnit, const std::string& x_message)
+{
+	for(auto it : m_sensorsProxy)
+	{
+		it->Notify(x_measurementType, x_measurementUnit, x_message);
+	}
+}
+
 
 void POPSensor::Subscribe(int x_measurementType, int x_dataType)
 {

@@ -186,7 +186,7 @@ By typing commands in the application you will be able to interact with your sen
 
 Installation of POP-C++ with support for templates
 --------------------------------------------------
-TODO: Add this version of POPC to github
+Support for templates in POP-C++ is only experimental. Not included in this release.
 
 Installation of contiki files for xm1000
 ----------------------------------------

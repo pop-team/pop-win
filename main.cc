@@ -79,6 +79,20 @@ void generateTestData(POPSensor& xr_gateway)
 	}
 }
 
+/// Test the different communication messages
+void testCommunication(POPSensor& xr_gateway)
+{
+	cout<<"Send a test notification to sensors"<<popcendl;
+	xr_gateway.Notify(MSR_LOG, UNT_NONE, "This is a test notification");
+	usleep(0.3 * 1000000);
+	cout<<"Send a test subsciption to sensors"<<popcendl;
+	xr_gateway.Subscribe(MSR_VIBRATION, UNT_NONE);
+	usleep(0.3 * 1000000);
+	cout<<"Send a test publication to sensors (should send the command list)"<<popcendl;
+	xr_gateway.Publish(PUB_COMMAND, 0);
+}
+
+
 /// Ask the remote to generate test data
 void clearData(POPSensor& xr_gateway)
 {
@@ -141,6 +155,9 @@ int main(int argc, char** argv)
 
 	cout << " p: Print stored data" <<popcendl;
 	commands['p'] = printData;
+
+	cout << " t: Test communication" <<popcendl;
+	commands['t'] = testCommunication;
 	cout << "---------------------------------------------------------------------------------------" <<popcendl;
 	cout << popcendl;
 

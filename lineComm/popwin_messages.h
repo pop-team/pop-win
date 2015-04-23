@@ -82,13 +82,20 @@ struct SubscribeMessage
 // note: UnSubscribe message has the same structure as publish messages
 
 // Print message to buffer
+///
+/// @param x_msg     Incoming message
+/// @param xp_buffer Output buffer
+/// @param x_bufferSize Size of the buffer for safety
 int bufferizeSubscribeMessage(const struct SubscribeMessage* x_msg, char* xp_buffer, size_t x_bufferSize);
 
 // Read message from buffer
+/// 
+/// @param xp_msg         Output: message structure
+/// @param x_buffer       Input:  message is read from here
 int unbufferizeSubscribeMessage(struct SubscribeMessage* xp_msg, const char* x_buffer);
 
 // -------------------------------------------------------------------------------- //
-// Notification message
+// A structure representing a notification message
 
 struct NotifyMessage
 {
@@ -100,10 +107,19 @@ struct NotifyMessage
 	char*                data;
 };
 
-// Print message to buffer
+/// Print message to buffer
+///
+/// @param x_msg     Incoming message
+/// @param xp_buffer Output buffer
+/// @param x_bufferSize Size of the buffer for safety
 int bufferizeNotifyMessage(const struct NotifyMessage* x_msg, char* xp_buffer, size_t x_bufferSize);
 
 // Read message from buffer
+/// 
+/// @param xp_msg         Output: message structure
+/// @param x_buffer       Input:  message is read from here
+/// @param xp_data        Output: data contained in notification message gets copied here
+/// @param x_maxDataSize: Size of the data buffer for safety
 int unbufferizeNotifyMessage(struct NotifyMessage* x_msg, char* xp_data, const char* x_buffer, size_t x_dataSize);
 
 // -------------------------------------------------------------------------------- //
@@ -122,9 +138,18 @@ struct PublishMessage
 // Note: no unpublish message for the first version. The structure will be similar to publish messages
 
 // Print message to buffer
+///
+/// @param x_msg     Incoming message
+/// @param xp_buffer Output buffer
+/// @param x_bufferSize Size of the buffer for safety
 int bufferizePublishMessage(const struct PublishMessage* x_msg, char* xp_buffer, size_t x_bufferSize);
 
 // Read message from buffer
+/// 
+/// @param xp_msg         Output: message structure
+/// @param x_buffer       Input:  message is read from here
+/// @param xp_data        Output: data contained in notification message gets copied here
+/// @param x_maxDataSize: Size of the data buffer for safety
 int unbufferizePublishMessage(struct PublishMessage* xp_msg, char* xp_data, const char* x_buffer, size_t x_dataSize);
 
 // -------------------------------------------------------------------------------- //

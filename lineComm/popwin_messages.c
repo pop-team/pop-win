@@ -19,11 +19,11 @@
 // Print message to buffer
 int bufferizeSubscribeMessage(const struct SubscribeMessage* x_msg, char* xp_buffer, size_t x_bufferSize)
 {
-	int ret = snprintf(xp_buffer, x_bufferSize, "%02x %02x %02x %02x\n",
+	int ret = snprintf(xp_buffer, x_bufferSize, "%02x %02x %02x %04x\n",
 		MSG_SUBSCRIBE,
-		x_msg->id,
+		x_msg->dataType,
 		x_msg->measurementType,
-		x_msg->dataType
+		x_msg->id
 	);
 	return ret > 0 && ret < x_bufferSize;
 }
@@ -35,11 +35,11 @@ int unbufferizeSubscribeMessage(struct SubscribeMessage* xp_msg, const char* x_b
 	int id    = -1;
 	int mt    = -1;
 	int dt    = -1;
-	int ret = sscanf(x_buffer, "%02x %02x %02x %02x",
+	int ret = sscanf(x_buffer, "%02x %02x %02x %04x",
 		&mtype,
-		&id,
+		&dt,
 		&mt,
-		&dt
+		&id
 	);
 	if(ret == 4 && mtype == MSG_SUBSCRIBE)
 	{
@@ -70,8 +70,8 @@ int bufferizeNotifyMessage(const struct NotifyMessage* x_msg, char* xp_buffer, s
 	return ret > 0 && ret < x_bufferSize;
 }
 
-// Read message from buffer
-int unbufferizeNotifyMessage(struct NotifyMessage* xp_msg, char* xp_data, const char* x_buffer, size_t x_dataSize)
+/// Read message from buffer
+int unbufferizeNotifyMessage(struct NotifyMessage* xp_msg, char* xp_data, const char* x_buffer, size_t x_maxDataSize)
 {
 	int mtype = -1;
 	int id    = -1;
@@ -80,7 +80,7 @@ int unbufferizeNotifyMessage(struct NotifyMessage* xp_msg, char* xp_data, const 
 	int un    = -1;
 	int dataSize = 0;
 
-	int ret = sscanf(x_buffer, "%02x %02x %02x %04x %02x %04x", // TODO: See if we can handle hexadecimal !!
+	int ret = sscanf(x_buffer, "%02x %02x %02x %04x %02x %04x",
 		&mtype,
 		&dt,
 		&mt,
@@ -96,12 +96,12 @@ int unbufferizeNotifyMessage(struct NotifyMessage* xp_msg, char* xp_data, const 
 		xp_msg->id              = id;
 		xp_msg->unit            = (enum MeasurementUnit) un;
 		xp_msg->dataSize        = (size_t) dataSize;
-		if(dataSize + 1 > x_dataSize)
+		if(dataSize + 1 > x_maxDataSize)
 		{
-			printf("ERROR: Buffer has insufficient size %d > %d\n", dataSize + 1, (int)x_dataSize);
+			printf("ERROR: Buffer has insufficient size %d > %d\n", dataSize + 1, (int)x_maxDataSize);
 			return 0;
 		}
-		int s = snprintf(xp_data, x_dataSize, "%s", x_buffer + 21 + 1);
+		int s = snprintf(xp_data, x_maxDataSize, "%s", x_buffer + 21 + 1);
 		if(s == dataSize)
 		{
 			return 1;
@@ -135,7 +135,7 @@ int bufferizePublishMessage(const struct PublishMessage* x_msg, char* xp_buffer,
 }
 
 // Read message from buffer
-int unbufferizePublishMessage(struct PublishMessage* xp_msg, char* xp_data, const char* x_buffer, size_t x_dataSize)
+int unbufferizePublishMessage(struct PublishMessage* xp_msg, char* xp_data, const char* x_buffer, size_t x_maxDataSize)
 {
 	int mtype = -1;
 	int id    = -1;
@@ -161,12 +161,12 @@ int unbufferizePublishMessage(struct PublishMessage* xp_msg, char* xp_data, cons
 		xp_msg->id              = id;
 		// msg->unit            = (enum PublicationUnit) un;
 		xp_msg->dataSize        = (size_t) dataSize;
-		if(dataSize + 1 > x_dataSize)
+		if(dataSize + 1 > x_maxDataSize)
 		{
-			printf("ERROR: Buffer has insufficient size %d > %d\n", dataSize + 1, (int)x_dataSize);
+			printf("ERROR: Buffer has insufficient size %d > %d\n", dataSize + 1, (int)x_maxDataSize);
 			return 0;
 		}
-		int s = snprintf(xp_data, x_dataSize, "%s", x_buffer + 18 + 1);
+		int s = snprintf(xp_data, x_maxDataSize, "%s", x_buffer + 18 + 1);
 		if(s == dataSize)
 		{
 			return 1;

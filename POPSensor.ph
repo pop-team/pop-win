@@ -3,8 +3,13 @@
  *
  * @author Laurent Winkler based on work by Valentin Bourqui
  * @date Dec 2014
- * @brief POPSensor class for the POPWIN project. This object handles the data gathering of a group of sensors.
+ * @brief POPSensor class for the POPWIN project. This object handles the data gathering of a group of sensor proxies.
  *
+ *   Gateway----POPSensor--- SensorProxy1 --- RemoteSensorX ---     ^^^^^^^^^^^^
+ *                      \                                         ^Sensor network^
+ *                       --- SensorProxy2 --- RemoteSensorY ---     ^^^^^^^^^^^^
+ *
+ *                            ...
  *
  */
 
@@ -99,19 +104,23 @@ public:
 	void Connect(const std::string& x_connectionType);
 	void Disconnect();
 
+	/// Start listening on serial line
 	void StartListening();
+
+	/// Stop listening
 	void StopListening();
+
+	/// Check if connected to any sensor
 	bool IsConnected();
 
-	/// Publish data to this POPSensor
-	// void Publish(const std::string& x_message); // TODO: send only relevant data
-	// void Publish(); // TODO: send only relevant data
-	// void Publish(int x_publicationType, double x_data);
-	/// TODO Comment
-	// TODO: Maybe handle enums in popc
+	/// Send notification to the connected sensor
+	void Notify(int x_measurementType, int x_measurementUnit, const std::string& x_message);
+
+	/// Send a subscription to sensors
 	void Subscribe(int x_measurementType, int x_dataType);
+
+	/// Send a publication to sensors
 	void Publish(int x_publicationType, int x_data);
-	// void Publish(int x_publicationType, const std::string& x_data);
 
 	/// Retrieve data gathered 
 	std::map<RecordHeader, double>      RetrieveDataDouble();
@@ -120,9 +129,9 @@ public:
 
 	/// Clear data gathered 
 	void ClearData();
+
 private:
-	/// Subscribe to a sensor
-	
+	/// List of sensor proxy. Each proxy can be connected to one sensor via serial line
 	std::vector<SensorProxy*> m_sensorsProxy;
 };
 
