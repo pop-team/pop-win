@@ -1,0 +1,15 @@
+{
+	"machines":{
+		"power":    "50",
+		"memory":   "100,60",
+		"protocol": "socket\:http"
+	},
+	"wsns":{
+		"node":{
+			"measureType": "temperature",
+			"dataType":    "float",
+			"direction":   "IN"
+		},
+		"location": "myOffice"
+	}
+}
