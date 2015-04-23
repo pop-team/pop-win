@@ -23,41 +23,57 @@ POPSensor::POPSensor(const std::string& x_url)
 
 POPSensor::~POPSensor()
 {
+	Disconnect();
+}
+
+/// Search and create sensor proxys for communication with sensors
+void POPSensor::Connect(const std::string& x_connectionType)
+{
+	if(x_connectionType == "usb")
+	{
+		for(int i = 0 ; i < 4 ; i++)
+		{
+			// Scan usb ports for connected gateways
+			stringstream port;
+			port << "/dev/ttyUSB" << i;
+			try
+			{
+				m_sensorsProxy.push_back(new SensorProxy(1000 + i, "localhost", port.str()));
+				cout<<"Creating sensor proxy with id="<<(1000+i)<<" on port "<<port.str()<<popcendl;
+			}
+			catch(...)
+			{
+				// cout<<"Cannot create a sensor proxy on port "<<port.str()<<popcendl;
+			}
+
+			// Subscribe to sensor
+			// m_sensorsProxy.back()->SubscribeMe(*this);
+			// POPSensor tmp(GetAccessPointForThis()); // TODO
+			// m_sensorsProxy.back()->SubscribeMe(tmp);
+			// m_sensorsProxy.back()->SubscribeMe(*__POPThis_POPSensor);
+		}
+	}
+	else throw POPException("Only \"usb\" connection is supported for gateway");
+	cout<<"Created "<<m_sensorsProxy.size()<<" sensor proxy objects"<<popcendl;
+
+	if(m_sensorsProxy.empty())
+		throw POPException("No sensor proxy could be create. Did you connect the gateway mote via USB ?");
+}
+
+
+void POPSensor::Disconnect()
+{
 	cout<<"Destroying POPSensor and its "<<m_sensorsProxy.size() << " SensorProxy." <<popcendl;
 	for(auto it : m_sensorsProxy)
 	{
 		delete(it);
 	}
+	m_sensorsProxy.clear();
 }
 
-/// Search and create sensor proxys for communication with sensors
-void POPSensor::Connect()
+bool POPSensor::IsConnected()
 {
-	// TODO: Handle resource description files
-	for(int i = 0 ; i < 4 ; i++)
-	{
-		stringstream port;
-		port << "/dev/ttyUSB" << i;
-		try
-		{
-			m_sensorsProxy.push_back(new SensorProxy(1000 + i, "localhost", port.str()));
-			cout<<"Creating sensor proxy with id="<<(1000+i)<<" on port "<<port.str()<<popcendl;
-		}
-		catch(...)
-		{
-			// cout<<"Cannot create a sensor proxy on port "<<port.str()<<popcendl;
-		}
-
-		// Subscribe to sensor
-		// m_sensorsProxy.back()->SubscribeMe(*this);
-		// POPSensor tmp(GetAccessPointForThis()); // TODO
-		// m_sensorsProxy.back()->SubscribeMe(tmp);
-		// m_sensorsProxy.back()->SubscribeMe(*__POPThis_POPSensor);
-	}
-	cout<<"Created "<<m_sensorsProxy.size()<<" sensor proxy objects"<<popcendl;
-
-	if(m_sensorsProxy.empty())
-		throw POPException("No sensor proxy could be create. Did you connect the gateway mote via USB ?");
+	return !m_sensorsProxy.empty();
 }
 
 /// Subscribe to a sensor
@@ -124,6 +140,15 @@ void POPSensor::ClearData()
 		it->ClearData();
 	}
 }
+
+void POPSensor::Subscribe(int x_measurementType, int x_dataType)
+{
+	for(auto it : m_sensorsProxy)
+	{
+		it->Subscribe(x_measurementType, x_dataType);
+	}
+}
+
 
 void POPSensor::Publish(int x_publicationType, int x_data)
 {

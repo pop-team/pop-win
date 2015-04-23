@@ -354,4 +354,9 @@ void SensorProxy::Publish(int x_publicationType, int x_data)
 	SendRawData(buf);
 }
 
+void SensorProxy::Subscribe(int x_measurementType, int x_dataType)
+{
+	// TODO
+}
+
 @pack(SensorProxy);

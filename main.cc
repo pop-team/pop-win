@@ -148,8 +148,9 @@ int main(int argc, char** argv)
 	try
 	{
 		POPSensor gateway("localhost");
-		gateway.Connect();
+		gateway.Connect("usb");
 		gateway.StartListening();
+		gateway.Subscribe(MSR_TEMPERATURE, TYPE_DOUBLE);
 
 		//cout<<"Ask to send the list of commands"<<popcendl;
 		//gateway.Publish(PUB_COMMAND, 0);

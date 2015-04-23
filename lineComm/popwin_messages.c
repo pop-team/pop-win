@@ -208,6 +208,18 @@ enum MessageType getMessageType(const char* x_msg)
 
 // -------------------------------------------------------------------------------- //
 
+// Return measurement type from string
+enum MeasurementType measurementType(const char* x_str)
+{
+	if(!strcmp(x_str, "logging"))     return MSR_LOG;
+	if(!strcmp(x_str, "command"))     return MSR_COMMAND;
+	if(!strcmp(x_str, "temperature")) return MSR_TEMPERATURE;
+	if(!strcmp(x_str, "vibration"))   return MSR_VIBRATION;
+	if(!strcmp(x_str, "test"))        return MSR_TEST;
+
+	return MSR_LOG;
+}
+
 // String to explain measurement type
 const char* explainMeasurementType(enum MeasurementType x)
 {
@@ -220,6 +232,18 @@ const char* explainMeasurementType(enum MeasurementType x)
 		case MSR_TEST:        return "test";
 		default:              return "unknown";
 	}
+}
+
+// Return measurement units from string
+enum MeasurementUnit measurementUnit(const char* x_str)
+{
+	if(!strcmp(x_str, "no unit"))     return UNT_NONE;
+	if(!strcmp(x_str, "celsius"))     return UNT_CELSIUS;
+	if(!strcmp(x_str, "kelvin"))      return UNT_KELVIN;
+	if(!strcmp(x_str, "seconds"))     return UNT_SECONDS;
+	if(!strcmp(x_str, "meters"))      return UNT_METERS;
+
+	return UNT_NONE;
 }
 
 // String to explain measurement units

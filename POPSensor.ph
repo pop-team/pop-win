@@ -92,14 +92,16 @@ parclass POPSensor {
 
 public:
 	// POPSensor(int newID, int wanted, int minp) @{ od.search(0, 3, 0); };
-	POPSensor(const std::string& x_url) @{ od.url(x_url); };
+	POPSensor(const std::string& x_url) @{ od.url(x_url); }; // TODO: use resource string
 	~POPSensor();
 
 	/// Search and create sensor proxys for communication with sensors
-	void Connect();
+	void Connect(const std::string& x_connectionType);
+	void Disconnect();
 
 	void StartListening();
 	void StopListening();
+	bool IsConnected();
 
 	/// Publish data to this POPSensor
 	// void Publish(const std::string& x_message); // TODO: send only relevant data
@@ -107,6 +109,7 @@ public:
 	// void Publish(int x_publicationType, double x_data);
 	/// TODO Comment
 	// TODO: Maybe handle enums in popc
+	void Subscribe(int x_measurementType, int x_dataType);
 	void Publish(int x_publicationType, int x_data);
 	// void Publish(int x_publicationType, const std::string& x_data);
 
@@ -119,8 +122,7 @@ public:
 	void ClearData();
 private:
 	/// Subscribe to a sensor
-	// void Subscribe(SensorProxy& x_sensorProxy);
-
+	
 	std::vector<SensorProxy*> m_sensorsProxy;
 };
 

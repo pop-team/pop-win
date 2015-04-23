@@ -4,6 +4,9 @@
 		"memory":   "100,60",
 		"protocol": "socket\:http"
 	},
+	"gateway":{
+		"connection": "usb"
+	},
 	"wsns":{
 		"node":{
 			"measureType": "temperature",

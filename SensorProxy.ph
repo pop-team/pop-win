@@ -28,7 +28,7 @@ public:
 
 	// sync seq void Publish(int x_publicationType, double x_data);
 	sync seq void Publish(int x_publicationType, int x_data);
-	// sync seq void Publish(int x_publicationType, const std::string& x_data);
+	sync seq void Subscribe(int x_measurementType, int x_dataType);
 
 	/// Send data to the remote sensors
 	async conc void StartListening();
