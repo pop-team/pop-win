@@ -63,9 +63,9 @@ const char* g_commandNames[NB_COMMANDS]    = {"list_functions", "read_temperatur
 /****************************/
 /*** DECLARE FUNCTIONS      */
 /****************************/
-void handlePublication();
-void handleNotification();
-void handleSubscription();
+void handlePublication(const char* data);
+void handleNotification(const char* data);
+void handleSubscription(const char* data);
 
 int sscanf ( const char * s, const char * format, ...);
 size_t strlen ( const char * str );
@@ -95,10 +95,10 @@ void sendSubscriptionSerial(const struct SubscribeMessage* msg)
 }
 
 // send a notification message: Only for use on the remote sensor
-void sendNotificationSerial(const struct NotifyMessage* msg)
+void sendNotificationSerial(const struct NotifyMessage* msg, const char* data)
 {
 	char buf[BUFFERSIZE];
-	if(bufferizeNotifyMessage(msg, buf, sizeof(buf)) <= 0)
+	if(bufferizeNotifyMessage(msg, data, buf, sizeof(buf)) <= 0)
 		ERROR("Cannot write message to buffer");
 
 	// Send message via serial line on contiki
@@ -132,9 +132,8 @@ void logging(const char *format,...)
 	msg.measurementType = MSR_LOG;
 	msg.dataType        = TYPE_STRING;
 	msg.id              = get_id();
-	msg.data            = buf;
 	msg.dataSize        = strlen(buf);
-	sendNotificationSerial(&msg);
+	sendNotificationSerial(&msg, buf);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -200,7 +199,7 @@ PROCESS_THREAD(init_com_process, ev, data)
 			{
 				case MSG_SUBSCRIBE:
 				{
-					handleSubscription();
+					handleSubscription(data);
 				}
 				break;
 				case MSG_PUBLISH:
@@ -253,7 +252,10 @@ void handleSubscription(const char* data)
 	struct SubscribeMessage msg;
 	memset(&msg, 0, sizeof(msg));
 	if(unbufferizeSubscribeMessage(&msg, data) <= 0)
+	{
 		ERROR("Cannot read message from buffer");
+		return;
+	}
 
 	// 
 	// Define here what to do on reception  TODO for UNIGE
@@ -377,9 +379,8 @@ void read_temperature(){
 	msg.dataType        = TYPE_DOUBLE;
 	msg.unit            = UNT_CELSIUS;
 	msg.id              = get_id();
-	msg.data            = data;
 	msg.dataSize        = strlen(data);
-	sendNotificationSerial(&msg);
+	sendNotificationSerial(&msg, data);
 }
 
 /*
@@ -400,9 +401,8 @@ void generate_test_data_double(){
 		msg.measurementType = MSR_TEST;
 		msg.dataType        = TYPE_DOUBLE;
 		msg.id              = get_id();
-		msg.data            = data;
 		msg.dataSize        = strlen(data);
-		sendNotificationSerial(&msg);
+		sendNotificationSerial(&msg, data);
 	}
 }
 
@@ -422,9 +422,8 @@ void generate_test_data_int(){
 		msg.measurementType = MSR_TEST;
 		msg.dataType        = TYPE_INT;
 		msg.id              = get_id();
-		msg.data            = data;
 		msg.dataSize        = strlen(data);
-		sendNotificationSerial(&msg);
+		sendNotificationSerial(&msg, data);
 	}
 }
 
@@ -442,9 +441,8 @@ void generate_test_data_string(){
 		msg.measurementType = MSR_TEST;
 		msg.dataType        = TYPE_STRING;
 		msg.id              = get_id();
-		msg.data            = data;
 		msg.dataSize        = strlen(data);
-		sendNotificationSerial(&msg);
+		sendNotificationSerial(&msg, data);
 	}
 }
 

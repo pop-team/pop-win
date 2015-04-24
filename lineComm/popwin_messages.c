@@ -55,7 +55,7 @@ int unbufferizeSubscribeMessage(struct SubscribeMessage* xp_msg, const char* x_b
 // Notification message
 
 // Print message to buffer
-int bufferizeNotifyMessage(const struct NotifyMessage* x_msg, char* xp_buffer, size_t x_bufferSize)
+int bufferizeNotifyMessage(const struct NotifyMessage* x_msg, const char* x_data, char* xp_buffer, size_t x_bufferSize)
 {
 	// note: sizeof(size_t) = 2 for contiki but we use 4 for compatibility
 	int ret = snprintf(xp_buffer, x_bufferSize, "%02x %02x %02x %04x %02x %04x %s\n",
@@ -65,7 +65,7 @@ int bufferizeNotifyMessage(const struct NotifyMessage* x_msg, char* xp_buffer, s
 		x_msg->id,
 		x_msg->unit,
 		(int)x_msg->dataSize,
-		x_msg->data
+		x_data
 	);
 	return ret > 0 && ret < x_bufferSize;
 }
@@ -119,7 +119,7 @@ int unbufferizeNotifyMessage(struct NotifyMessage* xp_msg, char* xp_data, const 
 // Publication message
 
 // Print message to buffer
-int bufferizePublishMessage(const struct PublishMessage* x_msg, char* xp_buffer, size_t x_bufferSize)
+int bufferizePublishMessage(const struct PublishMessage* x_msg, const char* x_data, char* xp_buffer, size_t x_bufferSize)
 {
 	// note: sizeof(size_t) = 2 for contiki but we use 4 for compatibility
 	int ret = snprintf(xp_buffer, x_bufferSize, "%02x %02x %02x %04x %04x %s\n",
@@ -129,7 +129,7 @@ int bufferizePublishMessage(const struct PublishMessage* x_msg, char* xp_buffer,
 		x_msg->id,
 		// msg->unit,
 		(int)x_msg->dataSize,
-		x_msg->data
+		x_data
 	);
 	return ret > 0 && ret < x_bufferSize;
 }

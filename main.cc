@@ -86,7 +86,7 @@ void testCommunication(POPSensor& xr_gateway)
 	xr_gateway.Notify(MSR_LOG, UNT_NONE, "This is a test notification");
 	usleep(0.3 * 1000000);
 	cout<<"Send a test subsciption to sensors"<<popcendl;
-	xr_gateway.Subscribe(MSR_VIBRATION, UNT_NONE);
+	xr_gateway.Subscribe(MSR_VIBRATION, TYPE_DOUBLE);
 	usleep(0.3 * 1000000);
 	cout<<"Send a test publication to sensors (should send the command list)"<<popcendl;
 	xr_gateway.Publish(PUB_COMMAND, 0);
@@ -167,7 +167,6 @@ int main(int argc, char** argv)
 		POPSensor gateway("localhost");
 		gateway.Connect("usb");
 		gateway.StartListening();
-		gateway.Subscribe(MSR_TEMPERATURE, TYPE_DOUBLE);
 
 		//cout<<"Ask to send the list of commands"<<popcendl;
 		//gateway.Publish(PUB_COMMAND, 0);

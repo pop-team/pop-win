@@ -104,7 +104,6 @@ struct NotifyMessage
 	unsigned short       id;
 	enum MeasurementUnit unit;
 	size_t               dataSize;
-	char*                data;
 };
 
 /// Print message to buffer
@@ -112,7 +111,7 @@ struct NotifyMessage
 /// @param x_msg     Incoming message
 /// @param xp_buffer Output buffer
 /// @param x_bufferSize Size of the buffer for safety
-int bufferizeNotifyMessage(const struct NotifyMessage* x_msg, char* xp_buffer, size_t x_bufferSize);
+int bufferizeNotifyMessage(const struct NotifyMessage* x_msg, const char* x_data, char* xp_buffer, size_t x_bufferSize);
 
 // Read message from buffer
 /// 
@@ -132,7 +131,6 @@ struct PublishMessage
 	unsigned short       id;               // not mandatory, for convenience
 	// enum MeasurementUnit unit;
 	size_t               dataSize;
-	char*                data;
 };
 
 // Note: no unpublish message for the first version. The structure will be similar to publish messages
@@ -142,7 +140,7 @@ struct PublishMessage
 /// @param x_msg     Incoming message
 /// @param xp_buffer Output buffer
 /// @param x_bufferSize Size of the buffer for safety
-int bufferizePublishMessage(const struct PublishMessage* x_msg, char* xp_buffer, size_t x_bufferSize);
+int bufferizePublishMessage(const struct PublishMessage* x_msg, const char* x_data, char* xp_buffer, size_t x_bufferSize);
 
 // Read message from buffer
 /// 

@@ -347,9 +347,8 @@ void SensorProxy::Notify(int x_measurementType, int x_measurementUnit, const std
 	msg.unit            = static_cast<MeasurementUnit>(x_measurementUnit);
 	msg.id              = m_id;
 	msg.dataSize        = strlen(dataBuffer);
-	msg.data            = dataBuffer;
 
-	if(bufferizeNotifyMessage(&msg, buf, BUFFERSIZE) <= 0)
+	if(bufferizeNotifyMessage(&msg, dataBuffer, buf, BUFFERSIZE) <= 0)
 		throw POPException("Cannot bufferize publish message", dataBuffer);
 	// cout<< "Sending " << buf << popcendl;
 	SendRawData(buf);
@@ -370,9 +369,8 @@ void SensorProxy::Publish(int x_publicationType, int x_data)
 	// msg.unit            = UNT_UNKNOWN;
 	msg.id              = m_id;
 	msg.dataSize        = strlen(dataBuffer);
-	msg.data            = dataBuffer;
 
-	if(bufferizePublishMessage(&msg, buf, BUFFERSIZE) <= 0)
+	if(bufferizePublishMessage(&msg, dataBuffer, buf, BUFFERSIZE) <= 0)
 		throw POPException("Cannot bufferize publish message", dataBuffer);
 	// cout<< "Sending " << buf << popcendl;
 	SendRawData(buf);

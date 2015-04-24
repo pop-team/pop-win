@@ -91,7 +91,7 @@ void POPSensor::StopListening()
 	for(auto it : m_sensorsProxy)
 	{
 		it->StopListening();
-		it->Notify(MSR_LOG, UNT_NONE, "This is the end");
+		// it->Notify(MSR_LOG, UNT_NONE, "This is the end");
 	}
 }
 
