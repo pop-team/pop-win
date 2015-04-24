@@ -1,8 +1,8 @@
 {
 	"machines":{
 		"power":    "50",
-		"memory":   "100,60",
-		"protocol": "socket\:http"
+			"memory":   "100,60",
+			"protocol": "socket:http"
 	},
 	"gateway":{
 		"connection": "usb"

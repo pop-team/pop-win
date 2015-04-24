@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <termios.h>
 #include <map>
+#include <fstream>
 
 #include "POPSensor.ph"
 
@@ -34,6 +35,9 @@ void blinkLeds(POPSensor& xr_gateway)
 			usleep(usecs);
 		}
 	}
+
+	// Toggle all leds
+	// xr_gateway.Publish(PUB_LED, 3);
 }
 
 /// Ask temperature and acceleration readings 
@@ -83,7 +87,7 @@ void generateTestData(POPSensor& xr_gateway)
 void testCommunication(POPSensor& xr_gateway)
 {
 	cout<<"Send a test notification to sensors"<<popcendl;
-	xr_gateway.Notify(MSR_LOG, UNT_NONE, "This is a test notification");
+	xr_gateway.Notify(MSR_LOG, UNT_NONE, "test_notification");
 	usleep(0.3 * 1000000);
 	cout<<"Send a test subsciption to sensors"<<popcendl;
 	xr_gateway.Subscribe(MSR_VIBRATION, TYPE_DOUBLE);
@@ -128,8 +132,19 @@ void printData(POPSensor& xr_gateway)
 	}
 }
 
+/// Subscribe to elements in json file
+void subscribeToResources(POPSensor& xr_gateway)
+{
+	xr_gateway.SubscribeToResources();
+}
+
 int main(int argc, char** argv)
 {
+	if(argc != 2)
+	{
+		cout << "usage: popcrun <obj.map> ./main <resource.json>" << popcendl;
+		exit(0);
+	}
 	// Input a list of commands
 	map<char, Command> commands;
 	cout << popcendl;
@@ -156,6 +171,9 @@ int main(int argc, char** argv)
 	cout << " p: Print stored data" <<popcendl;
 	commands['p'] = printData;
 
+	cout << " s: Subscribe to resources specified in JSON file" <<popcendl;
+	commands['s'] = subscribeToResources;
+
 	cout << " t: Test communication" <<popcendl;
 	commands['t'] = testCommunication;
 	cout << "---------------------------------------------------------------------------------------" <<popcendl;
@@ -165,7 +183,16 @@ int main(int argc, char** argv)
 	try
 	{
 		POPSensor gateway("localhost");
-		gateway.Connect("usb");
+
+		// Read json resource file into string
+		ifstream jif(argv[1]);
+		if(!jif.is_open())
+			throw POPException("Cannot open json resource file", argv[1]);
+		stringstream ss;
+		ss << jif.rdbuf();
+		jif.close();
+
+		gateway.Connect(ss.str());
 		gateway.StartListening();
 
 		//cout<<"Ask to send the list of commands"<<popcendl;
@@ -197,6 +224,7 @@ int main(int argc, char** argv)
 			catch(POPException &e)
 			{
 				cout<<"Cannot execute command. Received exception: " << e.what() << popcendl;
+				c = '\n';
 			}
 		}
 

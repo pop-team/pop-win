@@ -108,6 +108,8 @@ SensorProxy::SensorProxy(int x_id, const std::string& x_url, const string& x_dev
 	{
 		throw POPException("Fail to open connection to sensor", x_device);
 	}
+
+	// m_debugOf.open("debug.txt");
 }
 
 SensorProxy::~SensorProxy()
@@ -115,43 +117,13 @@ SensorProxy::~SensorProxy()
 	// Destroy object
 	cout<<"Destroy sensor proxy." << popcendl;
 	close(m_fd);
+	// m_debugOf.close();
 }
 
-/*
-int SensorProxy::SetData(const char* JSONData)
+void SensorProxy::SendRawData(const std::string& x_data)
 {
-	BufferSendData(JSONData);
-	BufferReadData();
-	fflush(stdout);
-	return 0;
-}
-
-void SensorProxy::Publish()
-{
-	for(auto elem : m_subscribed)
-	{
-		elem->Publish("new publisher !!");
-	}
-}
-*/
-
-
-/// A gateway subscribes to a sensor to be sent the data
-/*
-void SensorProxy::SubscribeMe(POPSensor& xr_gateway)
-{
-	cout<<"SubscribeMe" <<popcendl;
-	m_subscribed.push_back(&xr_gateway);
-	// xr_gateway.Publish();
-}
-*/
-
-
-
-void SensorProxy::SendRawData(const std::string& JSONData)
-{
-
-	const char* data = JSONData.c_str();
+	// m_debugOf << x_data; m_debugOf.flush();
+	const char* data = x_data.c_str();
 	// printf("Sending %s on %d\n", data, m_fd);
 	int n = strlen(data);
 	if (n <= 0) {

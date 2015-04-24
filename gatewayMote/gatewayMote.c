@@ -495,11 +495,11 @@ PROCESS_THREAD(button_pressed, ev, data)
 
 		// Toggle the LEDS
 		if (push % 2 == 0) { 
-			leds_toggle(LEDS_ALL);
+			leds_off(LEDS_ALL);
 			LOG("Button pressed [%d] TURNING OFF ALL LEDS ... [DONE]", push);
 			push++;
 		} else {
-			leds_toggle(LEDS_ALL);
+			leds_on(LEDS_ALL);
 			LOG("Button pressed [%d] TURNING ON ALL LEDS ...   [DONE]", push);
 			push++;
 		}

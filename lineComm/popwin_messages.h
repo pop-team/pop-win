@@ -33,7 +33,7 @@ enum MeasurementType
 	MSR_LIGHT       = 6  // acceleration measurement
 	// ... //
 };
-enum MeasurementType measurementType(const char* x_str);
+enum MeasurementType translateMeasurementType(const char* x_str);
 const char* explainMeasurementType(enum MeasurementType x);
 
 // Different types of measurement
@@ -46,7 +46,7 @@ enum MeasurementUnit
 	UNT_METERS      = 4
 	// ... // 
 };
-enum MeasurementUnit measurementUnit(const char* x_str);
+enum MeasurementUnit translateMeasurementUnit(const char* x_str);
 const char* explainMeasurementUnit(enum MeasurementUnit x);
 
 // Different types of publication
@@ -66,6 +66,8 @@ enum DataType
 	TYPE_STRING     = 3
 };
 
+enum DataType translateDataType(const char* x_str);
+const char* explainDataType(enum DataType x);
 
 /// TYPES OF MESSAGES ///
 

@@ -182,19 +182,6 @@ int unbufferizePublishMessage(struct PublishMessage* xp_msg, char* xp_data, cons
 
 // -------------------------------------------------------------------------------- //
 
-// Retrieve the type of data (second position)
-/*
-enum DataType getDataType(const char* x_msg)
-{
-	int type     = 0;
-	int dataType = 0;
-	if(sscanf(x_msg, "%02d %02d", &type, &dataType) != 2)
-		return TYPE_UNKNOWN;
-	else
-		return (enum DataType) dataType;
-	
-}*/
-
 // Retrieve the type of the message (first 2 bytes)
 enum MessageType getMessageType(const char* x_msg)
 {
@@ -209,7 +196,7 @@ enum MessageType getMessageType(const char* x_msg)
 // -------------------------------------------------------------------------------- //
 
 // Return measurement type from string
-enum MeasurementType measurementType(const char* x_str)
+enum MeasurementType translateMeasurementType(const char* x_str)
 {
 	if(!strcmp(x_str, "logging"))     return MSR_LOG;
 	if(!strcmp(x_str, "command"))     return MSR_COMMAND;
@@ -217,6 +204,7 @@ enum MeasurementType measurementType(const char* x_str)
 	if(!strcmp(x_str, "vibration"))   return MSR_VIBRATION;
 	if(!strcmp(x_str, "test"))        return MSR_TEST;
 
+	printf("ERROR: Unknown measurement type %s\n", x_str);
 	return MSR_LOG;
 }
 
@@ -230,12 +218,13 @@ const char* explainMeasurementType(enum MeasurementType x)
 		case MSR_TEMPERATURE: return "temperature";
 		case MSR_VIBRATION:   return "vibration";
 		case MSR_TEST:        return "test";
-		default:              return "unknown";
 	}
+	printf("ERROR: Unknown measurement type %d\n", (int)x);
+	return "unknown";
 }
 
 // Return measurement units from string
-enum MeasurementUnit measurementUnit(const char* x_str)
+enum MeasurementUnit translateMeasurementUnit(const char* x_str)
 {
 	if(!strcmp(x_str, "no unit"))     return UNT_NONE;
 	if(!strcmp(x_str, "celsius"))     return UNT_CELSIUS;
@@ -243,6 +232,7 @@ enum MeasurementUnit measurementUnit(const char* x_str)
 	if(!strcmp(x_str, "seconds"))     return UNT_SECONDS;
 	if(!strcmp(x_str, "meters"))      return UNT_METERS;
 
+	printf("ERROR: Unknown measurement unit %s\n", x_str);
 	return UNT_NONE;
 }
 
@@ -256,7 +246,36 @@ const char* explainMeasurementUnit(enum MeasurementUnit x)
 		case UNT_KELVIN:      return "kelvin";
 		case UNT_SECONDS:     return "seconds";
 		case UNT_METERS:      return "meters";
-		default:              return "unknown";
 	}
+	printf("ERROR: Unknown measurement unit %d\n", (int)x);
+	return "unknown";
+}
+
+// Return data types from string
+enum DataType translateDataType(const char* x_str)
+{
+	if(!strcmp(x_str, "unknown"))     return TYPE_UNKNOWN;
+	if(!strcmp(x_str, "float"))     return TYPE_DOUBLE;
+	if(!strcmp(x_str, "double"))     return TYPE_DOUBLE;
+	if(!strcmp(x_str, "int"))      return TYPE_INT;
+	if(!strcmp(x_str, "string"))      return TYPE_STRING;
+
+	printf("ERROR: Unknown data type %s\n", x_str);
+
+	return TYPE_UNKNOWN;
+}
+
+// String to explain data types
+const char* explainDataType(enum DataType x)
+{
+	switch(x)
+	{
+		case TYPE_UNKNOWN    : return "unknown";
+		case TYPE_DOUBLE     : return "float";
+		case TYPE_INT        : return "int";
+		case TYPE_STRING     : return "string";
+	}
+	printf("ERROR: Unknown data type %d\n", (int)x);
+	return "unknown";
 }
 

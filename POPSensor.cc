@@ -12,6 +12,8 @@
 #include "POPSensor.ph"
 #include "SensorProxy.ph"
 #include <unistd.h>
+#include <json/json.h>
+#include <json/reader.h>
 
 using namespace std;
 
@@ -27,9 +29,20 @@ POPSensor::~POPSensor()
 }
 
 /// Search and create sensor proxys for communication with sensors
-void POPSensor::Connect(const std::string& x_connectionType)
+void POPSensor::Connect(const std::string& x_resourceDescr)
 {
-	if(x_connectionType == "usb")
+	// Read json resource file
+	m_jsonResources = x_resourceDescr;
+	Json::Reader reader;
+	Json::Value root;
+	if (!reader.parse(x_resourceDescr, root, false))
+	{
+		throw POPException("Error while reading json string", x_resourceDescr);
+	}
+
+	string connectionType = root["gateway"].get("connection", "<not found>").asString();
+
+	if(connectionType == "usb")
 	{
 		for(int i = 0 ; i < 4 ; i++)
 		{
@@ -47,7 +60,7 @@ void POPSensor::Connect(const std::string& x_connectionType)
 			}
 		}
 	}
-	else throw POPException("Only \"usb\" connection is supported for gateway");
+	else throw POPException("Only \"usb\" connection is supported for gateway", "connection=" + connectionType);
 	cout<<"Created "<<m_sensorsProxy.size()<<" sensor proxy objects"<<popcendl;
 
 	if(m_sensorsProxy.empty())
@@ -57,6 +70,7 @@ void POPSensor::Connect(const std::string& x_connectionType)
 
 void POPSensor::Disconnect()
 {
+	m_jsonResources = "";
 	cout<<"Destroying POPSensor and its "<<m_sensorsProxy.size() << " SensorProxy." <<popcendl;
 	for(auto it : m_sensorsProxy)
 	{
@@ -159,6 +173,31 @@ void POPSensor::Publish(int x_publicationType, int x_data)
 	for(auto it : m_sensorsProxy)
 	{
 		it->Publish(x_publicationType, x_data);
+	}
+}
+
+void POPSensor::SubscribeToResources()
+{
+	if(m_jsonResources.empty())
+		throw POPException("No resources specified. Did you connect ?");
+	Json::Reader reader;
+	Json::Value root;
+	if (!reader.parse(m_jsonResources, root, false))
+	{
+		throw POPException("Error while reading json string", m_jsonResources);
+	}
+
+	int mtype = translateMeasurementType(root["wsns"]["node"].get("measureType", "<not found>").asString().c_str()); // TODO replace measurement with measure
+	int dtype = translateDataType       (root["wsns"]["node"].get("dataType", "<not found>").asString().c_str());
+
+	if(mtype == static_cast<int>(MSR_LOG))
+		throw POPException("measureType not found in JSON resources description");
+	if(dtype == static_cast<int>(TYPE_UNKNOWN))
+		throw POPException("dataType not found in JSON resources description");
+
+	for(auto it : m_sensorsProxy)
+	{
+		it->Subscribe(mtype, dtype);
 	}
 }
 

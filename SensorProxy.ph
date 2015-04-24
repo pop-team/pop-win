@@ -12,6 +12,7 @@
 #define SENSOR_PROXY_H
 
 #include <atomic>
+#include <fstream>
 
 #include "POPSensor.ph"
 #include "lineComm/popwin_messages.h"
@@ -40,7 +41,7 @@ public:
 	sync seq void ClearData();
 
 private:
-	void SendRawData(const std::string& JSONData);
+	void SendRawData(const std::string& x_data);
 	void ReadData(std::ostream& xr_ostream);
 	void HandleIncomingMessage(const std::string& x_msg);
 	// void HandleIncomingMessage(const SubsribeMessage& x_msg);
@@ -54,9 +55,8 @@ private:
 	std::map<RecordHeader, std::string> m_stringData;
 	std::map<RecordHeader, int>         m_intData;
 	std::map<RecordHeader, double>      m_doubleData;
-	// std::vector<bool>        m_boolData;
 
-	// std::vector<POPSensor*> m_subscribed;
+	// std::ofstream m_debugOf; // for debug only
 };
 
 #endif
