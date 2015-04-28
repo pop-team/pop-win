@@ -203,6 +203,8 @@ enum MeasurementType translateMeasurementType(const char* x_str)
 	if(!strcmp(x_str, "temperature")) return MSR_TEMPERATURE;
 	if(!strcmp(x_str, "vibration"))   return MSR_VIBRATION;
 	if(!strcmp(x_str, "test"))        return MSR_TEST;
+	if(!strcmp(x_str, "acceleration")) return MSR_ACCELERATION;
+	if(!strcmp(x_str, "light"))       return MSR_LIGHT;
 
 	printf("ERROR: Unknown measurement type %s\n", x_str);
 	return MSR_LOG;
@@ -218,6 +220,8 @@ const char* explainMeasurementType(enum MeasurementType x)
 		case MSR_TEMPERATURE: return "temperature";
 		case MSR_VIBRATION:   return "vibration";
 		case MSR_TEST:        return "test";
+		case MSR_ACCELERATION:return "acceleration";
+		case MSR_LIGHT:       return "light";
 	}
 	printf("ERROR: Unknown measurement type %d\n", (int)x);
 	return "unknown";

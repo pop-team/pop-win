@@ -514,4 +514,5 @@ exit:
 // Include the sources of external files for compilation
 #include "scanf.c"
 #include "popwin_messages.c"
+#include "DRW.c"
 

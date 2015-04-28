@@ -217,6 +217,13 @@ The SensorProxy class of POPWin will try to reset the value to 115200 but this d
 
 - It seems that the upload of a program on the mote does not succeed each time (this problem appeared with contiki 2.6). The upload may have to be repeated many times ... annoying.
 
+
+	*	    Zolertia   xm1000
+	bourqui     ok
+	2.6         random
+	2.7         random
+	master      untested
+
 ### Problem
 Cannot compile application with Contiki 2.6:
 
