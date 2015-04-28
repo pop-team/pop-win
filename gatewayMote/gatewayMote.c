@@ -51,14 +51,14 @@ void generate_test_data_double();
 void generate_test_data_int();
 void generate_test_data_string();
 void print_id();
-void send_broadcast();
+void send_broadcast_cmd();
 void toggle_debug();
 
 // All functions are stored in a table
 typedef void (*FunctionCall)(void);
 #define NB_COMMANDS 8
-const FunctionCall g_commands[NB_COMMANDS] = {list_functions, read_temperature, generate_test_data_double, generate_test_data_int, generate_test_data_string, print_id, send_broadcast, toggle_debug};
-const char* g_commandNames[NB_COMMANDS]    = {"list_functions", "read_temperature", "generate_test_data_double", "generate_test_data_int", "generate_test_data_string", "print_id", "send_broadcast", "toggle_debug"};
+const FunctionCall g_commands[NB_COMMANDS] = {list_functions, read_temperature, generate_test_data_double, generate_test_data_int, generate_test_data_string, print_id, send_broadcast_cmd, toggle_debug};
+const char* g_commandNames[NB_COMMANDS]    = {"list_functions", "read_temperature", "generate_test_data_double", "generate_test_data_int", "generate_test_data_string", "print_id", "send_broadcast_cmd", "toggle_debug"};
 
 /****************************/
 /*** DECLARE FUNCTIONS      */
@@ -76,6 +76,9 @@ void * memset ( void * ptr, int value, size_t num );
 
 int get_id();
 void logging(const char *format,...);
+
+// Functions of DRW.c
+static void send_broadcast(uint8_t type);
 
 /****************************/
 /*** GLOBAL VARIABLES       */
@@ -137,6 +140,7 @@ void logging(const char *format,...)
 }
 
 /*---------------------------------------------------------------------------*/
+/* Commented by LW: We use the version in DRW.c
 static void
 broadcast_recv(struct broadcast_conn *c, const rimeaddr_t *from)
 {
@@ -144,18 +148,21 @@ broadcast_recv(struct broadcast_conn *c, const rimeaddr_t *from)
 	           from->u8[0], from->u8[1], (char *)packetbuf_dataptr());
 }
 static const struct broadcast_callbacks broadcast_call = {broadcast_recv};
+*/
 static struct broadcast_conn broadcast;
 /*---------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------*/
 /* We first declare our processes. */
-PROCESS(init_com_process, "Init communication process");
+PROCESS(gateway_communication_process, "Communication to/from the gateway");
 PROCESS(button_pressed,   "Button pressed");
+PROCESS(communication_process, "Communication process");
+PROCESS(drw, "Directional Random Walk");
 
 
 /* The AUTOSTART_PROCESSES() definition specifices what processes to
    start when this module is loaded. We put our processes there. */
-AUTOSTART_PROCESSES(&init_com_process, &button_pressed);
+AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &communication_process, &drw);
 /*---------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------*/
@@ -164,7 +171,7 @@ AUTOSTART_PROCESSES(&init_com_process, &button_pressed);
 /****************************/
 
 
-PROCESS_THREAD(init_com_process, ev, data)
+PROCESS_THREAD(gateway_communication_process, ev, data)
 {   
 	PROCESS_EXITHANDLER(goto exit);
 	PROCESS_BEGIN();
@@ -175,8 +182,8 @@ PROCESS_THREAD(init_com_process, ev, data)
 	printf("++++++++++++++++++++++++++++++\n");  
 	leds_off(LEDS_ALL);
 
-	LOG("set broadcast callback");
-	broadcast_open(&broadcast, 129, &broadcast_call);
+	// LOG("set broadcast callback");
+	// broadcast_open(&broadcast, 129, &broadcast_call); // Commented LW : use the version in DRW.c
 
 	while(1) {
 		/* Do the rest of the stuff here. */ 
@@ -456,7 +463,7 @@ void print_id(){
 /*
  * Send a broad_cast message
  */
-void send_broadcast(){
+void send_broadcast_cmd(){
 	packetbuf_copyfrom("Hello", 6);
 	broadcast_send(&broadcast);
 	LOG("broadcast message sent");
@@ -491,7 +498,7 @@ PROCESS_THREAD(button_pressed, ev, data)
 		PROCESS_WAIT_EVENT_UNTIL((ev==sensors_event) && (data == &button_sensor));
 
 		// Send a broadcast message
-		send_broadcast();
+		send_broadcast_cmd();
 
 		// Toggle the LEDS
 		if (push % 2 == 0) { 
