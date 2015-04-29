@@ -27,6 +27,8 @@
 #include "dev/temperature-sensor.h"
 #include "dev/button-sensor.h"
 #include "popwin_messages.h"
+#include "queue.h"
+#include "DRW.h"
 
 
 /****************************/
@@ -498,7 +500,13 @@ PROCESS_THREAD(button_pressed, ev, data)
 		PROCESS_WAIT_EVENT_UNTIL((ev==sensors_event) && (data == &button_sensor));
 
 		// Send a broadcast message
-		send_broadcast_cmd();
+		// send_broadcast_cmd();
+
+if ((int)node_id == SENDER)
+{
+	// If we are on the sender, go to message state
+	state = NEW_MESSAGE;
+}
 
 		// Toggle the LEDS
 		if (push % 2 == 0) { 

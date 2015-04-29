@@ -1,3 +1,6 @@
+#ifndef _QUEUE_H_
+#define _QUEUE_H_
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "net/rime.h"
@@ -15,7 +18,9 @@
 typedef struct Message {
   uint8_t type;
   uint8_t tag;   
-  char * message;
+  uint8_t message;
+  uint8_t nodeid;
+  uint8_t value;
   uint8_t weight;
   float wait_time;
   rimeaddr_t target;
@@ -136,7 +141,7 @@ void display (Queue* queue) {
         for (i = 0; i < size; i++) {
             if (i > 0)
                 printf(", ");
-            printf("%s", head->item.message);
+            printf("%d", head->item.message);
             head = head->next;
         }
     }
@@ -160,9 +165,13 @@ Queue createQueue () {
 Message createMessage () {
     Message m;
     m.type = 0;
-    m.message = "";
+    m.message = 0;
     m.tag = 0;
     m.weight = 0;
     m.wait_time = 0;
+    m.value = 0;
+    m.nodeid = 0;
     return m;
 }
+
+#endif

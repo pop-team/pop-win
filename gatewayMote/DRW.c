@@ -8,73 +8,12 @@
 #include <stdbool.h>
 #include "dev/leds.h"
 #include <stdio.h>
+#include <string.h>
 #include "dev/cc2420.h"
+#include "dev/button-sensor.h"
+#include "dev/light-sensor.h"
 
-/* This #define defines the maximum amount of neighbors we can remember. */
-#define MAX_NEIGHBORS 16
-/* This #define defines the node id corresponding to the database */
-#define DATABASE 2
-#define DATABASE_TAG UINT8_MAX
-/* This #define defines the node id corresponding to the sender */
-#define SENDER 1
-#define POWER 3
-
-static bool printConsole = true;
-
-/* Mote global variables */
-static uint8_t state;
-static uint8_t tag;     //should be a list
-static bool tag_asked = false;
-static int visited;
-
-static struct Message message_to_forward;
-static struct Message message_to_send;
-static rimeaddr_t unicast_target;
-static rimeaddr_t weight_target;
-
-static Queue message_queue;
-
-/* These are the types of unicast messages that we can send. */
-enum {
-  UNICAST_TYPE_MESSAGE,       //message to forward to database
-  UNICAST_TYPE_WEIGHT,       //information about a mote weight
-  BROADCAST_APPLY_TAG,        //telling neihbors they are tagged 
-  BROADCAST_MAKE_CANDIDATE,   //telling neighbors to compute weight    
-  BROADCAST_ASK_TAG,          //asking neighbors if they are tagged
-  BROADCAST_REPLY_TAG         //message telling if tagged
-  
-};
-
-/* These are the states in which a mote can be during the DRW */
-enum {
-  IDLE,
-  NEW_MESSAGE,
-  CURRENT_DRW_NODE,
-  CANDIDATE_NODE  
-};
-
-/* This structure holds information about neighbors. */
-struct neighbor {
-
-  struct neighbor *next;
-  rimeaddr_t addr;
-  uint8_t tag;
-  uint8_t weight;             // #neighbors tagged / total neihbors
-
-};
-
-/* This MEMB() definition defines a memory pool from which we allocate
-   neighbor entries. */
-MEMB(neighbors_memb, struct neighbor, MAX_NEIGHBORS);
-
-/* The neighbors_list is a Contiki list that holds the neighbors we
-   have seen thus far. */
-LIST(neighbors_list);
-
-/* These hold the broadcast and unicast structures, respectively. */
-static struct broadcast_conn broadcast;
-static struct unicast_conn unicast;
-
+#include "DRW.h"
 
 /*---------------------------------------------------------------------------*/
 /* We first declare our three processes. */
@@ -262,7 +201,7 @@ static void add_neighbor(uint8_t ntag, uint8_t nweight, const rimeaddr_t *from){
 
 
 //Forward message
-/* This is the function that does the routing to the next mote in the DRW */
+/* This is the function that does the routing to the next mote in the DRW when the DRW is in construction*/
 static void forward_message(){
 
       //pick neighbor with minimum weight and send a unicast message to it.
@@ -283,11 +222,17 @@ static void forward_message(){
 
       struct Message m;
       m.message = message_to_forward.message;
+      m.value = message_to_forward.value;
+      m.nodeid = message_to_forward.nodeid;
       m.type = UNICAST_TYPE_MESSAGE;
       m.tag = tag;
       message_queue.push(&message_queue, m);
       }
 }
+/*---------------------------------------------------------------------------*/
+
+
+
 /*---------------------------------------------------------------------------*/
 
 
@@ -365,6 +310,8 @@ recv_uc(struct unicast_conn *c, const rimeaddr_t *from)
 		   from->u8[0], from->u8[1]);
 	    tag = msg->tag;
 	    message_to_forward.message = msg->message;
+	    message_to_forward.value = msg->value;
+	    message_to_forward.nodeid = msg->nodeid;
             state = CURRENT_DRW_NODE;
 	    
     break;
@@ -479,18 +426,44 @@ PROCESS_THREAD(drw, ev, data)
         etimer_set(&et, CLOCK_SECOND * 30);
         PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
         
-        message_to_forward.message = "there is fire in room 22";
+	uint8_t typemessage = 6;
+	message_to_forward.message = typemessage;
+	SENSORS_ACTIVATE(light_sensor);
+	uint8_t value = (uint8_t)light_sensor.value(0);
+	printf("Light value1: %u\n", value);
+	printf("Light value2: %d\n", light_sensor.value(0));
+	message_to_forward.value = value;
+	SENSORS_DEACTIVATE(light_sensor);	
+	message_to_forward.nodeid = node_id;
+
         forward_message();
+	leds_off(LEDS_BLUE);
+	leds_toggle(LEDS_ALL);
+
+        state = IDLE; 
         
-        state = IDLE;
-        leds_off(LEDS_BLUE);
-      
+  
      } else if (state == CURRENT_DRW_NODE){
         	    
        if ((int)node_id == DATABASE) {
 	      
-	 printf("Message has reached the database!\n");
-	 printf("message is: %s\n", message_to_forward.message);
+	 printf("Message has reached the gateway!\n");
+	 printf("Message is: %u\n", message_to_forward.message);
+         printf("Value is: %u\n", message_to_forward.value);
+         printf("Nodeid of publisher is: %u\n", message_to_forward.nodeid);
+
+	// Send a notification to POP-C++
+	char buf[BUFFERSIZE];
+	struct NotifyMessage msg;
+	memset(&msg, 0, sizeof(msg));
+	snprintf(buf, sizeof(buf), "%d", message_to_forward.value);
+	msg.measurementType = message_to_forward.message;
+	msg.dataType        = TYPE_INT;
+	msg.id              = message_to_forward.nodeid;
+	msg.dataSize        = strlen(buf);
+	sendNotificationSerial(&msg, buf);
+
+         state=IDLE;
 	 leds_on(LEDS_ALL);
        
        } else {
@@ -526,7 +499,7 @@ PROCESS_THREAD(drw, ev, data)
               
         state = IDLE;
         leds_off(LEDS_GREEN);      
-     } 
+    } 
   }
   
   PROCESS_END();
