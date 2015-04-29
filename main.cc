@@ -8,6 +8,8 @@
  *
  */
 
+ // TODO: Handle crash if corrupted JSON
+
 #include <unistd.h>
 #include <termios.h>
 #include <map>

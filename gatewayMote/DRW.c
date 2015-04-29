@@ -331,8 +331,7 @@ static const struct unicast_callbacks unicast_callbacks = {recv_uc};
 uint8_t sense_light(){
 	SENSORS_ACTIVATE(light_sensor);
 	unsigned int value = (unsigned int)light_sensor.value(0);
-	printf("Light value1: %u\n", value);
-	//printf("Light value2: %d\n", light_sensor.value(0));
+	printf("Light value: %u\n", value);
 	SENSORS_DEACTIVATE(light_sensor);
 	
 	return (uint8_t)value;
@@ -341,8 +340,7 @@ uint8_t sense_light(){
 uint8_t sense_infrared(){
 	SENSORS_ACTIVATE(light_sensor);
 	unsigned int value = (unsigned int)light_sensor.value(1);
-	printf("Light value1: %u\n", value);
-	//printf("Light value2: %d\n", light_sensor.value(0));
+	printf("Infrared value: %u\n", value);
 	SENSORS_DEACTIVATE(light_sensor);
 	
 	return (uint8_t)value;
@@ -380,13 +378,25 @@ uint8_t sense_humidity(){
 }
 
 void send_event(const char* message){
+
+return; // TODO: CM see if this works
+
+
+
 	printf("sending message: %s\n", message);
 	uint8_t typemessage = MSR_EVENT;
 	message_to_forward.message = typemessage;
-	snprintf(message_to_forward.message_string, sizeof(message_to_forward.message_string), "%s", message);
+	//snprintf(message_to_forward.message_string, sizeof(message_to_forward.message_string), "%s", message); // TODO: Test
 	message_to_forward.nodeid = node_id;
 
+	message_to_forward.type = UNICAST_TYPE_MESSAGE;
+	message_to_forward.value = 999u; // TODO: Handle string messages
+
+	printf("size of queue1\n");
+	printf("size of queue1 %u\n", message_queue.size);
 	forward_message();
+	printf("size of queue2 %u\n", message_queue.size);
+	// state = NEW_MESSAGE;
 }
 
 //Communication Process
@@ -457,24 +467,36 @@ PROCESS_THREAD(sensor_events, ev, data)
         etimer_set(&et, 3 * CLOCK_SECOND);
         PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
+	static char event_hot = 0;
 	uint8_t temp = sense_temperature();
 	
 	if(temp >= 30u){
-		send_event("It is hot !");
+		if(event_hot == 0){
+			send_event("It is hot !");
+			event_hot = 1;
+		}
 	}	
+	else event_hot = 0;
 
+	static char event_humid = 0;
 	uint8_t humid = sense_humidity();
 
 	if(humid > 80u){
-		send_event("It is wet !");
+		if(event_humid == 0){
+			send_event("It is wet !");
+			event_humid = 1;
+		}
 	}
+	else event_humid = 0;
 	
 	static char event_dark = 0;
 	uint8_t light = sense_light(); 
 
-	if(light < 120u && event_dark == 0){
-		send_event("It is dark !");
-		event_dark = 1;
+	if(light < 120u){
+		if(event_dark == 0){
+			send_event("It is dark !");
+			event_dark = 1;
+		}
 	}
 	else event_dark = 0;
 	
@@ -535,8 +557,8 @@ PROCESS_THREAD(drw, ev, data)
 		message_to_forward.message = typemessage;
 		SENSORS_ACTIVATE(light_sensor);
 		uint8_t value = (uint8_t)light_sensor.value(0);
-		printf("Light value1: %u\n", value);
-		printf("Light value2: %d\n", light_sensor.value(0));
+		// printf("Light value1: %u\n", value);
+		printf("Light value2: %d\n", value);
 		message_to_forward.value = value;
 		SENSORS_DEACTIVATE(light_sensor);	
 		message_to_forward.nodeid = node_id;
@@ -570,6 +592,7 @@ PROCESS_THREAD(drw, ev, data)
   
      } else if (state == CURRENT_DRW_NODE){
         	    
+       // Id DATABASE is the id of the gateway
        if ((int)node_id == DATABASE) {
 	      
 	 printf("Message has reached the gateway!\n");
@@ -587,6 +610,8 @@ PROCESS_THREAD(drw, ev, data)
 	msg.id              = message_to_forward.nodeid;
 	msg.dataSize        = strlen(buf);
 	sendNotificationSerial(&msg, buf);
+
+	printf("String content of message:%s", message_to_forward.message_string);
 
          state=IDLE;
 	 leds_on(LEDS_ALL);

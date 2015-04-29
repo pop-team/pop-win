@@ -503,7 +503,7 @@ PROCESS_THREAD(button_pressed, ev, data)
 		// Send a broadcast message
 		// send_broadcast_cmd();
 
-if ((int)node_id == SENDER)
+if ((int)node_id == SENDER) // TODO: CM MAybe remove this
 {
 	// If we are on the sender, go to message state
 	state = NEW_MESSAGE;
@@ -525,6 +525,7 @@ if ((int)node_id == SENDER)
 		sense_temperature();
 		sense_humidity();
 		sense_light(); 
+		// sense_infrared(); 
 	}
 
 exit:
