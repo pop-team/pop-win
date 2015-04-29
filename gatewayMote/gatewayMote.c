@@ -160,11 +160,12 @@ PROCESS(gateway_communication_process, "Communication to/from the gateway");
 PROCESS(button_pressed,   "Button pressed");
 PROCESS(communication_process, "Communication process");
 PROCESS(drw, "Directional Random Walk");
+PROCESS(sensor_events, "Send events based on sensor values");
 
 
 /* The AUTOSTART_PROCESSES() definition specifices what processes to
    start when this module is loaded. We put our processes there. */
-AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &communication_process, &drw);
+AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &communication_process, &drw, &sensor_events);
 /*---------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------*/

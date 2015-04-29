@@ -19,6 +19,7 @@ typedef struct Message {
   uint8_t type;
   uint8_t tag;   
   uint8_t message;
+  char    message_string[16];
   uint8_t nodeid;
   uint8_t value;
   uint8_t weight;
@@ -171,6 +172,7 @@ Message createMessage () {
     m.wait_time = 0;
     m.value = 0;
     m.nodeid = 0;
+    memset(m.message_string, 0, sizeof(m.message));
     return m;
 }
 

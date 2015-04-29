@@ -31,7 +31,8 @@ enum MeasurementType
 	MSR_TEST        = 4, // test data
 	MSR_ACCELERATION= 5, // acceleration measurement
 	MSR_LIGHT       = 6,  // acceleration measurement
-	MSR_HUMIDITY    = 7   // acceleration measurement
+	MSR_HUMIDITY    = 7,  // humidity measurement
+	MSR_EVENT       = 8   // a specific event is sent
 	// ... //
 };
 enum MeasurementType translateMeasurementType(const char* x_str);

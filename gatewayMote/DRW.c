@@ -379,6 +379,16 @@ uint8_t sense_humidity(){
 	return (uint8_t)value;
 }
 
+void send_event(const char* message){
+	printf("sending message: %s\n", message);
+	uint8_t typemessage = MSR_EVENT;
+	message_to_forward.message = typemessage;
+	snprintf(message_to_forward.message_string, sizeof(message_to_forward.message_string), "%s", message);
+	message_to_forward.nodeid = node_id;
+
+	forward_message();
+}
+
 //Communication Process
 PROCESS_THREAD(communication_process, ev, data)
 {
@@ -432,15 +442,54 @@ PROCESS_THREAD(communication_process, ev, data)
 }
 
 /*---------------------------------------------------------------------------*/
+//PROCESS DEFINITION: Poll the sensors and check if events happened
+PROCESS_THREAD(sensor_events, ev, data)
+{
+  
+  PROCESS_BEGIN();
+
+  // Initialization of sensor
+  sht11_init();
+
+  static struct etimer et;
+  
+   while(1){
+        etimer_set(&et, 3 * CLOCK_SECOND);
+        PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+	uint8_t temp = sense_temperature();
+	
+	if(temp >= 30u){
+		send_event("It is hot !");
+	}	
+
+	uint8_t humid = sense_humidity();
+
+	if(humid > 80u){
+		send_event("It is wet !");
+	}
+	
+	static char event_dark = 0;
+	uint8_t light = sense_light(); 
+
+	if(light < 120u && event_dark == 0){
+		send_event("It is dark !");
+		event_dark = 1;
+	}
+	else event_dark = 0;
+	
+  }
+  PROCESS_END();
+ 
+}
+
+/*---------------------------------------------------------------------------*/
 //PROCESS DEFINITION: DRW
 PROCESS_THREAD(drw, ev, data)
 {
   
     
   PROCESS_BEGIN();
-
-  // Initialization of sensor
-  sht11_init();
 
   state = IDLE;
   list_init(neighbors_list);
