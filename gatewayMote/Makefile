@@ -1,2 +1,2 @@
-CONTIKI=/home/lwinkler/prog/contiki/
+CONTIKI=$(HOME)/prog/contiki/
 include $(CONTIKI)/Makefile.include

@@ -102,8 +102,8 @@ Downloading the develop version of POP-C++. As soon as the release is made the 3
 In case of problem with the installation, please refer to the README file contained in POP-C++.
 
 ```
-	sudo apt-get install git-core g++ flex bison cxxtest
-	git clone git@github.com:pop-team/pop-cpp.git -b develop
+	sudo apt-get install git-core g++ flex bison cxxtest zlib1g-dev
+	git clone https://github.com/pop-team/pop-win.git -b develop
 	cd pop-cpp
 	cmake .
 	make
@@ -125,7 +125,8 @@ Do not forget to install the mentionned patch for **cpu/msp430/Makefile.msp430**
 #### Download and compile the sources of POPWin
 
 ```
-	git clone git@github.com:pop-team/pop-win.git
+	sudo apt-get install libjsoncpp-dev
+	git clone https://github.com/pop-team/pop-win.git
 	cd pop-win
 	make clean && make
 ```
