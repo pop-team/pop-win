@@ -8,11 +8,25 @@
 		"connection": "usb"
 	},
 	"wsns":{
-		"node":{
+		"subscriptions":[
+		{
 			"measureType": "temperature",
 			"dataType":    "float",
 			"direction":   "IN"
 		},
+		{
+			"measureType": "temperature",
+			"dataType":    "float",
+			"direction":   "IN"
+		},
+		{
+			"measureType": "temperature",
+			"dataType":    "float",
+			"direction":   "IN"
+		},
+
+
+		]
 		"location": "myOffice"
 	}
 }

@@ -518,7 +518,12 @@ if ((int)node_id == SENDER)
 			LOG("Button pressed [%d] TURNING ON ALL LEDS ...   [DONE]", push);
 			push++;
 		}
-		if (push == 255){ push = 0;} // Prevents overflowing		 
+		if (push == 255){ push = 0;} // Prevents overflowing		
+
+
+		sense_temperature();
+		sense_humidity();
+		sense_light(); 
 	}
 
 exit:

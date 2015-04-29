@@ -18,6 +18,7 @@ static uint8_t state;
 static uint8_t tag;     //should be a list
 static bool tag_asked = false;
 static int visited;
+static int sense_counter = 0;
 
 static struct Message message_to_forward;
 static struct Message message_to_send;
@@ -25,6 +26,11 @@ static rimeaddr_t unicast_target;
 static rimeaddr_t weight_target;
 
 static Queue message_queue;
+
+uint8_t sense_light();
+uint8_t sense_infrared();
+uint8_t sense_humidity();
+uint8_t sense_temperature();
 
 /* These are the types of unicast messages that we can send. */
 enum {

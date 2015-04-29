@@ -30,7 +30,8 @@ enum MeasurementType
 	MSR_VIBRATION   = 3, // vibration measurement
 	MSR_TEST        = 4, // test data
 	MSR_ACCELERATION= 5, // acceleration measurement
-	MSR_LIGHT       = 6  // acceleration measurement
+	MSR_LIGHT       = 6,  // acceleration measurement
+	MSR_HUMIDITY    = 7   // acceleration measurement
 	// ... //
 };
 enum MeasurementType translateMeasurementType(const char* x_str);

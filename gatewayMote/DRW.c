@@ -12,6 +12,7 @@
 #include "dev/cc2420.h"
 #include "dev/button-sensor.h"
 #include "dev/light-sensor.h"
+#include "dev/sht11.h"
 
 #include "DRW.h"
 
@@ -327,6 +328,56 @@ recv_uc(struct unicast_conn *c, const rimeaddr_t *from)
 static const struct unicast_callbacks unicast_callbacks = {recv_uc};
 /*---------------------------------------------------------------------------*/
 
+uint8_t sense_light(){
+	SENSORS_ACTIVATE(light_sensor);
+	unsigned int value = (unsigned int)light_sensor.value(0);
+	printf("Light value1: %u\n", value);
+	//printf("Light value2: %d\n", light_sensor.value(0));
+	SENSORS_DEACTIVATE(light_sensor);
+	
+	return (uint8_t)value;
+}
+
+uint8_t sense_infrared(){
+	SENSORS_ACTIVATE(light_sensor);
+	unsigned int value = (unsigned int)light_sensor.value(1);
+	printf("Light value1: %u\n", value);
+	//printf("Light value2: %d\n", light_sensor.value(0));
+	SENSORS_DEACTIVATE(light_sensor);
+	
+	return (uint8_t)value;
+}
+
+uint8_t sense_temperature(){
+/*
+	int16_t sign    = 1;
+	int16_t  raw    = tmp102_read_temp_raw();
+	uint16_t absraw = raw;
+	if(raw < 0) {
+		absraw = (raw ^ 0xFFFF) + 1;
+		sign = -1;
+	}
+	int16_t  tempint  = ((absraw >> 8) * sign)-3;
+	uint16_t tempfrac = ((absraw >> 4) % 16) * 625;	
+	char     minus    = ((tempint == 0) & (sign == -1)) ? '-' : ' ';
+
+	DEBUG("Temp %d %d %d  --> %d %d %d", sign, raw, absraw, tempint, tempfrac, (int)minus);
+*/
+	// Create a temperature notification and send
+	// SEND( "{\"status\":\"OK\", \"infos\":{\"temperature\":\"%c%d.%04d\"}}", minus, tempint, tempfrac);
+	
+	// note: in the present situation, all messages are sent as 8 bits integers for simplicity
+	unsigned int value = (unsigned int) (-39.60 + 0.01 * sht11_temp());
+	printf("sense temperature %u\n", value);
+	return (uint8_t)value;
+}
+
+uint8_t sense_humidity(){
+	unsigned int rh = sht11_humidity();
+	unsigned int value = (unsigned int) (-4 + 0.0405*rh - 2.8e-6*(rh*rh));
+	printf("sense humidity %u percent (%u)\n", value, rh);
+	return (uint8_t)value;
+}
 
 //Communication Process
 PROCESS_THREAD(communication_process, ev, data)
@@ -388,6 +439,9 @@ PROCESS_THREAD(drw, ev, data)
     
   PROCESS_BEGIN();
 
+  // Initialization of sensor
+  sht11_init();
+
   state = IDLE;
   list_init(neighbors_list);
   message_queue = createQueue();
@@ -426,15 +480,37 @@ PROCESS_THREAD(drw, ev, data)
         etimer_set(&et, CLOCK_SECOND * 30);
         PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
         
-	uint8_t typemessage = 6;
-	message_to_forward.message = typemessage;
-	SENSORS_ACTIVATE(light_sensor);
-	uint8_t value = (uint8_t)light_sensor.value(0);
-	printf("Light value1: %u\n", value);
-	printf("Light value2: %d\n", light_sensor.value(0));
-	message_to_forward.value = value;
-	SENSORS_DEACTIVATE(light_sensor);	
-	message_to_forward.nodeid = node_id;
+	// Sense temperature and send
+	if(sense_counter % 3 == 0){
+		uint8_t typemessage = 6;
+		message_to_forward.message = typemessage;
+		SENSORS_ACTIVATE(light_sensor);
+		uint8_t value = (uint8_t)light_sensor.value(0);
+		printf("Light value1: %u\n", value);
+		printf("Light value2: %d\n", light_sensor.value(0));
+		message_to_forward.value = value;
+		SENSORS_DEACTIVATE(light_sensor);	
+		message_to_forward.nodeid = node_id;
+
+/*		uint8_t typemessage = MSR_LIGHT;
+		message_to_forward.message = typemessage;
+		message_to_forward.value = sense_light();
+		message_to_forward.nodeid = node_id;*/
+	}
+	else if(sense_counter % 3 == 1){
+		uint8_t typemessage = MSR_TEMPERATURE;
+		message_to_forward.message = typemessage;
+		message_to_forward.value = sense_temperature();
+		message_to_forward.nodeid = node_id;
+	}
+	else{
+		uint8_t typemessage = MSR_HUMIDITY;
+		message_to_forward.message = typemessage;
+		message_to_forward.value = sense_humidity();
+		message_to_forward.nodeid = node_id;
+	}
+	sense_counter++;
+
 
         forward_message();
 	leds_off(LEDS_BLUE);
