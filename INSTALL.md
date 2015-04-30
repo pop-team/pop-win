@@ -193,14 +193,11 @@ Installation of contiki files for xm1000
 ----------------------------------------
 To compile the code for xm1000 mote, you will need to add the following files to your Contiki directory:
 
-In directory popwin/gatewayMote: decompress the files in archive contiki-xm1000-v2012-08-29.rar. Then copy the content of tools/ and platform/ directories in your Contiki directory.
+In directory popwin/gatewayMote: decompress the files in archive contiki-xm1000-v2012-08-29.rar (along with popwin sources). Then copy the content of tools/ and platform/ directories in your Contiki directory.
 
-Remember that you have to copy and paste the appropriate files (2 files) of the xm1000 (available in the Advantic website) in the file system of InstantContiki2.6 (contiki->platform and contiki->tools).
+You can find the latest version of the code on page:
 
-Remember also to call to the target xm1000 instead to call the target sky.
-
-This is like this because the xm1000 sensor have a better micro-controller than usual Tmotes Sky and we have to use the appropriate drivers for this micro-controller.
-
+	http://www.advanticsys.com/shop/asxm1000-p-24.html
 	http://www.advanticsys.com/wiki/index.php?title=XM1000
 
 Troubleshooting
@@ -299,3 +296,19 @@ If the application is already in communication, the port will be busy and the up
 	Use -h for help
 	Use --fromweb to upgrade a GoodFET.
 
+
+### Problem
+With contiki 2.7 while compiling for xm1000
+
+	.../dev/sht11.c: In function ‘sht11_init’:
+	.../dev/sht11.c:218:4: warning: #warning SHT11: DISABLING I2C BUS [-Wcpp]
+	.../dev/sht11.c:221:5: error: ‘SHT11_PxREN’ undeclared (first use in this function)
+	.../dev/sht11.c:221:5: note: each undeclared identifier is reported only once for each function it appears in
+	...file.include:214: recipe for target 'obj_xm1000/sht11.o' failed
+
+### Solution
+Add this line in contiki/platform/xm1000/dev/sht11-arch.h (http://sourceforge.net/p/contiki/mailman/message/31712247/)
+
+	#define SHT11_PxREN  P1REN
+
+	

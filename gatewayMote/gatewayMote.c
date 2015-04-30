@@ -79,13 +79,9 @@ void * memset ( void * ptr, int value, size_t num );
 int get_id();
 void logging(const char *format,...);
 
-// Functions of DRW.c
-static void send_broadcast(uint8_t type);
-
 /****************************/
 /*** GLOBAL VARIABLES       */
 /****************************/
-char g_busy  = 0;
 char g_debug = 1;
 
 // send a subscription message
@@ -187,6 +183,8 @@ PROCESS_THREAD(gateway_communication_process, ev, data)
 
 	// LOG("set broadcast callback");
 	// broadcast_open(&broadcast, 129, &broadcast_call); // Commented LW : use the version in DRW.c
+
+	static char g_busy  = 0;
 
 	while(1) {
 		/* Do the rest of the stuff here. */ 
@@ -363,30 +361,14 @@ void list_functions()
  * Return data to the gateway
  */
 void read_temperature(){
-	/* TODO
-	int16_t sign    = 1;
-	int16_t  raw    = tmp102_read_temp_raw();
-	uint16_t absraw = raw;
-	if(raw < 0) {
-		absraw = (raw ^ 0xFFFF) + 1;
-		sign = -1;
-	}
-	int16_t  tempint  = ((absraw >> 8) * sign)-3;
-	uint16_t tempfrac = ((absraw >> 4) % 16) * 625;	
-	char     minus    = ((tempint == 0) & (sign == -1)) ? '-' : ' ';
+	// Note: this function sends the data via serial line. It should not be used directly
 
-	DEBUG("Temp %d %d %d  --> %d %d %d", sign, raw, absraw, tempint, tempfrac, (int)minus);
-
-	// Create a temperature notification and send
-	// SEND( "{\"status\":\"OK\", \"infos\":{\"temperature\":\"%c%d.%04d\"}}", minus, tempint, tempfrac);
-	*/
-
-	char data[32];
-	sprintf(data, "-15.98");
+	char data[32]; // TODO: Add a buffer directly in message structure
+	sprintf(data, "%u", sense_temperature());
 	struct NotifyMessage msg;
 	memset(&msg, 0, sizeof(msg));
 	msg.measurementType = MSR_TEMPERATURE;
-	msg.dataType        = TYPE_DOUBLE;
+	msg.dataType        = TYPE_INT;
 	msg.unit            = UNT_CELSIUS;
 	msg.id              = get_id();
 	msg.dataSize        = strlen(data);
@@ -503,7 +485,7 @@ PROCESS_THREAD(button_pressed, ev, data)
 		// Send a broadcast message
 		// send_broadcast_cmd();
 
-if ((int)node_id == SENDER) // TODO: CM MAybe remove this
+//if ((int)node_id == SENDER) // TODO: CM MAybe remove this
 {
 	// If we are on the sender, go to message state
 	state = NEW_MESSAGE;
@@ -520,6 +502,9 @@ if ((int)node_id == SENDER) // TODO: CM MAybe remove this
 			push++;
 		}
 		if (push == 255){ push = 0;} // Prevents overflowing		
+
+
+		LOG("Sensor has id %d (%d)", get_id(), node_id);
 
 
 		sense_temperature();
