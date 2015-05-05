@@ -107,38 +107,20 @@ void POPSensor::StopListening()
 	}
 }
 
-map<RecordHeader, double> POPSensor::RetrieveDataDouble()
+POPSensorData POPSensor::Gather()
 {
-	map<RecordHeader, double> records;
+	POPSensorData fullData;
 	for(auto it : m_sensorsProxy)
 	{
-		auto gatheredData(it->RetrieveDataDouble());
-		records.insert(gatheredData.begin(), gatheredData.end());
+		POPSensorData data(it->Gather());
+
+		fullData.dataDouble.insert(data.dataDouble.begin(), data.dataDouble.end());
+		fullData.dataInt.insert(data.dataInt.begin(), data.dataInt.end());
+		fullData.dataString.insert(data.dataString.begin(), data.dataString.end());
 	}
-	return records;
+	return fullData;
 }
 
-map<RecordHeader, int> POPSensor::RetrieveDataInt()
-{
-	map<RecordHeader, int> records;
-	for(auto it : m_sensorsProxy)
-	{
-		auto gatheredData(it->RetrieveDataInt());
-		records.insert(gatheredData.begin(), gatheredData.end());
-	}
-	return records;
-}
-
-map<RecordHeader, string> POPSensor::RetrieveDataString()
-{
-	map<RecordHeader, string> records;
-	for(auto it : m_sensorsProxy)
-	{
-		auto gatheredData(it->RetrieveDataString());
-		records.insert(gatheredData.begin(), gatheredData.end());
-	}
-	return records;
-}
 
 void POPSensor::ClearData()
 {

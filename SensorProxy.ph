@@ -35,9 +35,7 @@ public:
 	/// Send data to the remote sensors
 	async conc void StartListening();
 	async conc void StopListening();
-	sync seq std::map<RecordHeader, double>      RetrieveDataDouble();
-	sync seq std::map<RecordHeader, int>         RetrieveDataInt();
-	sync seq std::map<RecordHeader, std::string> RetrieveDataString();
+	sync seq POPSensorData Gather();
 	sync seq void ClearData();
 
 private:
@@ -52,11 +50,7 @@ private:
 	std::atomic<bool> m_listening;
 
 	// Different containers of data
-	std::map<RecordHeader, std::string> m_stringData;
-	std::map<RecordHeader, int>         m_intData;
-	std::map<RecordHeader, double>      m_doubleData;
-
-	// std::ofstream m_debugOf; // for debug only
+	POPSensorData m_sensorData;
 };
 
 #endif

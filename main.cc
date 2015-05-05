@@ -107,29 +107,8 @@ void clearData(POPSensor& xr_popSensor)
 /// Ask the remote to generate test data
 void printData(POPSensor& xr_popSensor)
 {
-	// Print double data
-	auto gatheredDataDouble(xr_popSensor.RetrieveDataDouble());
-	cout << "\nRecords found on proxy <double>: "<< gatheredDataDouble.size() << popcendl;
-	for(auto elem : gatheredDataDouble)
-	{
-		cout<< ">>" << elem.first << " -- " << elem.second << popcendl;
-	}
-
-	// Print int data
-	auto gatheredDataInt(xr_popSensor.RetrieveDataInt());
-	cout << "\nRecords found on proxy <int>: "<< gatheredDataInt.size() << popcendl;
-	for(auto elem : gatheredDataInt)
-	{
-		cout<< ">>" << elem.first << " -- " << elem.second << popcendl;
-	}
-
-	// Print string data
-	auto gatheredDataString(xr_popSensor.RetrieveDataString());
-	cout << "\nRecords found on proxy <string>: "<< gatheredDataString.size() << popcendl;
-	for(auto elem : gatheredDataString)
-	{
-		cout<< ">>" << elem.first << " -- " << elem.second << popcendl;
-	}
+	POPSensorData data(xr_popSensor.Gather());
+	data.Print();
 }
 
 /// Subscribe to elements in json file

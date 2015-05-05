@@ -206,30 +206,16 @@ void SensorProxy::StopListening()
 	m_listening.store(false);
 }
 
-map<RecordHeader, double> SensorProxy::RetrieveDataDouble()
+POPSensorData SensorProxy::Gather()
 {
 	// cout << "Retrieve " << m_doubleData.size() << " records of type double" <<popcendl;
-	return m_doubleData;
-}
-
-map<RecordHeader, int> SensorProxy::RetrieveDataInt()
-{
-	// cout << "Retrieve " << m_intData.size() << " records of type int" <<popcendl;
-	return m_intData;
-}
-
-map<RecordHeader, string> SensorProxy::RetrieveDataString()
-{
-	// cout << "Retrieve " << m_stringData.size() << " records of type string" <<popcendl;
-	return m_stringData;
+	return m_sensorData;
 }
 
 
 void SensorProxy::ClearData()
 {
-	m_doubleData.clear();
-	m_intData.clear();
-	m_stringData.clear();
+	m_sensorData.Clear();
 }
 
 /// Handle all incoming messages
@@ -268,10 +254,10 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 				switch(msg.dataType)
 				{
 					case TYPE_DOUBLE:
-						m_doubleData.insert(std::pair<RecordHeader, double>(RecordHeader(ms, msg), atof(data))); 
+						m_sensorData.dataDouble.insert(std::pair<RecordHeader, double>(RecordHeader(ms, msg), atof(data))); 
 					break;
 					case TYPE_INT:
-						m_intData.insert(std::pair<RecordHeader, int>(RecordHeader(ms, msg), atoi(data))); 
+						m_sensorData.dataInt.insert(std::pair<RecordHeader, int>(RecordHeader(ms, msg), atoi(data))); 
 					break;
 					case TYPE_STRING:
 					{
@@ -282,7 +268,7 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 						else
 						{
 							std::string str(data);
-							m_stringData.insert(std::pair<RecordHeader, std::string>(RecordHeader(ms, msg), str)); 
+							m_sensorData.dataString.insert(std::pair<RecordHeader, std::string>(RecordHeader(ms, msg), str)); 
 						}
 					}
 					break;
