@@ -8,8 +8,6 @@
  *
  */
 
- // TODO: Handle crash if corrupted JSON
-
 #include <unistd.h>
 #include <termios.h>
 #include <map>
@@ -23,39 +21,39 @@ using namespace std;
 //                                COMMANDS
 // -------------------------------------------------------------------------------- //
 
-typedef void (*Command)(POPSensor& xr_gateway);
+typedef void (*Command)(POPSensor& xr_popSensor);
 
 /// Blink all leds 3 times
-void blinkLeds(POPSensor& xr_gateway)
+void blinkLeds(POPSensor& xr_popSensor)
 {
 	static const int usecs = 500 * 1000;
 	for(int led = 0 ; led < 3 ; led++)
 	{
 		for(int i = 0 ; i < 2*3 ; i++)
 		{
-			xr_gateway.Publish(PUB_LED, led);
+			xr_popSensor.Publish(PUB_LED, led);
 			usleep(usecs);
 		}
 	}
 
 	// Toggle all leds
-	// xr_gateway.Publish(PUB_LED, 3);
+	// xr_popSensor.Publish(PUB_LED, 3);
 }
 
 /// Ask temperature and acceleration readings 
-void askSensorReadings(POPSensor& xr_gateway)
+void askSensorReadings(POPSensor& xr_popSensor)
 {
 	// Note: for the moment, only temperature is available
 	static const int usecs = 100 * 1000;
 	for(int i = 0 ; i < 10 ; i++)
 	{
-		xr_gateway.Publish(PUB_COMMAND, 1);
+		xr_popSensor.Publish(PUB_COMMAND, 1);
 		usleep(usecs);
 	}
 }
 
 /// Send a custom command
-void customCommand(POPSensor& xr_gateway)
+void customCommand(POPSensor& xr_popSensor)
 {
 	// Note: for the moment, only temperature is available
 	static const int usecs = 100 * 1000;
@@ -64,21 +62,21 @@ void customCommand(POPSensor& xr_gateway)
 	while(num == '\n' - '0')
 		num = getchar() - '0';
 	// cout << "send command " << num << popcendl;
-	xr_gateway.Publish(PUB_COMMAND, num);
+	xr_popSensor.Publish(PUB_COMMAND, num);
 }
 
 
 /// Ask the remote to generate test data
-void generateTestData(POPSensor& xr_gateway)
+void generateTestData(POPSensor& xr_popSensor)
 {
 	for(int i = 0 ; i < 5 ; i++)
 	{
 		// Each command generates 10 sanples of data (types: double, int, string)
-		xr_gateway.Publish(PUB_COMMAND, 2);
+		xr_popSensor.Publish(PUB_COMMAND, 2);
 		usleep(0.3 * 1000000);
-		xr_gateway.Publish(PUB_COMMAND, 3);
+		xr_popSensor.Publish(PUB_COMMAND, 3);
 		usleep(0.3 * 1000000);
-		xr_gateway.Publish(PUB_COMMAND, 4);
+		xr_popSensor.Publish(PUB_COMMAND, 4);
 
 		// Wait a bit to avoid overloading the mote
 		usleep(0.3 * 1000000);
@@ -86,31 +84,31 @@ void generateTestData(POPSensor& xr_gateway)
 }
 
 /// Test the different communication messages
-void testCommunication(POPSensor& xr_gateway)
+void testCommunication(POPSensor& xr_popSensor)
 {
 	cout<<"Send a test notification to sensors"<<popcendl;
-	xr_gateway.Notify(MSR_LOG, UNT_NONE, "test_notification");
+	xr_popSensor.Notify(MSR_LOG, UNT_NONE, "test_notification");
 	usleep(0.3 * 1000000);
 	cout<<"Send a test subsciption to sensors"<<popcendl;
-	xr_gateway.Subscribe(MSR_VIBRATION, TYPE_DOUBLE);
+	xr_popSensor.Subscribe(MSR_VIBRATION, TYPE_DOUBLE);
 	usleep(0.3 * 1000000);
 	cout<<"Send a test publication to sensors (should send the command list)"<<popcendl;
-	xr_gateway.Publish(PUB_COMMAND, 0);
+	xr_popSensor.Publish(PUB_COMMAND, 0);
 }
 
 
 /// Ask the remote to generate test data
-void clearData(POPSensor& xr_gateway)
+void clearData(POPSensor& xr_popSensor)
 {
 	// Each command generates 10 sanples of data (types: double, int, string)
-	xr_gateway.ClearData();
+	xr_popSensor.ClearData();
 }
 
 /// Ask the remote to generate test data
-void printData(POPSensor& xr_gateway)
+void printData(POPSensor& xr_popSensor)
 {
 	// Print double data
-	auto gatheredDataDouble(xr_gateway.RetrieveDataDouble());
+	auto gatheredDataDouble(xr_popSensor.RetrieveDataDouble());
 	cout << "\nRecords found on proxy <double>: "<< gatheredDataDouble.size() << popcendl;
 	for(auto elem : gatheredDataDouble)
 	{
@@ -118,7 +116,7 @@ void printData(POPSensor& xr_gateway)
 	}
 
 	// Print int data
-	auto gatheredDataInt(xr_gateway.RetrieveDataInt());
+	auto gatheredDataInt(xr_popSensor.RetrieveDataInt());
 	cout << "\nRecords found on proxy <int>: "<< gatheredDataInt.size() << popcendl;
 	for(auto elem : gatheredDataInt)
 	{
@@ -126,7 +124,7 @@ void printData(POPSensor& xr_gateway)
 	}
 
 	// Print string data
-	auto gatheredDataString(xr_gateway.RetrieveDataString());
+	auto gatheredDataString(xr_popSensor.RetrieveDataString());
 	cout << "\nRecords found on proxy <string>: "<< gatheredDataString.size() << popcendl;
 	for(auto elem : gatheredDataString)
 	{
@@ -135,9 +133,9 @@ void printData(POPSensor& xr_gateway)
 }
 
 /// Subscribe to elements in json file
-void subscribeToResources(POPSensor& xr_gateway)
+void subscribeToResources(POPSensor& xr_popSensor)
 {
-	xr_gateway.SubscribeToResources();
+	xr_popSensor.SubscribeToResources();
 }
 
 int main(int argc, char** argv)
@@ -184,21 +182,11 @@ int main(int argc, char** argv)
 
 	try
 	{
-		POPSensor gateway("localhost");
-
-		// Read json resource file into string
-		ifstream jif(argv[1]);
-		if(!jif.is_open())
-			throw POPException("Cannot open json resource file", argv[1]);
-		stringstream ss;
-		ss << jif.rdbuf();
-		jif.close();
-
-		gateway.Connect(ss.str());
-		gateway.StartListening();
+		POPSensor popSensor("localhost", argv[1]);
+		popSensor.StartListening();
 
 		//cout<<"Ask to send the list of commands"<<popcendl;
-		//gateway.Publish(PUB_COMMAND, 0);
+		//popSensor.Publish(PUB_COMMAND, 0);
 
 		char c = '\n';
 		while(true)
@@ -214,7 +202,7 @@ int main(int argc, char** argv)
 				auto cmd = commands.find(c);
 				if(cmd != commands.end())
 				{
-					(*cmd->second)(gateway);
+					(*cmd->second)(popSensor);
 					c = '\n';
 				}
 				else
@@ -231,7 +219,7 @@ int main(int argc, char** argv)
 		}
 
 		cout<<"Stop listening"<<popcendl;
-		gateway.StopListening();
+		popSensor.StopListening();
 
 
 		cout<<"End of popwin main"<<popcendl;

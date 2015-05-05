@@ -12,32 +12,31 @@
 #include "POPSensor.ph"
 #include "SensorProxy.ph"
 #include <unistd.h>
+#include <fstream>
 #include <json/json.h>
 #include <json/reader.h>
 
 using namespace std;
 
 
-POPSensor::POPSensor(const std::string& x_url)
+POPSensor::POPSensor(const std::string& x_url, const std::string& x_resourceFileName)
 {
-	
-}
+	// Read json resource file into string
+	ifstream jif(x_resourceFileName);
+	if(!jif.is_open())
+		throw POPException("Cannot open json resource file", argv[1]);
+	stringstream ss;
+	ss << jif.rdbuf();
+	jif.close();
 
-POPSensor::~POPSensor()
-{
-	Disconnect();
-}
 
-/// Search and create sensor proxys for communication with sensors
-void POPSensor::Connect(const std::string& x_resourceDescr)
-{
 	// Read json resource file
-	m_jsonResources = x_resourceDescr;
+	m_jsonResources = ss.str();
 	Json::Reader reader;
 	Json::Value root;
-	if (!reader.parse(x_resourceDescr, root, false))
+	if (!reader.parse(m_jsonResources, root, false))
 	{
-		throw POPException("Error while reading json string"); // , x_resourceDescr); // note: JSON string may be too long for buffer
+		throw POPException("Error while reading json string"); // , m_jsonResources); // note: JSON string may be too long for buffer
 	}
 
 	string connectionType = root["gateway"].get("connection", "<not found>").asString();
@@ -67,8 +66,7 @@ void POPSensor::Connect(const std::string& x_resourceDescr)
 		throw POPException("No sensor proxy could be create. Did you connect the gateway mote via USB ?");
 }
 
-
-void POPSensor::Disconnect()
+POPSensor::~POPSensor()
 {
 	m_jsonResources = "";
 	cout<<"Destroying POPSensor and its "<<m_sensorsProxy.size() << " SensorProxy." <<popcendl;

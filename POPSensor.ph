@@ -97,12 +97,8 @@ parclass POPSensor {
 
 public:
 	// POPSensor(int newID, int wanted, int minp) @{ od.search(0, 3, 0); };
-	POPSensor(const std::string& x_url) @{ od.url(x_url); };
+	POPSensor(const std::string& x_url, const std::string& x_resourceFileName) @{ od.url(x_url); };
 	~POPSensor();
-
-	/// Search and create sensor proxys for communication with sensors
-	void Connect(const std::string& x_resourceDescr);
-	void Disconnect();
 
 	/// Start listening on serial line
 	void StartListening();
