@@ -13,7 +13,7 @@
 
 using namespace std;
 
-template<class T> void serialize(map<RecordHeader, T> records, POPBuffer &buf, bool pack)
+template<class T> void serialize(map<RecordHeader, T>& records, POPBuffer &buf, bool pack)
 {
 	if(pack)
 	{
@@ -47,6 +47,8 @@ void POPSensorData::Serialize(POPBuffer &buf, bool pack)
 	 serialize(dataDouble, buf, pack);
 	 serialize(dataInt,    buf, pack);
 	 serialize(dataString, buf, pack);
+
+	 // cout << "serialize "<<pack << " " << dataDouble.size() << popcendl;
 }
 
 void POPSensorData::Print()
@@ -57,14 +59,12 @@ void POPSensorData::Print()
 	}
 
 	// Print int data
-	cout << "\nRecords found on proxy <int>: "<< dataInt.size() << popcendl;
 	for(auto elem : dataInt)
 	{
 		cout<< ">>" << elem.first << " -- " << elem.second << popcendl;
 	}
 
 	// Print string data
-	cout << "\nRecords found on proxy <string>: "<< dataString.size() << popcendl;
 	for(auto elem : dataString)
 	{
 		cout<< ">>" << elem.first << " -- " << elem.second << popcendl;
