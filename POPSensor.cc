@@ -37,7 +37,7 @@ void POPSensor::Connect(const std::string& x_resourceDescr)
 	Json::Value root;
 	if (!reader.parse(x_resourceDescr, root, false))
 	{
-		throw POPException("Error while reading json string", x_resourceDescr);
+		throw POPException("Error while reading json string"); // , x_resourceDescr); // note: JSON string may be too long for buffer
 	}
 
 	string connectionType = root["gateway"].get("connection", "<not found>").asString();

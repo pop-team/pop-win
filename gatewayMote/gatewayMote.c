@@ -181,17 +181,19 @@ PROCESS_THREAD(gateway_communication_process, ev, data)
 	printf("++++++++++++++++++++++++++++++\n");  
 	leds_off(LEDS_ALL);
 
+
 	// LOG("set broadcast callback");
 	// broadcast_open(&broadcast, 129, &broadcast_call); // Commented LW : use the version in DRW.c
-
 	static char g_busy  = 0;
 
 	while(1) {
 		/* Do the rest of the stuff here. */ 
-		PROCESS_WAIT_EVENT_UNTIL((ev==serial_line_event_message));
+		PROCESS_WAIT_EVENT_UNTIL(ev==serial_line_event_message);
+		// PROCESS_WAIT_EVENT_UNTIL((ev==sensors_event) && (data == &button_sensor));
+		// printf("RECEIVED DATA\n");
 		if(data == NULL)
 		{
-			DEBUG("Received empty data");
+			LOG("Received empty data");
 			continue;
 		}
 
@@ -229,6 +231,7 @@ PROCESS_THREAD(gateway_communication_process, ev, data)
 		else ERROR("Device is busy. Cannot process message");
 	}		
 exit:
+	LOG("Exiting process");
 	leds_off(LEDS_ALL);
 	PROCESS_END();
 }

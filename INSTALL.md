@@ -311,4 +311,58 @@ Add this line in contiki/platform/xm1000/dev/sht11-arch.h (http://sourceforge.ne
 
 	#define SHT11_PxREN  P1REN
 
+### Problem: Incoming communication problem with xm1000
+Dear support team
+
+I am having trouble with the XM1000 remote sensor and contiki 2.7. It seems that the incoming communication (PC->sensor) are not handled by the sensor. 
+
+It seems that the following program gets stuck at PROCESS_WAIT_EVENT_UNTIL and does not handle any events (ie nothing gets printed)
+
+The code is compiled with the toolchain and contiki 2.7. (The same code works with Zolertia z1 sensors)
+
+Can you help me ? 
+
+Best regards
+Laurent Winkler
+
+
+
+	#include "contiki.h"
+	#include "dev/leds.h"
+	#include <stdio.h>
+	#include "dev/serial-line.h"
+
+	/*---------------------------------------------------------------------------*/
+	/* We first declare our processes. */
+	PROCESS(gateway_communication_process, "Communication to/from the gateway");
+
+
+	/* The AUTOSTART_PROCESSES() definition specifices what processes to
+	   start when this module is loaded. We put our processes there. */
+	AUTOSTART_PROCESSES(&gateway_communication_process);
+
+	PROCESS_THREAD(gateway_communication_process, ev, data)
+	{
+		PROCESS_EXITHANDLER(goto exit);
+		PROCESS_BEGIN();
+
+		/* Initialize stuff here. */
+		printf("++++++++++++++++++++++++++++++\n");
+		printf("+   INIT/START SERIAL COM    +\n");
+		printf("++++++++++++++++++++++++++++++\n");
+
+		while(1) {
+			PROCESS_WAIT_EVENT_UNTIL(ev == serial_line_event_message && data != NULL);
+			printf("RECEIVED DATA\n");
+			if(data == NULL)
+			{
+				printf("Received empty data\n");
+				continue;
+			}
+		}               
+	exit:
+		printf("Exiting process\n");
+		leds_off(LEDS_ALL);
+		PROCESS_END();
+	}
 	
