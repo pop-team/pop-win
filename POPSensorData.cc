@@ -13,14 +13,40 @@
 
 using namespace std;
 
+template<class T> void serialize(map<RecordHeader, T> records, POPBuffer &buf, bool pack)
+{
+	if(pack)
+	{
+		int size = records.size();
+		buf.Pack(&size, 1);
+		for(auto& elem : records)
+		{
+			RecordHeader head = elem.first;
+			head.Serialize(buf, true);
+			buf.Pack(&((T &)(elem.second)), 1);
+		}
+	}
+	else
+	{
+		int size = 0;
+		buf.UnPack(&size,1);
+		records.clear();
+		for(int i=0 ; i < size ; i++)
+		{
+			RecordHeader key;
+			T value{};
+			key.Serialize(buf, false);
+			buf.UnPack(&value,1);
+			records[key] = value;
+		}
+	}
+}
 
 void POPSensorData::Serialize(POPBuffer &buf, bool pack)
 {
-	/* TODO
-	   buf.Pack(&stringData,1);
-	   buf.Pack(&intData,1);
-	   buf.Pack(&doubleData,1);
-	 */
+	 serialize(dataDouble, buf, pack);
+	 serialize(dataInt,    buf, pack);
+	 serialize(dataString, buf, pack);
 }
 
 void POPSensorData::Print()
