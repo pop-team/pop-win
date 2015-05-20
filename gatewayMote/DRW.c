@@ -611,15 +611,14 @@ PROCESS_THREAD(drw, ev, data)
 				printf("Nodeid of publisher is: %u\n", message_to_forward.nodeid);
 
 				// Send a notification to POP-C++
-				char buf[BUFFERSIZE];
 				struct NotifyMessage msg;
 				memset(&msg, 0, sizeof(msg));
-				snprintf(buf, sizeof(buf), "%d", message_to_forward.value);
+				snprintf(msg.data, sizeof(msg.data), "%d", message_to_forward.value);
 				msg.measurementType = message_to_forward.message;
 				msg.dataType        = TYPE_INT;
 				msg.id              = message_to_forward.nodeid;
-				msg.dataSize        = strlen(buf);
-				sendNotificationSerial(&msg, buf);
+				msg.dataSize        = strlen(msg.data);
+				sendNotificationSerial(&msg);
 
 				// printf("String content of message:%s", message_to_forward.message_string);
 

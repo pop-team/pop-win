@@ -55,7 +55,7 @@ int unbufferizeSubscribeMessage(struct SubscribeMessage* xp_msg, const char* x_b
 // Notification message
 
 // Print message to buffer
-int bufferizeNotifyMessage(const struct NotifyMessage* x_msg, const char* x_data, char* xp_buffer, size_t x_bufferSize)
+int bufferizeNotifyMessage(const struct NotifyMessage* x_msg, char* xp_buffer, size_t x_bufferSize)
 {
 	// note: sizeof(size_t) = 2 for contiki but we use 4 for compatibility
 	int ret = snprintf(xp_buffer, x_bufferSize, "%02x %02x %02x %04x %02x %04x %s\n",
@@ -65,13 +65,13 @@ int bufferizeNotifyMessage(const struct NotifyMessage* x_msg, const char* x_data
 		x_msg->id,
 		x_msg->unit,
 		(int)x_msg->dataSize,
-		x_data
+		x_msg->data
 	);
 	return ret > 0 && ret < x_bufferSize;
 }
 
 /// Read message from buffer
-int unbufferizeNotifyMessage(struct NotifyMessage* xp_msg, char* xp_data, const char* x_buffer, size_t x_maxDataSize)
+int unbufferizeNotifyMessage(struct NotifyMessage* xp_msg, const char* x_buffer, size_t x_maxDataSize)
 {
 	int mtype = -1;
 	int id    = -1;
@@ -101,7 +101,7 @@ int unbufferizeNotifyMessage(struct NotifyMessage* xp_msg, char* xp_data, const 
 			printf("ERROR: Buffer has insufficient size %d > %d\n", dataSize + 1, (int)x_maxDataSize);
 			return 0;
 		}
-		int s = snprintf(xp_data, x_maxDataSize, "%s", x_buffer + 21 + 1);
+		int s = snprintf(xp_msg->data, x_maxDataSize, "%s", x_buffer + 21 + 1);
 		if(s == dataSize)
 		{
 			return 1;
@@ -119,7 +119,7 @@ int unbufferizeNotifyMessage(struct NotifyMessage* xp_msg, char* xp_data, const 
 // Publication message
 
 // Print message to buffer
-int bufferizePublishMessage(const struct PublishMessage* x_msg, const char* x_data, char* xp_buffer, size_t x_bufferSize)
+int bufferizePublishMessage(const struct PublishMessage* x_msg, char* xp_buffer, size_t x_bufferSize)
 {
 	// note: sizeof(size_t) = 2 for contiki but we use 4 for compatibility
 	int ret = snprintf(xp_buffer, x_bufferSize, "%02x %02x %02x %04x %04x %s\n",
@@ -129,13 +129,13 @@ int bufferizePublishMessage(const struct PublishMessage* x_msg, const char* x_da
 		x_msg->id,
 		// msg->unit,
 		(int)x_msg->dataSize,
-		x_data
+		x_msg->data
 	);
 	return ret > 0 && ret < x_bufferSize;
 }
 
 // Read message from buffer
-int unbufferizePublishMessage(struct PublishMessage* xp_msg, char* xp_data, const char* x_buffer, size_t x_maxDataSize)
+int unbufferizePublishMessage(struct PublishMessage* xp_msg, const char* x_buffer, size_t x_maxDataSize)
 {
 	int mtype = -1;
 	int id    = -1;
@@ -166,7 +166,7 @@ int unbufferizePublishMessage(struct PublishMessage* xp_msg, char* xp_data, cons
 			printf("ERROR: Buffer has insufficient size %d > %d\n", dataSize + 1, (int)x_maxDataSize);
 			return 0;
 		}
-		int s = snprintf(xp_data, x_maxDataSize, "%s", x_buffer + 18 + 1);
+		int s = snprintf(xp_msg->data, x_maxDataSize, "%s", x_buffer + 18 + 1);
 		if(s == dataSize)
 		{
 			return 1;

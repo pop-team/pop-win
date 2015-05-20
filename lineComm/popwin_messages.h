@@ -10,7 +10,12 @@
 #ifndef POPWIN_MESSAGES_H
 #define POPWIN_MESSAGES_H
 
-#define BUFFERSIZE 512
+
+// The max size of a buffer after unbuffering (on the gateway only)
+#define BUFFERSIZE     512
+
+// The size of the data itself (e.g. in Notify messages)
+#define BUFFERDATASIZE 64
 
 // Different types of messages
 enum MessageType
@@ -110,6 +115,7 @@ struct NotifyMessage
 	unsigned short       id;
 	enum MeasurementUnit unit;
 	size_t               dataSize;
+	char                 data[BUFFERDATASIZE];
 };
 
 /// Print message to buffer
@@ -117,15 +123,14 @@ struct NotifyMessage
 /// @param x_msg     Incoming message
 /// @param xp_buffer Output buffer
 /// @param x_bufferSize Size of the buffer for safety
-int bufferizeNotifyMessage(const struct NotifyMessage* x_msg, const char* x_data, char* xp_buffer, size_t x_bufferSize);
+int bufferizeNotifyMessage(const struct NotifyMessage* x_msg, char* xp_buffer, size_t x_bufferSize);
 
 // Read message from buffer
 /// 
 /// @param xp_msg         Output: message structure
 /// @param x_buffer       Input:  message is read from here
-/// @param xp_data        Output: data contained in notification message gets copied here
 /// @param x_maxDataSize: Size of the data buffer for safety
-int unbufferizeNotifyMessage(struct NotifyMessage* x_msg, char* xp_data, const char* x_buffer, size_t x_dataSize);
+int unbufferizeNotifyMessage(struct NotifyMessage* x_msg, const char* x_buffer, size_t x_dataSize);
 
 // -------------------------------------------------------------------------------- //
 // Publication message
@@ -137,6 +142,7 @@ struct PublishMessage
 	unsigned short       id;               // not mandatory, for convenience
 	// enum MeasurementUnit unit;
 	size_t               dataSize;
+	char                 data[BUFFERDATASIZE];
 };
 
 // Note: no unpublish message for the first version. The structure will be similar to publish messages
@@ -146,15 +152,14 @@ struct PublishMessage
 /// @param x_msg     Incoming message
 /// @param xp_buffer Output buffer
 /// @param x_bufferSize Size of the buffer for safety
-int bufferizePublishMessage(const struct PublishMessage* x_msg, const char* x_data, char* xp_buffer, size_t x_bufferSize);
+int bufferizePublishMessage(const struct PublishMessage* x_msg, char* xp_buffer, size_t x_bufferSize);
 
 // Read message from buffer
 /// 
 /// @param xp_msg         Output: message structure
 /// @param x_buffer       Input:  message is read from here
-/// @param xp_data        Output: data contained in notification message gets copied here
 /// @param x_maxDataSize: Size of the data buffer for safety
-int unbufferizePublishMessage(struct PublishMessage* xp_msg, char* xp_data, const char* x_buffer, size_t x_dataSize);
+int unbufferizePublishMessage(struct PublishMessage* xp_msg, const char* x_buffer, size_t x_dataSize);
 
 // -------------------------------------------------------------------------------- //
 

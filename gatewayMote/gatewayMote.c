@@ -96,10 +96,10 @@ void sendSubscriptionSerial(const struct SubscribeMessage* msg)
 }
 
 // send a notification message: Only for use on the remote sensor
-void sendNotificationSerial(const struct NotifyMessage* msg, const char* data)
+void sendNotificationSerial(const struct NotifyMessage* msg)
 {
 	char buf[BUFFERSIZE];
-	if(bufferizeNotifyMessage(msg, data, buf, sizeof(buf)) <= 0)
+	if(bufferizeNotifyMessage(msg, buf, sizeof(buf)) <= 0)
 		ERROR("Cannot write message to buffer");
 
 	// Send message via serial line on contiki
@@ -122,19 +122,19 @@ int get_id()
 /// Log message (handled as a notification of type string): Only for use on the remote sensor
 void logging(const char *format,...)
 {
-	char buf[BUFFERSIZE];
-	va_list ap;
-	va_start(ap, format);
-	vsnprintf(buf, sizeof(buf), format, ap);
-	va_end(ap);
 
 	struct NotifyMessage msg;
 	memset(&msg, 0, sizeof(msg));
+	va_list ap;
+	va_start(ap, format);
+	vsnprintf(msg.data, sizeof(msg.data), format, ap);
+	va_end(ap);
+
 	msg.measurementType = MSR_LOG;
 	msg.dataType        = TYPE_STRING;
 	msg.id              = get_id();
-	msg.dataSize        = strlen(buf);
-	sendNotificationSerial(&msg, buf);
+	msg.dataSize        = strlen(msg.data);
+	sendNotificationSerial(&msg);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -243,8 +243,7 @@ void handleNotification(const char* data)
 {
 	struct NotifyMessage msg;
 	memset(&msg, 0, sizeof(msg));
-	char data2[BUFFERSIZE];
-	if(unbufferizeNotifyMessage(&msg, data2, data, sizeof(data2)) <= 0)
+	if(unbufferizeNotifyMessage(&msg, data, sizeof(msg.data)) <= 0)
 		ERROR("Cannot read message from buffer");
 
 	// 
@@ -281,8 +280,7 @@ void handlePublication(const char* data)
 {
 	struct PublishMessage msg;
 	memset(&msg, 0, sizeof(msg));
-	char dataBuffer[32];
-	if(unbufferizePublishMessage(&msg, dataBuffer, data, sizeof(dataBuffer)) <= 0)
+	if(unbufferizePublishMessage(&msg, data, sizeof(data)) <= 0)
 		ERROR("Cannot read message from buffer");
 
 	DEBUG("Handle publication dataType=%d", msg.dataType);
@@ -296,7 +294,7 @@ void handlePublication(const char* data)
 		break;
 		case TYPE_INT:
 		{
-			int dataInt = atoi(dataBuffer);
+			int dataInt = atoi(msg.data);
 			switch(msg.publicationType)
 			{
 				case PUB_LED:
@@ -366,16 +364,15 @@ void list_functions()
 void read_temperature(){
 	// Note: this function sends the data via serial line. It should not be used directly
 
-	char data[32]; // TODO: Add a buffer directly in message structure
-	sprintf(data, "%u", sense_temperature());
 	struct NotifyMessage msg;
 	memset(&msg, 0, sizeof(msg));
+	sprintf(msg.data, "%u", sense_temperature());
 	msg.measurementType = MSR_TEMPERATURE;
 	msg.dataType        = TYPE_INT;
 	msg.unit            = UNT_CELSIUS;
 	msg.id              = get_id();
-	msg.dataSize        = strlen(data);
-	sendNotificationSerial(&msg, data);
+	msg.dataSize        = strlen(msg.data);
+	sendNotificationSerial(&msg);
 }
 
 /*
@@ -389,15 +386,14 @@ void generate_test_data_double(){
 	{
 		// Due to a bug of Contiki we cannot print doubles
 		d *= 3;
-		char data[32];
-		sprintf(data, "%d.%02d", d / 100, ABS(d % 100));
 		struct NotifyMessage msg;
 		memset(&msg, 0, sizeof(msg));
+		sprintf(msg.data, "%d.%02d", d / 100, ABS(d % 100));
 		msg.measurementType = MSR_TEST;
 		msg.dataType        = TYPE_DOUBLE;
 		msg.id              = get_id();
-		msg.dataSize        = strlen(data);
-		sendNotificationSerial(&msg, data);
+		msg.dataSize        = strlen(msg.data);
+		sendNotificationSerial(&msg);
 	}
 }
 
@@ -410,15 +406,14 @@ void generate_test_data_int(){
 	for(i = 0 ; i < 10 ; i++)
 	{
 		n += 1e4;
-		char data[32];
-		sprintf(data, "%d", n);
 		struct NotifyMessage msg;
 		memset(&msg, 0, sizeof(msg));
+		sprintf(msg.data, "%d", n);
 		msg.measurementType = MSR_TEST;
 		msg.dataType        = TYPE_INT;
 		msg.id              = get_id();
-		msg.dataSize        = strlen(data);
-		sendNotificationSerial(&msg, data);
+		msg.dataSize        = strlen(msg.data);
+		sendNotificationSerial(&msg);
 	}
 }
 
@@ -429,15 +424,14 @@ void generate_test_data_string(){
 	int i = 0;
 	for(i = 0 ; i < 10 ; i++)
 	{
-		char data[32];
-		sprintf(data, "Test string number %d !", i);
 		struct NotifyMessage msg;
 		memset(&msg, 0, sizeof(msg));
+		sprintf(msg.data, "Test string number %d !", i);
 		msg.measurementType = MSR_TEST;
 		msg.dataType        = TYPE_STRING;
 		msg.id              = get_id();
-		msg.dataSize        = strlen(data);
-		sendNotificationSerial(&msg, data);
+		msg.dataSize        = strlen(msg.data);
+		sendNotificationSerial(&msg);
 	}
 }
 
