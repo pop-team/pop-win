@@ -22,7 +22,6 @@
 #include "dev/leds.h"
 #include <stdio.h>
 
-// #include "dev/tmp102.h"
 #include "dev/serial-line.h"
 #include "dev/temperature-sensor.h"
 #include "dev/button-sensor.h"
@@ -110,12 +109,6 @@ void sendNotificationSerial(const struct NotifyMessage* msg)
 int get_id()
 {
 	// Id is computed from rime address (for messaging)
-	// normal format is "a.b". We transform it into an integer as a * 256 + b
-	/*
-	int id = rimeaddr_node_addr.u8[0];
-	id *= 256; //  Note: there seems to be a problem on the z1 mote with this line
-	id += rimeaddr_node_addr.u8[1];
-	*/
 	return rimeaddr_node_addr.u8[0];
 }
 

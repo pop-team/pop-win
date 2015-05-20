@@ -31,6 +31,7 @@ int bufferizeSubscribeMessage(const struct SubscribeMessage* x_msg, char* xp_buf
 // Read message from buffer
 int unbufferizeSubscribeMessage(struct SubscribeMessage* xp_msg, const char* x_buffer)
 {
+	memset(xp_msg, 0, sizeof(xp_msg));
 	int mtype = -1;
 	int id    = -1;
 	int mt    = -1;
@@ -73,6 +74,7 @@ int bufferizeNotifyMessage(const struct NotifyMessage* x_msg, char* xp_buffer, s
 /// Read message from buffer
 int unbufferizeNotifyMessage(struct NotifyMessage* xp_msg, const char* x_buffer, size_t x_maxDataSize)
 {
+	memset(xp_msg, 0, sizeof(xp_msg));
 	int mtype = -1;
 	int id    = -1;
 	int mt    = -1;
@@ -137,6 +139,7 @@ int bufferizePublishMessage(const struct PublishMessage* x_msg, char* xp_buffer,
 // Read message from buffer
 int unbufferizePublishMessage(struct PublishMessage* xp_msg, const char* x_buffer, size_t x_maxDataSize)
 {
+	memset(xp_msg, 0, sizeof(xp_msg));
 	int mtype = -1;
 	int id    = -1;
 	int mt    = -1;

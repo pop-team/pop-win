@@ -189,17 +189,18 @@ POPSensorData SensorProxy::Gather()
 void SensorProxy::Clear()
 {
 	m_sensorData.Clear();
-	m_subscriptions.clear();
+	// m_subscriptions.clear();
 }
 
 /// Handle all incoming messages
 void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 {
-	// cout << "received" << x_rawMsg << popcendl;
+	// cout << "received :" << x_rawMsg << popcendl;
 	struct timeval time_now;
 	gettimeofday(&time_now, NULL);
 	long ms = time_now.tv_sec * 1000 + time_now.tv_usec / 1000;
 	// cout << "ms" << ms << popcendl;
+
 
 	try
 	{
@@ -222,36 +223,28 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 			case MSG_NOTIFY:
 			{
 				NotifyMessage msg;
-				char data[BUFFERSIZE];
-				if(unbufferizeNotifyMessage(&msg, data, x_rawMsg.c_str(), sizeof(data)) <= 0)
+				if(unbufferizeNotifyMessage(&msg, x_rawMsg.c_str(), x_rawMsg.size()) <= 0)
 					throw POPException("Cannot unbufferize notify message");
 
-				if(m_subscriptions.find(msg.dataType) == m_subscriptions.end())
+				auto it = m_subscriptions.find(msg.measurementType);
+				bool subscibed = it != m_subscriptions.end() && it->second;
+				if(!subscibed)
 				{
 					// Not subscribed to this type of data
-					cout<< "Remote message (" << explainDataType(msg.dataType) << "): '" << data << "'" << popcendl;
+					cout<< "Unstored notification (" << explainMeasurementType(msg.measurementType) << "): '" << msg.data << "'" << popcendl;
 					break;
 				}
 				switch(msg.dataType)
 				{
 					case TYPE_DOUBLE:
-						m_sensorData.dataDouble.insert(std::pair<RecordHeader, double>(RecordHeader(ms, msg), atof(data))); 
-					break;
+						m_sensorData.dataDouble.insert(std::pair<RecordHeader, double>(RecordHeader(ms, msg), atof(msg.data))); 
+						break;
 					case TYPE_INT:
-						m_sensorData.dataInt.insert(std::pair<RecordHeader, int>(RecordHeader(ms, msg), atoi(data))); 
-					break;
+						m_sensorData.dataInt.insert(std::pair<RecordHeader, int>(RecordHeader(ms, msg), atoi(msg.data))); 
+						break;
 					case TYPE_STRING:
-					{
-						if(msg.measurementType == MSR_LOG)
-						{
-						}
-						else
-						{
-							std::string str(data);
-							m_sensorData.dataString.insert(std::pair<RecordHeader, std::string>(RecordHeader(ms, msg), str)); 
-						}
-					}
-					break;
+						m_sensorData.dataString.insert(std::pair<RecordHeader, std::string>(RecordHeader(ms, msg), std::string(msg.data))); 
+						break;
 					default:
 						printf("Unknown data type %d in %s\n", msg.dataType, x_rawMsg.c_str());
 				}
@@ -274,50 +267,45 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 void SensorProxy::Notify(int x_measurementType, int x_measurementUnit, const std::string& x_message)
 {
 	// note: only string messages are implemented. Other types can be trivially implemented
-	char dataBuffer[BUFFERSIZE];
-	char buf[BUFFERSIZE];
-	sprintf(dataBuffer, "%s\r\n", x_message.c_str());
-
 	struct NotifyMessage msg;
 	memset(&msg, 0, sizeof(struct NotifyMessage));
+	snprintf(msg.data, sizeof(msg.data), "%s\r\n", x_message.c_str());
 	msg.measurementType = static_cast<MeasurementType>(x_measurementType);
 	msg.dataType        = TYPE_STRING;
 	msg.unit            = static_cast<MeasurementUnit>(x_measurementUnit);
 	msg.id              = m_id;
-	msg.dataSize        = strlen(dataBuffer);
+	msg.dataSize        = strlen(msg.data);
 
-	if(bufferizeNotifyMessage(&msg, dataBuffer, buf, BUFFERSIZE) <= 0)
-		throw POPException("Cannot bufferize publish message", dataBuffer);
+	char buffer[BUFFERSIZE];
+	if(bufferizeNotifyMessage(&msg, buffer, BUFFERSIZE) <= 0)
+		throw POPException("Cannot bufferize publish message", buffer);
 	// cout<< "Sending " << buf << popcendl;
-	SendRawData(buf);
-	
+	SendRawData(buffer);
 }
 
 void SensorProxy::Publish(int x_publicationType, int x_data)
 {
-	char dataBuffer[BUFFERSIZE];
-	char buf[BUFFERSIZE];
-	sprintf(dataBuffer, "%d", x_data);
-	// sprintf(message, "{\"function\":4,\"led\":%d}\n", led);
-
 	struct PublishMessage msg;
 	memset(&msg, 0, sizeof(struct PublishMessage));
+	sprintf(msg.data, "%d", x_data);
 	msg.publicationType = static_cast<PublicationType>(x_publicationType);
 	msg.dataType        = TYPE_INT;
 	// msg.unit            = UNT_UNKNOWN;
 	msg.id              = m_id;
-	msg.dataSize        = strlen(dataBuffer);
+	msg.dataSize        = strlen(msg.data);
 
-	if(bufferizePublishMessage(&msg, dataBuffer, buf, BUFFERSIZE) <= 0)
-		throw POPException("Cannot bufferize publish message", dataBuffer);
+	char buffer[BUFFERSIZE];
+	if(bufferizePublishMessage(&msg, buffer, BUFFERSIZE) <= 0)
+		throw POPException("Cannot bufferize publish message", buffer);
 	// cout<< "Sending " << buf << popcendl;
-	SendRawData(buf);
+	SendRawData(buffer);
 }
 
 void SensorProxy::Subscribe(int x_measurementType, int x_dataType)
 {
 	char buf[BUFFERSIZE];
-	m_subscriptions[x_dataType] = true;
+	// cout << "subscribe to "<< x_measurementType << endl;
+	m_subscriptions[x_measurementType] = true;
 
 	struct SubscribeMessage msg;
 	memset(&msg, 0, sizeof(struct SubscribeMessage));
