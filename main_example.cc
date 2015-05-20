@@ -65,7 +65,7 @@ int main(int argc, char** argv)
 		data.Print();
 
 		cout<<"Clear data"<<popcendl;
-		popSensor.ClearData();
+		popSensor.Clear();
 
 
 		cout<<"End of popwin main"<<popcendl;

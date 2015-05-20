@@ -186,9 +186,10 @@ POPSensorData SensorProxy::Gather()
 }
 
 
-void SensorProxy::ClearData()
+void SensorProxy::Clear()
 {
 	m_sensorData.Clear();
+	m_subscriptions.clear();
 }
 
 /// Handle all incoming messages
@@ -224,6 +225,13 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 				char data[BUFFERSIZE];
 				if(unbufferizeNotifyMessage(&msg, data, x_rawMsg.c_str(), sizeof(data)) <= 0)
 					throw POPException("Cannot unbufferize notify message");
+
+				if(m_subscriptions.find(msg.dataType) == m_subscriptions.end())
+				{
+					// Not subscribed to this type of data
+					cout<< "Remote message (" << explainDataType(msg.dataType) << "): '" << data << "'" << popcendl;
+					break;
+				}
 				switch(msg.dataType)
 				{
 					case TYPE_DOUBLE:
@@ -236,7 +244,6 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 					{
 						if(msg.measurementType == MSR_LOG)
 						{
-							cout<< "Remote log message: '" << data << "'" << popcendl;
 						}
 						else
 						{
@@ -310,6 +317,7 @@ void SensorProxy::Publish(int x_publicationType, int x_data)
 void SensorProxy::Subscribe(int x_measurementType, int x_dataType)
 {
 	char buf[BUFFERSIZE];
+	m_subscriptions[x_dataType] = true;
 
 	struct SubscribeMessage msg;
 	memset(&msg, 0, sizeof(struct SubscribeMessage));

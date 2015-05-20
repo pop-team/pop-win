@@ -101,7 +101,7 @@ void testCommunication(POPSensor& xr_popSensor)
 void clearData(POPSensor& xr_popSensor)
 {
 	// Each command generates 10 sanples of data (types: double, int, string)
-	xr_popSensor.ClearData();
+	xr_popSensor.Clear();
 }
 
 /// Ask the remote to generate test data

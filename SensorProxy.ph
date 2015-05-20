@@ -38,7 +38,7 @@ public:
 	async conc void StartListening();
 	async conc void StopListening();
 	sync seq POPSensorData Gather();
-	sync seq void ClearData();
+	sync seq void Clear();
 
 private:
 	void SendRawData(const std::string& x_data);
@@ -47,7 +47,8 @@ private:
 
 	int m_fd;
 	int m_id;
-	std::atomic<bool> m_listening;
+	std::atomic<bool>  m_listening;
+	std::map<int,bool> m_subscriptions;
 
 	// Different containers of data
 	POPSensorData m_sensorData;

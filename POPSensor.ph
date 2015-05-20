@@ -44,7 +44,7 @@ public:
 	POPSensorData Gather();
 
 	/// Clear data gathered 
-	void ClearData();
+	void Clear();
 
 
 	/// Methods specific to the POPWin project

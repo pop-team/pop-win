@@ -114,11 +114,11 @@ POPSensorData POPSensor::Gather()
 }
 
 
-void POPSensor::ClearData()
+void POPSensor::Clear()
 {
 	for(auto it : m_sensorsProxy)
 	{
-		it->ClearData();
+		it->Clear();
 	}
 }
 
@@ -159,11 +159,8 @@ void POPSensor::SubscribeToResources()
 		throw POPException("Error while reading json string", m_jsonResources);
 	}
 
-
-	cout << root["wsns"]["nodes"].size() << popcendl;
 	for(int i = 0 ; i < root["wsns"]["nodes"].size() ; i++)
 	{
-
 		enum MeasurementType mtype = translateMeasurementType(root["wsns"]["nodes"][i].get("measureType", "<not found>").asString().c_str()); // TODO replace measurement with measure
 		enum DataType dtype        = translateDataType       (root["wsns"]["nodes"][i].get("dataType", "<not found>").asString().c_str());
 		bool direction             = root["wsns"]["nodes"][i].get("direction", "<not found>").asString().c_str() == string("IN");
@@ -181,7 +178,6 @@ void POPSensor::SubscribeToResources()
 				it->Subscribe(mtype, dtype);
 			}
 		}
-		//TODO store
 	}
 }
 
