@@ -206,6 +206,7 @@ enum MeasurementType translateMeasurementType(const char* x_str)
 	if(!strcmp(x_str, "acceleration")) return MSR_ACCELERATION;
 	if(!strcmp(x_str, "light"))       return MSR_LIGHT;
 	if(!strcmp(x_str, "humidity"))    return MSR_HUMIDITY;
+	if(!strcmp(x_str, "infrared"))    return MSR_INFRARED;
 	if(!strcmp(x_str, "event"))       return MSR_EVENT;
 
 	printf("ERROR: Unknown measurement type %s\n", x_str);
@@ -225,6 +226,7 @@ const char* explainMeasurementType(enum MeasurementType x)
 		case MSR_ACCELERATION:return "acceleration";
 		case MSR_LIGHT:       return "light";
 		case MSR_HUMIDITY:    return "humidity";
+		case MSR_INFRARED:    return "infrared";
 		case MSR_EVENT:       return "event";
 	}
 	printf("ERROR: Unknown measurement type %d\n", (int)x);
@@ -239,6 +241,7 @@ enum MeasurementUnit translateMeasurementUnit(const char* x_str)
 	if(!strcmp(x_str, "kelvin"))      return UNT_KELVIN;
 	if(!strcmp(x_str, "seconds"))     return UNT_SECONDS;
 	if(!strcmp(x_str, "meters"))      return UNT_METERS;
+	if(!strcmp(x_str, "lux"))         return UNT_LUX;
 
 	printf("ERROR: Unknown measurement unit %s\n", x_str);
 	return UNT_NONE;
@@ -254,6 +257,7 @@ const char* explainMeasurementUnit(enum MeasurementUnit x)
 		case UNT_KELVIN:      return "kelvin";
 		case UNT_SECONDS:     return "seconds";
 		case UNT_METERS:      return "meters";
+		case UNT_LUX:         return "lux";
 	}
 	printf("ERROR: Unknown measurement unit %d\n", (int)x);
 	return "unknown";

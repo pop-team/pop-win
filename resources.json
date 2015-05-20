@@ -1,8 +1,8 @@
 {
 	"machines":{
 		"power":    "50",
-			"memory":   "100,60",
-			"protocol": "socket:http"
+		"memory":   "100,60",
+		"protocol": "socket:http"
 	},
 	"gateway":{
 		"connection": "usb"
@@ -11,17 +11,42 @@
 		"nodes":[
 			{
 				"measureType": "temperature",
+				"dataType":    "int",
+				"direction":   "IN"
+			},
+			{
+				"measureType": "humidity",
+				"dataType":    "int",
+				"direction":   "IN"
+			},
+			{
+				"measureType": "light",
+				"dataType":    "int",
+				"direction":   "IN"
+			},
+			{
+				"measureType": "infrared",
+				"dataType":    "int",
+				"direction":   "IN"
+			},
+			{
+				"measureType": "event",
+				"dataType":    "string",
+				"direction":   "IN"
+			},
+			{
+				"measureType": "test",
 				"dataType":    "float",
 				"direction":   "IN"
 			},
 			{
-				"measureType": "temperature",
-				"dataType":    "float",
+				"measureType": "test",
+				"dataType":    "int",
 				"direction":   "IN"
 			},
 			{
-				"measureType": "temperature",
-				"dataType":    "float",
+				"measureType": "test",
+				"dataType":    "string",
 				"direction":   "IN"
 			}
 		]

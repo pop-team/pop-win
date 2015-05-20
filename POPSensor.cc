@@ -82,20 +82,13 @@ bool POPSensor::IsConnected()
 	return !m_sensorsProxy.empty();
 }
 
-/// Subscribe to a sensor
-/*
-void POPSensor::Subscribe(SensorProxy& x_sensorProxy)
-{
-	// x_sensorProxy.SubscribeMe(this);
-}
-*/
-
 void POPSensor::StartListening()
 {
 	for(auto it : m_sensorsProxy)
 	{
 		it->StartListening();
 	}
+	SubscribeToResources();
 }
 
 void POPSensor::StopListening()
@@ -103,7 +96,6 @@ void POPSensor::StopListening()
 	for(auto it : m_sensorsProxy)
 	{
 		it->StopListening();
-		// it->Notify(MSR_LOG, UNT_NONE, "This is the end");
 	}
 }
 
@@ -167,17 +159,29 @@ void POPSensor::SubscribeToResources()
 		throw POPException("Error while reading json string", m_jsonResources);
 	}
 
-	int mtype = translateMeasurementType(root["wsns"]["node"].get("measureType", "<not found>").asString().c_str()); // TODO replace measurement with measure
-	int dtype = translateDataType       (root["wsns"]["node"].get("dataType", "<not found>").asString().c_str());
 
-	if(mtype == static_cast<int>(MSR_LOG))
-		throw POPException("measureType not found in JSON resources description");
-	if(dtype == static_cast<int>(TYPE_UNKNOWN))
-		throw POPException("dataType not found in JSON resources description");
-
-	for(auto it : m_sensorsProxy)
+	cout << root["wsns"]["nodes"].size() << popcendl;
+	for(int i = 0 ; i < root["wsns"]["nodes"].size() ; i++)
 	{
-		it->Subscribe(mtype, dtype);
+
+		enum MeasurementType mtype = translateMeasurementType(root["wsns"]["nodes"][i].get("measureType", "<not found>").asString().c_str()); // TODO replace measurement with measure
+		enum DataType dtype        = translateDataType       (root["wsns"]["nodes"][i].get("dataType", "<not found>").asString().c_str());
+		bool direction             = root["wsns"]["nodes"][i].get("direction", "<not found>").asString().c_str() == string("IN");
+
+		if(mtype == static_cast<int>(MSR_LOG))
+			throw POPException("measureType not found in JSON resources description");
+		if(dtype == static_cast<int>(TYPE_UNKNOWN))
+			throw POPException("dataType not found in JSON resources description");
+
+		for(auto it : m_sensorsProxy)
+		{
+			if(direction)
+			{
+				cout << "Subscribe to " << explainMeasurementType(mtype) << " " << explainDataType(dtype) << " direction:" << (direction ? "IN" : "OUT") << popcendl;
+				it->Subscribe(mtype, dtype);
+			}
+		}
+		//TODO store
 	}
 }
 

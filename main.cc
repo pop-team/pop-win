@@ -3,7 +3,7 @@
  *
  * @author Laurent Winkler based on work by Valentin Bourqui
  * @date   Dec 2014
- * @brief  Main executable of the POPWIN project
+ * @brief  Main executable of the POPWIN project: The user can select interactively which commands to send to the gateway sensor
  *
  *
  */
@@ -111,12 +111,6 @@ void printData(POPSensor& xr_popSensor)
 	data.Print();
 }
 
-/// Subscribe to elements in json file
-void subscribeToResources(POPSensor& xr_popSensor)
-{
-	xr_popSensor.SubscribeToResources();
-}
-
 int main(int argc, char** argv)
 {
 	if(argc != 2)
@@ -149,9 +143,6 @@ int main(int argc, char** argv)
 
 	cout << " p: Print stored data" <<popcendl;
 	commands['p'] = printData;
-
-	cout << " s: Subscribe to resources specified in JSON file" <<popcendl;
-	commands['s'] = subscribeToResources;
 
 	cout << " t: Test communication" <<popcendl;
 	commands['t'] = testCommunication;
@@ -206,16 +197,6 @@ int main(int argc, char** argv)
 	catch(std::exception &e)
 	{
 		cerr<<"Exception caught in popwin main loop: " << e.what() << popcendl;
-		return 1;
-	}
-	catch(std::exception *e)
-	{
-		cerr<<"Exception caught in popwin main loop (*excep): " << e->what() << popcendl;
-		return 1;
-	}
-	catch(int e)
-	{
-		cerr<<"Exception caught in popwin main loop (int): " << e << popcendl;
 		return 1;
 	}
 	catch(...)

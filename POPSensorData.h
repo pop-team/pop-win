@@ -3,13 +3,8 @@
  *
  * @author Laurent Winkler based on work by Valentin Bourqui
  * @date Dec 2014
- * @brief POPSensor class for the POPWIN project. This object handles the data gathering of a group of sensor proxies.
+ * @brief POPSensorData class for the POPWIN project. This object represents the data gathered from sensor.
  *
- *   Gateway----POPSensor--- SensorProxy1 --- RemoteSensorX ---     ^^^^^^^^^^^^
- *                      \                                         ^Sensor network^
- *                       --- SensorProxy2 --- RemoteSensorY ---     ^^^^^^^^^^^^
- *
- *                            ...
  *
  */
 

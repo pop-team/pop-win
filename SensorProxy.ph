@@ -27,8 +27,10 @@ public:
 
 	/// Send notification to the connected sensor
 	sync seq void Notify(int x_measurementType, int x_measurementUnit, const std::string& x_message);
+
 	/// Send a publication to the connected sensor
 	sync seq void Publish(int x_publicationType, int x_data);
+
 	/// Send a subscription to the connected sensor
 	sync seq void Subscribe(int x_measurementType, int x_dataType);
 
@@ -42,8 +44,6 @@ private:
 	void SendRawData(const std::string& x_data);
 	void ReadData(std::ostream& xr_ostream);
 	void HandleIncomingMessage(const std::string& x_msg);
-	// void HandleIncomingMessage(const SubsribeMessage& x_msg);
-	// void HandleIncomingMessage(const NotifyMessage& x_msg);
 
 	int m_fd;
 	int m_id;

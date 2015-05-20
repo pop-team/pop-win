@@ -40,9 +40,6 @@ public:
 	/// Check if connected to any sensor
 	bool IsConnected();
 
-	/// Send a publication to sensors
-	void Publish(int x_publicationType, int x_data);
-
 	/// Retrieve data gathered 
 	POPSensorData Gather();
 
@@ -52,17 +49,20 @@ public:
 
 	/// Methods specific to the POPWin project
 
+	/// Send a publication to sensors
+	void Publish(int x_publicationType, int x_data);
+
 	/// Send notification to the connected sensor
 	void Notify(int x_measurementType, int x_measurementUnit, const std::string& x_message);
 
 	/// Send a subscription to sensors
 	void Subscribe(int x_measurementType, int x_dataType);
 
+
+private:
 	/// Subscribe to resources specified at connection
 	void SubscribeToResources();
 
-
-private:
 	/// List of sensor proxy. Each proxy can be connected to one sensor via serial line
 	std::vector<SensorProxy*> m_sensorsProxy;
 

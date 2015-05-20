@@ -24,15 +24,16 @@ enum MessageType
 // Different types of measurement
 enum MeasurementType
 {
-	MSR_LOG         = 0, // logging  can be seen as a notification. This is useful for debug but can be removed in the final version
-	MSR_COMMAND     = 1, // commands can be seen as a notification. This is useful for debug but can be removed in the final version 
-	MSR_TEMPERATURE = 2, // temperature measurement
-	MSR_VIBRATION   = 3, // vibration measurement
-	MSR_TEST        = 4, // test data
-	MSR_ACCELERATION= 5, // acceleration measurement
+	MSR_LOG         = 0,  // logging  can be seen as a notification. This is useful for debug but can be removed in the final version
+	MSR_COMMAND     = 1,  // commands can be seen as a notification. This is useful for debug but can be removed in the final version 
+	MSR_TEMPERATURE = 2,  // temperature measurement
+	MSR_VIBRATION   = 3,  // vibration measurement
+	MSR_TEST        = 4,  // test data
+	MSR_ACCELERATION= 5,  // acceleration measurement
 	MSR_LIGHT       = 6,  // acceleration measurement
 	MSR_HUMIDITY    = 7,  // humidity measurement
-	MSR_EVENT       = 8   // a specific event is sent
+	MSR_INFRARED    = 8,  // infrared measurement
+	MSR_EVENT       = 9   // a specific event is sent
 	// ... //
 };
 enum MeasurementType translateMeasurementType(const char* x_str);
@@ -45,7 +46,8 @@ enum MeasurementUnit
 	UNT_CELSIUS     = 1,
 	UNT_KELVIN      = 2,
 	UNT_SECONDS     = 3,
-	UNT_METERS      = 4
+	UNT_METERS      = 4,
+	UNT_LUX         = 5
 	// ... // 
 };
 enum MeasurementUnit translateMeasurementUnit(const char* x_str);

@@ -28,37 +28,6 @@
 
 // Note: check baudrate of USB port with : stty -F /dev/ttyUSB0
 #define BAUDRATE B115200
-/*
-#define BAUDRATE_S "115200"
-#ifdef linux
-#define MODEMDEVICE "/dev/ttyUSB0"
-#define MODEMDEVICETWO "/dev/ttyS0"
-#else
-#define MODEMDEVICE "/dev/com1"
-#endif 
-
-#define SLIP_END     0300
-#define SLIP_ESC     0333
-#define SLIP_ESC_END 0334
-#define SLIP_ESC_ESC 0335
-
-#define CSNA_INIT 0x01
-
-#define BUFSIZE 64
-#define HCOLS 20
-#define ICOLS 18
-
-
-#define MODE_START_DATE	0
-#define MODE_DATE	1
-#define MODE_START_TEXT	2
-#define MODE_TEXT	3
-#define MODE_INT	4
-#define MODE_HEX	5
-#define MODE_SLIP_AUTO	6
-#define MODE_SLIP	7
-#define MODE_SLIP_HIDE	8
-*/
 
 using namespace std;
 
@@ -84,15 +53,19 @@ SensorProxy::SensorProxy(int x_id, const std::string& x_url, const string& x_dev
 
 	cfsetispeed(&options, speed);
 	cfsetospeed(&options, speed);
+
 	/* Enable the receiver and set local mode */
 	options.c_cflag |= (CLOCAL | CREAD);
+
 	/* Mask the character size bits and turn off (odd) parity */
 	options.c_cflag &= ~(CSIZE|PARENB|PARODD);
+
 	/* Select 8 data bits */
 	options.c_cflag |= CS8;
 
 	/* Raw input */
 	options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
+
 	/* Raw output */
 	options.c_oflag &= ~OPOST;
 
@@ -296,7 +269,7 @@ void SensorProxy::Notify(int x_measurementType, int x_measurementUnit, const std
 	// note: only string messages are implemented. Other types can be trivially implemented
 	char dataBuffer[BUFFERSIZE];
 	char buf[BUFFERSIZE];
-	sprintf(dataBuffer, "%s", x_message.c_str());
+	sprintf(dataBuffer, "%s\r\n", x_message.c_str());
 
 	struct NotifyMessage msg;
 	memset(&msg, 0, sizeof(struct NotifyMessage));

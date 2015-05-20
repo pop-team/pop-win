@@ -3,7 +3,7 @@
  *
  * @author Laurent Winkler based on work by Valentin Bourqui
  * @date   May 2015
- * @brief  Main executable of the POPWIN project
+ * @brief  Example executable for the POPWIN project: The main routine shows the usage of the different C++ class of the POPWIN project.
  *
  *
  */
@@ -16,11 +16,6 @@
 #include "POPSensor.ph"
 
 using namespace std;
-
-// -------------------------------------------------------------------------------- //
-//                                COMMANDS
-// -------------------------------------------------------------------------------- //
-
 
 /// Ask the remote to generate test data
 void generateTestData(POPSensor& xr_popSensor)
@@ -65,31 +60,9 @@ int main(int argc, char** argv)
 		popSensor.StopListening();
 
 
-		// Print double data
-		/*
-		auto gatheredDataDouble(xr_gateway.RetrieveDataDouble());
-		cout << "\nRecords found on proxy <double>: "<< gatheredDataDouble.size() << popcendl;
-		for(auto elem : gatheredDataDouble)
-		{
-			cout<< ">>" << elem.first << " -- " << elem.second << popcendl;
-		}
-
-		// Print int data
-		auto gatheredDataInt(xr_gateway.RetrieveDataInt());
-		cout << "\nRecords found on proxy <int>: "<< gatheredDataInt.size() << popcendl;
-		for(auto elem : gatheredDataInt)
-		{
-			cout<< ">>" << elem.first << " -- " << elem.second << popcendl;
-		}
-
-		// Print string data
-		auto gatheredDataString(xr_gateway.RetrieveDataString());
-		cout << "\nRecords found on proxy <string>: "<< gatheredDataString.size() << popcendl;
-		for(auto elem : gatheredDataString)
-		{
-			cout<< ">>" << elem.first << " -- " << elem.second << popcendl;
-		}
-		*/
+		cout<<"Print the gathered data"<<popcendl;
+		POPSensorData data(popSensor.Gather());
+		data.Print();
 
 		cout<<"Clear data"<<popcendl;
 		popSensor.ClearData();
@@ -100,16 +73,6 @@ int main(int argc, char** argv)
 	catch(std::exception &e)
 	{
 		cerr<<"Exception caught in popwin main loop: " << e.what() << popcendl;
-		return 1;
-	}
-	catch(std::exception *e)
-	{
-		cerr<<"Exception caught in popwin main loop (*excep): " << e->what() << popcendl;
-		return 1;
-	}
-	catch(int e)
-	{
-		cerr<<"Exception caught in popwin main loop (int): " << e << popcendl;
 		return 1;
 	}
 	catch(...)
