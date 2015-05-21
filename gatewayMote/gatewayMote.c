@@ -84,7 +84,8 @@ void logging(const char *format,...);
 /*** GLOBAL VARIABLES       */
 /****************************/
 char g_debug   = 1; // Toggle debug mode
-char g_gateway = 0; // Design as a gateway
+// Design as a gateway: by default the z1 mote with id 158
+char g_gateway = get_id() == 158;
 
 // send a subscription message
 void gwSendSubscriptionSerial(const struct SubscribeMessage* msg)

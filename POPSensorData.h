@@ -73,7 +73,8 @@ public:
 	// Defind stream operator for easy printing
 	friend std::ostream& operator<< (std::ostream& x_stream, const RecordHeader& x_rec)
 	{
-		x_stream << "time: " << x_rec.timeStamp << " id:" << x_rec.id << " type:" << explainMeasurementType(x_rec.measurementType) << " unit:" << explainMeasurementUnit(x_rec.unit);
+		// x_stream << "time: " << x_rec.timeStamp << " id:" << x_rec.id << " type:" << explainMeasurementType(x_rec.measurementType) << " unit:" << explainMeasurementUnit(x_rec.unit);
+		x_stream << x_rec.timeStamp << ", " << x_rec.id << ", " << explainMeasurementType(x_rec.measurementType) << ", " << explainMeasurementUnit(x_rec.unit);
 		return x_stream;
 	}
 
@@ -90,6 +91,7 @@ class POPSensorData : public POPBase
 	public:
 	void Serialize(POPBuffer &buf, bool pack);
 	void Print();
+	void PrintToFile(std::ostream& xr_ostream);
 	void Clear();
 
 

@@ -55,19 +55,39 @@ void POPSensorData::Print()
 {
 	for(auto elem : dataDouble)
 	{
-		cout<< ">>" << elem.first << " -- " << elem.second << popcendl;
+		cout << elem.first << " -- " << elem.second << popcendl;
 	}
 
 	// Print int data
 	for(auto elem : dataInt)
 	{
-		cout<< ">>" << elem.first << " -- " << elem.second << popcendl;
+		cout << elem.first << " -- " << elem.second << popcendl;
 	}
 
 	// Print string data
 	for(auto elem : dataString)
 	{
-		cout<< ">>" << elem.first << " -- " << elem.second << popcendl;
+		cout << elem.first << " -- " << elem.second << popcendl;
+	}
+}
+
+void POPSensorData::PrintToFile(ostream& xr_ostream)
+{
+	for(auto elem : dataDouble)
+	{
+		xr_ostream << elem.first << ", " << elem.second << endl;
+	}
+
+	// Print int data
+	for(auto elem : dataInt)
+	{
+		xr_ostream << elem.first << ", " << elem.second << endl;
+	}
+
+	// Print string data
+	for(auto elem : dataString)
+	{
+		xr_ostream << elem.first << ", " << elem.second << endl;
 	}
 }
 

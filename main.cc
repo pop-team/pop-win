@@ -14,6 +14,10 @@
 #include <fstream>
 
 #include "POPSensor.ph"
+#include <time.h>
+
+#define LOGNAME_FORMAT "%Y%m%d_%H:%M:%S"
+#define LOGNAME_SIZE 18
 
 using namespace std;
 
@@ -111,6 +115,23 @@ void printData(POPSensor& xr_popSensor)
 	data.Print();
 }
 
+/// Ask the remote to generate test data
+void printToFile(POPSensor& xr_popSensor)
+{
+	POPSensorData data(xr_popSensor.Gather());
+	ofstream of;
+
+	char name[LOGNAME_SIZE];
+	time_t now = time(0);
+	strftime(name, sizeof(name), LOGNAME_FORMAT, localtime(&now));
+
+	of.open("out/data_" + std::string(name) + ".csv");
+	of << "Time, Id, Measurement, Unit, data\n";
+	data.PrintToFile(of);
+	of.close();
+}
+
+
 int main(int argc, char** argv)
 {
 	if(argc != 2)
@@ -143,6 +164,9 @@ int main(int argc, char** argv)
 
 	cout << " p: Print stored data" <<popcendl;
 	commands['p'] = printData;
+
+	cout << " P: Print to file" <<popcendl;
+	commands['P'] = printToFile;
 
 	cout << " t: Test communication" <<popcendl;
 	commands['t'] = testCommunication;
