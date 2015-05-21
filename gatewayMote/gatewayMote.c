@@ -84,8 +84,7 @@ void logging(const char *format,...);
 /*** GLOBAL VARIABLES       */
 /****************************/
 char g_debug   = 1; // Toggle debug mode
-// Design as a gateway: by default the z1 mote with id 158
-char g_gateway = get_id() == 158;
+char g_gateway = 0; // Design as a gateway
 
 // send a subscription message
 void gwSendSubscriptionSerial(const struct SubscribeMessage* msg)
@@ -527,7 +526,7 @@ PROCESS_THREAD(multihop_sense, ev, data)
 
 	static struct etimer et;
 
-	static char push = 0;
+	static uint8_t push = 0;	// Keeps the number of times the user pushes the button sensor
 
 	while(1){
 		etimer_set(&et, 30 * CLOCK_SECOND);
@@ -535,7 +534,6 @@ PROCESS_THREAD(multihop_sense, ev, data)
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
 		leds_on(LEDS_BLUE);
-		static uint8_t push = 0;	// Keeps the number of times the user pushes the button sensor
 
 		// Send a broadcast message
 		// send_broadcast_cmd();
