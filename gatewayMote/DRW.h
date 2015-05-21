@@ -28,10 +28,10 @@ static rimeaddr_t weight_target;
 
 static Queue message_queue;
 
-uint8_t sense_light();
-uint8_t sense_infrared();
-uint8_t sense_humidity();
-uint8_t sense_temperature();
+uint16_t sense_light();
+uint16_t sense_infrared();
+uint16_t sense_humidity();
+uint16_t sense_temperature();
 
 /* These are the types of unicast messages that we can send. */
 enum {

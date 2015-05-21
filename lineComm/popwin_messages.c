@@ -19,7 +19,7 @@
 // Print message to buffer
 int bufferizeSubscribeMessage(const struct SubscribeMessage* x_msg, char* xp_buffer, size_t x_bufferSize)
 {
-	int ret = snprintf(xp_buffer, x_bufferSize, "%02x %02x %02x %04x\n",
+	int ret = snprintf(xp_buffer, x_bufferSize, "%02x %02x %02x %04x",
 		MSG_SUBSCRIBE,
 		x_msg->dataType,
 		x_msg->measurementType,
@@ -59,7 +59,7 @@ int unbufferizeSubscribeMessage(struct SubscribeMessage* xp_msg, const char* x_b
 int bufferizeNotifyMessage(const struct NotifyMessage* x_msg, char* xp_buffer, size_t x_bufferSize)
 {
 	// note: sizeof(size_t) = 2 for contiki but we use 4 for compatibility
-	int ret = snprintf(xp_buffer, x_bufferSize, "%02x %02x %02x %04x %02x %04x %s\n",
+	int ret = snprintf(xp_buffer, x_bufferSize, "%02x %02x %02x %04x %02x %04x %s",
 		MSG_NOTIFY,
 		x_msg->dataType,
 		x_msg->measurementType,
@@ -110,8 +110,8 @@ int unbufferizeNotifyMessage(struct NotifyMessage* xp_msg, const char* x_buffer,
 		}
 		else
 		{
-			printf("ERROR: Data has the wrong size %d!=%d\n", s, dataSize);
-			return 0;
+			printf("WARNING: Data has the wrong size %d!=%d\n", s, dataSize);
+			return 1;
 		}
 	}
 	else return 0;
@@ -124,7 +124,7 @@ int unbufferizeNotifyMessage(struct NotifyMessage* xp_msg, const char* x_buffer,
 int bufferizePublishMessage(const struct PublishMessage* x_msg, char* xp_buffer, size_t x_bufferSize)
 {
 	// note: sizeof(size_t) = 2 for contiki but we use 4 for compatibility
-	int ret = snprintf(xp_buffer, x_bufferSize, "%02x %02x %02x %04x %04x %s\n",
+	int ret = snprintf(xp_buffer, x_bufferSize, "%02x %02x %02x %04x %04x %s",
 		MSG_PUBLISH,
 		x_msg->dataType,
 		x_msg->publicationType,
@@ -176,8 +176,8 @@ int unbufferizePublishMessage(struct PublishMessage* xp_msg, const char* x_buffe
 		}
 		else
 		{
-			printf("ERROR: Data has the wrong size %d!=%d\n", s, dataSize);
-			return 0;
+			printf("WARNING: Data has the wrong size %d!=%d\n", s, dataSize);
+			return 1;
 		}
 	}
 	else return 0;

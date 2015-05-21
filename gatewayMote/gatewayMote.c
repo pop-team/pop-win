@@ -54,19 +54,20 @@ void generate_test_data_string();
 void print_id();
 void send_broadcast_cmd();
 void toggle_debug();
+void toggle_gateway();
 
 // All functions are stored in a table
 typedef void (*FunctionCall)(void);
-#define NB_COMMANDS 8
-const FunctionCall g_commands[NB_COMMANDS] = {list_functions, read_temperature, generate_test_data_double, generate_test_data_int, generate_test_data_string, print_id, send_broadcast_cmd, toggle_debug};
-const char* g_commandNames[NB_COMMANDS]    = {"list_functions", "read_temperature", "generate_test_data_double", "generate_test_data_int", "generate_test_data_string", "print_id", "send_broadcast_cmd", "toggle_debug"};
+#define NB_COMMANDS 9
+const FunctionCall g_commands[NB_COMMANDS] = {list_functions, read_temperature, generate_test_data_double, generate_test_data_int, generate_test_data_string, print_id, send_broadcast_cmd, toggle_debug, toggle_gateway};
+const char* g_commandNames[NB_COMMANDS]    = {"list_functions", "read_temperature", "generate_test_data_double", "generate_test_data_int", "generate_test_data_string", "print_id", "send_broadcast_cmd", "toggle_debug", "toggle_gateway"};
 
 /****************************/
 /*** DECLARE FUNCTIONS      */
 /****************************/
-void handlePublication(const char* data);
-void handleNotification(const char* data);
-void handleSubscription(const char* data);
+void gwHandlePublication(const char* data);
+void gwHandleNotification(const char* data);
+void gwHandleSubscription(const char* data);
 
 int sscanf ( const char * s, const char * format, ...);
 size_t strlen ( const char * str );
@@ -74,6 +75,7 @@ int snprintf ( char * s, size_t n, const char * format, ... );
 int atoi (const char * str);
 double atof (const char* str);
 void * memset ( void * ptr, int value, size_t num );
+void sht11_init();
 
 int get_id();
 void logging(const char *format,...);
@@ -81,28 +83,29 @@ void logging(const char *format,...);
 /****************************/
 /*** GLOBAL VARIABLES       */
 /****************************/
-char g_debug = 1;
+char g_debug   = 1; // Toggle debug mode
+char g_gateway = 0; // Design as a gateway
 
 // send a subscription message
-void sendSubscriptionSerial(const struct SubscribeMessage* msg)
+void gwSendSubscriptionSerial(const struct SubscribeMessage* msg)
 {
 	char buf[BUFFERSIZE];
 	if(bufferizeSubscribeMessage(msg, buf, sizeof(buf)) <= 0)
 		ERROR("Cannot write message to buffer");
 
 	// Send message via serial line on contiki
-	printf(buf);
+	printf("%s\n", buf);
 }
 
 // send a notification message: Only for use on the remote sensor
-void sendNotificationSerial(const struct NotifyMessage* msg)
+void gwSendNotificationSerial(const struct NotifyMessage* msg)
 {
 	char buf[BUFFERSIZE];
 	if(bufferizeNotifyMessage(msg, buf, sizeof(buf)) <= 0)
 		ERROR("Cannot write message to buffer");
 
 	// Send message via serial line on contiki
-	printf(buf);
+	printf("%s\n", buf);
 }
 
 /// Return the id of the node
@@ -127,34 +130,24 @@ void logging(const char *format,...)
 	msg.dataType        = TYPE_STRING;
 	msg.id              = get_id();
 	msg.dataSize        = strlen(msg.data);
-	sendNotificationSerial(&msg);
+	gwSendNotificationSerial(&msg);
 }
-
-/*---------------------------------------------------------------------------*/
-/* Commented by LW: We use the version in DRW.c
-static void
-broadcast_recv(struct broadcast_conn *c, const rimeaddr_t *from)
-{
-	  LOG("broadcast message received from %d.%d: '%s'",
-	           from->u8[0], from->u8[1], (char *)packetbuf_dataptr());
-}
-static const struct broadcast_callbacks broadcast_call = {broadcast_recv};
-*/
-static struct broadcast_conn broadcast;
-/*---------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------*/
 /* We first declare our processes. */
-PROCESS(gateway_communication_process, "Communication to/from the gateway");
-PROCESS(button_pressed,   "Button pressed");
-PROCESS(communication_process, "Communication process");
-PROCESS(drw, "Directional Random Walk");
-PROCESS(sensor_events, "Send events based on sensor values");
+PROCESS(gateway_communication_process , "Communication to/from the gateway");
+PROCESS(button_pressed                , "Button pressed");
+PROCESS(communication_process         , "Communication process");
+PROCESS(drw                           , "Directional Random Walk");
+PROCESS(sensor_events                 , "Send events based on sensor values");
+PROCESS(multihop_announce             , "Multihop communication: init and announce periodically");
+PROCESS(multihop_sense                , "Take measurements and transmit via multihop");
 
 
 /* The AUTOSTART_PROCESSES() definition specifices what processes to
    start when this module is loaded. We put our processes there. */
-AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &communication_process, &drw, &sensor_events);
+// AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &communication_process, &drw, &sensor_events); // Processes to run with algo of UNIGE
+AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &multihop_announce, &multihop_sense);
 /*---------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------*/
@@ -202,17 +195,17 @@ PROCESS_THREAD(gateway_communication_process, ev, data)
 			{
 				case MSG_SUBSCRIBE:
 				{
-					handleSubscription(data);
+					gwHandleSubscription(data);
 				}
 				break;
 				case MSG_PUBLISH:
 				{
-					handlePublication(data);
+					gwHandlePublication(data);
 				}
 				break;
 				case MSG_NOTIFY:
 				{
-					handleNotification(data);
+					gwHandleNotification(data);
 				}
 				break;
 				default:
@@ -230,9 +223,31 @@ exit:
 }
 
 /*
+ * Handle any incoming message on gateway
+ */
+void gwHandleMessage(const char* data)
+{
+	enum MessageType mt = getMessageType(data);
+	switch(mt)
+	{
+		case MSG_SUBSCRIBE:
+			gwHandleSubscription(data);
+			break;
+		case MSG_NOTIFY:
+			gwHandleNotification(data);
+			break;
+		case MSG_PUBLISH:
+			gwHandlePublication(data);
+			break;
+		default:
+			ERROR("Received message of unknown type");
+	}
+}
+
+/*
  * Handle notification messages from gateway
  */
-void handleNotification(const char* data)
+void gwHandleNotification(const char* data)
 {
 	struct NotifyMessage msg;
 	memset(&msg, 0, sizeof(msg));
@@ -244,13 +259,13 @@ void handleNotification(const char* data)
 	// ...
 	LOG("Gateway has sent notification: %s", data);
 
-	// note: no action. See if it makes sense to handle notifications from gateway
+	gwSendNotificationSerial(&msg);
 }
 
 /*
  * Handle notification messages from gateway
  */
-void handleSubscription(const char* data)
+void gwHandleSubscription(const char* data)
 {
 	struct SubscribeMessage msg;
 	memset(&msg, 0, sizeof(msg));
@@ -263,13 +278,14 @@ void handleSubscription(const char* data)
 	// 
 	// Define here what to do on reception  TODO for UNIGE
 	// ...
-	LOG("Gateway has subscribed");
+	// LOG("Gateway has subscribed");
+	gwSendSubscriptionSerial(&msg);
 }
 
 /*
  * Handle publication messages from gateway
  */
-void handlePublication(const char* data)
+void gwHandlePublication(const char* data)
 {
 	struct PublishMessage msg;
 	memset(&msg, 0, sizeof(msg));
@@ -365,7 +381,7 @@ void read_temperature(){
 	msg.unit            = UNT_CELSIUS;
 	msg.id              = get_id();
 	msg.dataSize        = strlen(msg.data);
-	sendNotificationSerial(&msg);
+	gwSendNotificationSerial(&msg);
 }
 
 /*
@@ -386,7 +402,7 @@ void generate_test_data_double(){
 		msg.dataType        = TYPE_DOUBLE;
 		msg.id              = get_id();
 		msg.dataSize        = strlen(msg.data);
-		sendNotificationSerial(&msg);
+		gwSendNotificationSerial(&msg);
 	}
 }
 
@@ -406,7 +422,7 @@ void generate_test_data_int(){
 		msg.dataType        = TYPE_INT;
 		msg.id              = get_id();
 		msg.dataSize        = strlen(msg.data);
-		sendNotificationSerial(&msg);
+		gwSendNotificationSerial(&msg);
 	}
 }
 
@@ -424,7 +440,7 @@ void generate_test_data_string(){
 		msg.dataType        = TYPE_STRING;
 		msg.id              = get_id();
 		msg.dataSize        = strlen(msg.data);
-		sendNotificationSerial(&msg);
+		gwSendNotificationSerial(&msg);
 	}
 }
 
@@ -452,10 +468,143 @@ void toggle_debug(){
 	LOG("Debug messages %s", g_debug ? "on" : "off");
 }
 
+/*
+ * Design the mote as a gateway
+ */
+void toggle_gateway(){
+	g_gateway = !g_gateway;
+	LOG("Design as gateway %s", g_gateway ? "on" : "off");
+}
 
-//-----------------------------------------------------------------   
-// A simple thread to check that the mote is working: print a message and change led state
-//-----------------------------------------------------------------
+
+#include "example-multihop.c"
+/*---------------------------------------------------------------------------*/
+// For communication based on multihop: init and announce periodically
+
+
+PROCESS_THREAD(multihop_announce, ev, data)
+{
+	PROCESS_BEGIN();
+
+	// Init for multihop -----
+	/* Initialize the memory for the neighbor table entries. */
+	memb_init(&neighbor_mem);
+
+	/* Initialize the list used for the neighbor table. */
+	list_init(neighbor_table);
+
+	/* Open a multihop connection on Rime channel CHANNEL. */
+	multihop_open(&multihop, CHANNEL, &multihop_call);
+
+	static struct etimer et;
+
+	while(1){
+		etimer_set(&et, 22 * CLOCK_SECOND);
+		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+		leds_on(LEDS_GREEN);
+		/* Register an announcement with the same announcement ID as the
+		   Rime channel we use to open the multihop connection above. */
+		announcement_register(&example_announcement,
+				CHANNEL,
+				received_announcement);
+
+		/* Set a dummy value to start sending out announcments. */
+		announcement_set_value(&example_announcement, 0);
+		leds_off(LEDS_GREEN);
+	}
+	PROCESS_END();
+}
+
+/*---------------------------------------------------------------------------*/
+// For communication based on multihop: read sensor data
+
+PROCESS_THREAD(multihop_sense, ev, data)
+{
+	PROCESS_BEGIN();
+
+
+	static struct etimer et;
+
+	static char push = 0;
+
+	while(1){
+		etimer_set(&et, 30 * CLOCK_SECOND);
+		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+		leds_on(LEDS_BLUE);
+		static uint8_t push = 0;	// Keeps the number of times the user pushes the button sensor
+
+		// Send a broadcast message
+		// send_broadcast_cmd();
+
+		/*---- start of multihop call ----*/
+		rimeaddr_t to;
+		to.u8[0] = 158; // ID of our gateway
+		to.u8[1] = 0;
+
+		struct NotifyMessage msg;
+		memset(&msg, 0, sizeof(msg));
+
+		// Alternate the type of measurement
+		switch(push%4)
+		{
+			case 0:
+				msg.measurementType = MSR_TEMPERATURE;
+				msg.dataType        = TYPE_INT;
+				msg.unit            = UNT_CELSIUS;
+				sprintf(msg.data, "%d", sense_temperature());
+				break;
+			case 1:
+				msg.measurementType = MSR_HUMIDITY;
+				msg.dataType        = TYPE_INT;
+				msg.unit            = UNT_NONE; // TODO %
+				sprintf(msg.data, "%d", sense_humidity());
+				break;
+			case 2:
+				msg.measurementType = MSR_LIGHT;
+				msg.dataType        = TYPE_INT;
+				msg.unit            = UNT_LUX;
+				sprintf(msg.data, "%d", sense_light());
+				break;
+			case 3:
+				msg.measurementType = MSR_INFRARED;
+				msg.dataType        = TYPE_INT;
+				msg.unit            = UNT_LUX;
+				sprintf(msg.data, "%d", sense_infrared());
+				break;
+		}
+		msg.id              = get_id();
+		msg.dataSize        = strlen(msg.data);
+		push++;
+
+		if(g_gateway)
+		{
+			// We are on the gateway: send via serial to PC
+			gwSendNotificationSerial(&msg);
+		}
+		else
+		{
+			char buf[BUFFERSIZE];
+			if(bufferizeNotifyMessage(&msg, buf, sizeof(buf)) <= 0)
+				ERROR("Cannot write message to buffer");
+
+			// Use the multihop method to send a message
+			/* Copy the "Hello" to the packet buffer. */
+			packetbuf_copyfrom(buf, strlen(buf));
+
+			/* Send the packet. */
+			multihop_send(&multihop, &to);
+		}
+
+		leds_off(LEDS_BLUE);
+	}
+	PROCESS_END();
+}
+
+/*---------------------------------------------------------------------------*/
+// Button pressed routine
+
 PROCESS_THREAD(button_pressed, ev, data)
 {   
 	PROCESS_EXITHANDLER(goto exit);
@@ -466,6 +615,10 @@ PROCESS_THREAD(button_pressed, ev, data)
 	SENSORS_ACTIVATE(button_sensor);
 	leds_on(LEDS_ALL);
 
+	// Initialization of sensor
+	sht11_init();
+
+
 	while(1) {
 		/* Do the rest of the stuff here. */
 
@@ -475,11 +628,45 @@ PROCESS_THREAD(button_pressed, ev, data)
 		// Send a broadcast message
 		// send_broadcast_cmd();
 
-//if ((int)node_id == SENDER) // TODO: CM MAybe remove this
-{
-	// If we are on the sender, go to message state
-	state = NEW_MESSAGE;
-}
+		/*---- start of multihop call ----*/
+		rimeaddr_t to;
+		to.u8[0] = 158; // ID of our gateway
+		to.u8[1] = 0;
+
+		struct NotifyMessage msg;
+		memset(&msg, 0, sizeof(msg));
+		int d = 5567;
+		sprintf(msg.data, "%d.%02d", d / 100, ABS(d % 100));
+		msg.measurementType = MSR_TEST;
+		msg.dataType        = TYPE_DOUBLE;
+		msg.id              = get_id();
+		msg.dataSize        = strlen(msg.data);
+
+		if(g_gateway)
+		{
+			// We are on the gateway: send via serial to PC
+			gwSendNotificationSerial(&msg);
+		}
+		else
+		{
+			char buf[BUFFERSIZE];
+			if(bufferizeNotifyMessage(&msg, buf, sizeof(buf)) <= 0)
+				ERROR("Cannot write message to buffer");
+
+			// Use the multihop method to send a message
+			/* Copy the "Hello" to the packet buffer. */
+			packetbuf_copyfrom(buf, strlen(buf));
+
+			/* Send the packet. */
+			multihop_send(&multihop, &to);
+		}
+		/*---- end of multihop call ----*/
+
+		//if ((int)node_id == SENDER) // TODO: CM MAybe remove this
+		{
+			// If we are on the sender, go to message state
+			state = NEW_MESSAGE;
+		}
 
 		// Toggle the LEDS
 		if (push % 2 == 0) { 
@@ -496,11 +683,10 @@ PROCESS_THREAD(button_pressed, ev, data)
 
 		LOG("Sensor has id %d (%d)", get_id(), node_id);
 
-
 		sense_temperature();
 		sense_humidity();
 		sense_light(); 
-		// sense_infrared(); 
+		sense_infrared(); 
 	}
 
 exit:

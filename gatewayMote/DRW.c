@@ -334,25 +334,25 @@ recv_uc(struct unicast_conn *c, const rimeaddr_t *from)
 static const struct unicast_callbacks unicast_callbacks = {recv_uc};
 /*---------------------------------------------------------------------------*/
 
-uint8_t sense_light(){ // TODO: Please use uint16_t
+uint16_t sense_light(){
 	SENSORS_ACTIVATE(light_sensor);
-	unsigned int value = (unsigned int)light_sensor.value(0);
+	unsigned int value = light_sensor.value(0);
 	DEBUG("Light value: %u", value);
 	SENSORS_DEACTIVATE(light_sensor);
 
-	return (uint8_t)value;
+	return value;
 }
 
-uint8_t sense_infrared(){
+uint16_t sense_infrared(){
 	SENSORS_ACTIVATE(light_sensor);
-	unsigned int value = (unsigned int)light_sensor.value(1);
+	unsigned int value = light_sensor.value(1);
 	DEBUG("Infrared value: %u", value);
 	SENSORS_DEACTIVATE(light_sensor);
 
-	return (uint8_t)value;
+	return value;
 }
 
-uint8_t sense_temperature(){
+uint16_t sense_temperature(){
 	/*
 	   int16_t sign    = 1;
 	   int16_t  raw    = tmp102_read_temp_raw();
@@ -364,7 +364,7 @@ uint8_t sense_temperature(){
 	   int16_t  tempint  = ((absraw >> 8) * sign)-3;
 	   uint16_t tempfrac = ((absraw >> 4) % 16) * 625;	
 	   char     minus    = ((tempint == 0) & (sign == -1)) ? '-' : ' ';
-
+	// note: in the present situation, all messages are sent as 8 bits integers for simplicity
 	   DEBUG("Temp %d %d %d  --> %d %d %d", sign, raw, absraw, tempint, tempfrac, (int)minus);
 	 */
 	// Create a temperature notification and send
@@ -373,14 +373,14 @@ uint8_t sense_temperature(){
 	// note: in the present situation, all messages are sent as 8 bits integers for simplicity
 	unsigned int value = (unsigned int) (-39.60 + 0.01 * sht11_temp());
 	DEBUG("sense temperature %u", value);
-	return (uint8_t)value;
+	return value;
 }
 
-uint8_t sense_humidity(){
+uint16_t sense_humidity(){
 	unsigned int rh = sht11_humidity();
-	unsigned int value = (unsigned int) (-4 + 0.0405*rh - 2.8e-6*(rh*rh));
+	unsigned int value = -4 + 0.0405*rh - 2.8e-6*(rh*rh);
 	DEBUG("sense humidity %u percent (%u)", value, rh);
-	return (uint8_t)value;
+	return value;
 }
 
 void send_event(const char* message){
@@ -618,7 +618,7 @@ PROCESS_THREAD(drw, ev, data)
 				msg.dataType        = TYPE_INT;
 				msg.id              = message_to_forward.nodeid;
 				msg.dataSize        = strlen(msg.data);
-				sendNotificationSerial(&msg);
+				gwSendNotificationSerial(&msg);
 
 				// printf("String content of message:%s", message_to_forward.message_string);
 

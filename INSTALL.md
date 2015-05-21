@@ -206,6 +206,7 @@ Troubleshooting
 The sensors outputs garbage characters with serialdump or nothing at all
 ### Solution
 - The reset (using the sensor button) is not handled properly. You need to unplug the device of USB port and plug it back in after at least 5 seconds.
+- Another solution to this problem (with the Zolertia z1) is to hit the reset button repeatidly until an output can be seen
 
 - And also check that the baudrate of your port is set to 115200. You can get the current value with:
 
