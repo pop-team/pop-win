@@ -96,7 +96,8 @@ SensorProxy::~SensorProxy()
 void SensorProxy::SendRawData(const std::string& x_data)
 {
 	// m_debugOf << x_data; m_debugOf.flush();
-	const char* data = x_data.c_str();
+	string data = x_data + "\n";
+	const char* data = data.c_str();
 	// printf("Sending %s on %d\n", data, m_fd);
 	int n = strlen(data);
 	if (n <= 0) {
@@ -234,6 +235,7 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 					cout<< "Unstored notification (" << explainMeasurementType(msg.measurementType) << "): '" << msg.data << "'" << popcendl;
 					break;
 				}
+				cout<< "Stored notification   (" << explainMeasurementType(msg.measurementType) << "): '" << msg.data << "'" << popcendl;
 				switch(msg.dataType)
 				{
 					case TYPE_DOUBLE:
