@@ -103,7 +103,7 @@ int unbufferizeNotifyMessage(struct NotifyMessage* xp_msg, const char* x_buffer,
 			printf("ERROR: Buffer has insufficient size %d > %d\n", dataSize + 1, (int)x_maxDataSize);
 			return 0;
 		}
-		int s = snprintf(xp_msg->data, x_maxDataSize, "%s", x_buffer + 21 + 1);
+		int s = snprintf(xp_msg->data, sizeof(xp_msg->data), "%s", x_buffer + 21 + 1);
 		if(s == dataSize)
 		{
 			return 1;
@@ -169,7 +169,7 @@ int unbufferizePublishMessage(struct PublishMessage* xp_msg, const char* x_buffe
 			printf("ERROR: Buffer has insufficient size %d > %d\n", dataSize + 1, (int)x_maxDataSize);
 			return 0;
 		}
-		int s = snprintf(xp_msg->data, x_maxDataSize, "%s", x_buffer + 18 + 1);
+		int s = snprintf(xp_msg->data, sizeof(xp_msg->data), "%s", x_buffer + 18 + 1);
 		if(s == dataSize)
 		{
 			return 1;

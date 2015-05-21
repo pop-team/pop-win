@@ -530,6 +530,7 @@ PROCESS_THREAD(multihop_sense, ev, data)
 
 	while(1){
 		etimer_set(&et, 30 * CLOCK_SECOND);
+		// PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et) || ((ev==sensors_event) && (data == &button_sensor)));
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
 		leds_on(LEDS_BLUE);
@@ -591,7 +592,7 @@ PROCESS_THREAD(multihop_sense, ev, data)
 
 			// Use the multihop method to send a message
 			/* Copy the "Hello" to the packet buffer. */
-			packetbuf_copyfrom(buf, strlen(buf));
+			packetbuf_copyfrom(buf, strlen(buf) + 1);
 
 			/* Send the packet. */
 			multihop_send(&multihop, &to);
@@ -655,14 +656,14 @@ PROCESS_THREAD(button_pressed, ev, data)
 
 			// Use the multihop method to send a message
 			/* Copy the "Hello" to the packet buffer. */
-			packetbuf_copyfrom(buf, strlen(buf));
+			packetbuf_copyfrom(buf, strlen(buf) + 1); // +1 is for the null char
 
 			/* Send the packet. */
 			multihop_send(&multihop, &to);
 		}
 		/*---- end of multihop call ----*/
 
-		//if ((int)node_id == SENDER) // TODO: CM MAybe remove this
+		//if ((int)node_id == SENDER) // TODO: CM Maybe remove this
 		{
 			// If we are on the sender, go to message state
 			state = NEW_MESSAGE;
