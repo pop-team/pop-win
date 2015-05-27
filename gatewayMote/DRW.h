@@ -11,6 +11,10 @@
 #define SENDER 1
 #define POWER 3
 
+// Helper to print the decimal of a value
+#define DEC(x) ((unsigned)(x*100 - ((int) x) * 100))
+
+
 
 static bool printConsole = true;
 
@@ -32,6 +36,8 @@ uint16_t sense_light();
 uint16_t sense_infrared();
 uint16_t sense_humidity();
 uint16_t sense_temperature();
+float sense_humidity_float();
+float sense_temperature_float();
 
 /* These are the types of unicast messages that we can send. */
 enum {

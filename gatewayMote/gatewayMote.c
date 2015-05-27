@@ -556,19 +556,22 @@ PROCESS_THREAD(multihop_sense, ev, data)
 		memset(&msg, 0, sizeof(msg));
 
 		// Alternate the type of measurement
+		float fl = 0;
 		switch(push%4)
 		{
 			case 0:
 				msg.measurementType = MSR_TEMPERATURE;
-				msg.dataType        = TYPE_INT;
+				msg.dataType        = TYPE_DOUBLE;
 				msg.unit            = UNT_CELSIUS;
-				sprintf(msg.data, "%d", sense_temperature());
+				fl                  = sense_temperature_float();
+				sprintf(msg.data, "%d.%u", (int)fl, DEC(fl));
 				break;
 			case 1:
 				msg.measurementType = MSR_HUMIDITY;
-				msg.dataType        = TYPE_INT;
+				msg.dataType        = TYPE_DOUBLE;
 				msg.unit            = UNT_PERCENT;
-				sprintf(msg.data, "%d", sense_humidity());
+				fl                  = sense_humidity_float();
+				sprintf(msg.data, "%d.%u", (int)fl, DEC(fl));
 				break;
 			case 2:
 				msg.measurementType = MSR_LIGHT;
@@ -693,8 +696,8 @@ PROCESS_THREAD(button_pressed, ev, data)
 		LOG("Sensor has id %d (%d)", get_id(), node_id);
 
 		// To test the sensor: read value and printf
-		sense_temperature();
-		sense_humidity();
+		sense_temperature_float();
+		sense_humidity_float();
 		sense_light(); 
 		sense_infrared(); 
 	}
