@@ -165,7 +165,7 @@ recv(struct multihop_conn *c, const rimeaddr_t *sender,
 	   simulation (because the default simulation setup creates one
 	   node with address 1.0). */
 
-	gwHandleMessage((char *)packetbuf_dataptr());
+	gwHandleMessage((char *)packetbuf_dataptr(), 0);
 }
 /*
  * This function is called to forward a packet. The function picks a

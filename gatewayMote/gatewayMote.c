@@ -54,20 +54,21 @@ void generate_test_data_string();
 void print_id();
 void send_broadcast_cmd();
 void toggle_debug();
-void toggle_gateway();
+void set_as_gateway();
 
 // All functions are stored in a table
 typedef void (*FunctionCall)(void);
 #define NB_COMMANDS 9
-const FunctionCall g_commands[NB_COMMANDS] = {list_functions, read_temperature, generate_test_data_double, generate_test_data_int, generate_test_data_string, print_id, send_broadcast_cmd, toggle_debug, toggle_gateway};
-const char* g_commandNames[NB_COMMANDS]    = {"list_functions", "read_temperature", "generate_test_data_double", "generate_test_data_int", "generate_test_data_string", "print_id", "send_broadcast_cmd", "toggle_debug", "toggle_gateway"};
+const FunctionCall g_commands[NB_COMMANDS] = {list_functions, read_temperature, generate_test_data_double, generate_test_data_int, generate_test_data_string, print_id, send_broadcast_cmd, toggle_debug, set_as_gateway};
+const char* g_commandNames[NB_COMMANDS]    = {"list_functions", "read_temperature", "generate_test_data_double", "generate_test_data_int", "generate_test_data_string", "print_id", "send_broadcast_cmd", "toggle_debug", "set_as_gateway"};
 
 /****************************/
 /*** DECLARE FUNCTIONS      */
 /****************************/
-void gwHandlePublication(const char* data);
-void gwHandleNotification(const char* data);
-void gwHandleSubscription(const char* data);
+void gwHandleMessage(const char* data, char fromProxy);
+void gwHandlePublication(const char* data, char fromProxy);
+void gwHandleNotification(const char* data, char fromProxy);
+void gwHandleSubscription(const char* data, char fromProxy);
 
 int sscanf ( const char * s, const char * format, ...);
 size_t strlen ( const char * str );
@@ -91,22 +92,34 @@ void gwSendSubscriptionSerial(const struct SubscribeMessage* msg)
 {
 	char buf[BUFFERSIZE];
 	if(bufferizeSubscribeMessage(msg, buf, sizeof(buf)) <= 0)
-		ERROR("Cannot write message to buffer");
+		ERROR("Cannot write message to buffer (1)");
 
 	// Send message via serial line on contiki
 	printf("%s\n", buf);
 }
 
-// send a notification message: Only for use on the remote sensor
+// send a notification message: Only for use on the remote gateway
 void gwSendNotificationSerial(const struct NotifyMessage* msg)
 {
 	char buf[BUFFERSIZE];
 	if(bufferizeNotifyMessage(msg, buf, sizeof(buf)) <= 0)
-		ERROR("Cannot write message to buffer");
+		ERROR("Cannot write message to buffer (2)");
 
 	// Send message via serial line on contiki
 	printf("%s\n", buf);
 }
+
+// send a publication message: Only for use on the remote gateway
+void gwSendPublicationSerial(const struct PublishMessage* msg)
+{
+	char buf[BUFFERSIZE];
+	if(bufferizePublishMessage(msg, buf, sizeof(buf)) <= 0)
+		ERROR("Cannot write message to buffer (3)");
+
+	// Send message via serial line on contiki
+	printf("%s\n", buf);
+}
+
 
 /// Return the id of the node
 int get_id()
@@ -146,8 +159,15 @@ PROCESS(multihop_sense                , "Take measurements and transmit via mult
 
 /* The AUTOSTART_PROCESSES() definition specifices what processes to
    start when this module is loaded. We put our processes there. */
-// AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &communication_process, &drw, &sensor_events); // Processes to run with algo of UNIGE
+
+// note: we can choose here which version of the code we want to run:
+#if 0
+// Processes to run with routing algo of UNIGE
+AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &communication_process, &drw, &sensor_events); // Processes to run with algo of UNIGE
+#else
+// Processes to use the routing of messages given by the multihop example
 AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &multihop_announce, &multihop_sense);
+#endif
 /*---------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------*/
@@ -189,29 +209,7 @@ PROCESS_THREAD(gateway_communication_process, ev, data)
 			DEBUG("The mote received an interruption on serial line: %s", data);
 
 			// We received a message from gateway:
-			// switch on the different types of message
-			DEBUG("Handle msg type %d", getMessageType(data));
-			switch(getMessageType(data))
-			{
-				case MSG_SUBSCRIBE:
-				{
-					gwHandleSubscription(data);
-				}
-				break;
-				case MSG_PUBLISH:
-				{
-					gwHandlePublication(data);
-				}
-				break;
-				case MSG_NOTIFY:
-				{
-					gwHandleNotification(data);
-				}
-				break;
-				default:
-					// Unknown message type
-					ERROR("Unknown message type");
-			}
+			gwHandleMessage(data, 1);
 			g_busy = 0;
 		}
 		else ERROR("Device is busy. Cannot process message");
@@ -225,19 +223,20 @@ exit:
 /*
  * Handle any incoming message on gateway
  */
-void gwHandleMessage(const char* data)
+void gwHandleMessage(const char* data, char fromProxy)
 {
 	enum MessageType mt = getMessageType(data);
+	DEBUG("Handle msg type %d", getMessageType(data));
 	switch(mt)
 	{
 		case MSG_SUBSCRIBE:
-			gwHandleSubscription(data);
+			gwHandleSubscription(data, fromProxy);
 			break;
 		case MSG_NOTIFY:
-			gwHandleNotification(data);
+			gwHandleNotification(data, fromProxy);
 			break;
 		case MSG_PUBLISH:
-			gwHandlePublication(data);
+			gwHandlePublication(data, fromProxy);
 			break;
 		default:
 			ERROR("Received message of unknown type");
@@ -247,25 +246,27 @@ void gwHandleMessage(const char* data)
 /*
  * Handle notification messages from gateway
  */
-void gwHandleNotification(const char* data)
+void gwHandleNotification(const char* data, char fromProxy)
 {
 	struct NotifyMessage msg;
 	memset(&msg, 0, sizeof(msg));
 	if(unbufferizeNotifyMessage(&msg, data, sizeof(msg.data)) <= 0)
 		ERROR("Cannot read message from buffer");
 
-	// 
-	// Define here what to do on reception
-	// ...
-	LOG("Gateway has sent notification: %s", data);
-
-	gwSendNotificationSerial(&msg);
+	if(fromProxy)
+	{
+		// 
+		// note: the forwarding of messages to the network of sensors is not implemented yet
+		//
+		LOG("Proxy has sent notification: %s", data);
+	}
+	else gwSendNotificationSerial(&msg);
 }
 
 /*
  * Handle notification messages from gateway
  */
-void gwHandleSubscription(const char* data)
+void gwHandleSubscription(const char* data, char fromProxy)
 {
 	struct SubscribeMessage msg;
 	memset(&msg, 0, sizeof(msg));
@@ -275,17 +276,20 @@ void gwHandleSubscription(const char* data)
 		return;
 	}
 
-	// 
-	// Define here what to do on reception  TODO for UNIGE
-	// ...
-	// LOG("Gateway has subscribed");
-	gwSendSubscriptionSerial(&msg);
+	if(fromProxy)
+	{
+		// 
+		// note: the forwarding of messages to the network of sensors is not implemented yet
+		//
+		LOG("Proxy has sent subscription: %s", data);
+	}
+	else gwSendSubscriptionSerial(&msg);
 }
 
 /*
  * Handle publication messages from gateway
  */
-void gwHandlePublication(const char* data)
+void gwHandlePublication(const char* data, char fromProxy)
 {
 	struct PublishMessage msg;
 	memset(&msg, 0, sizeof(msg));
@@ -294,6 +298,11 @@ void gwHandlePublication(const char* data)
 
 	DEBUG("Handle publication dataType=%d", msg.dataType);
 
+	if(!fromProxy)
+	{
+		gwSendPublicationSerial(&msg);
+		return;
+	}
 	switch(msg.dataType)
 	{
 		case TYPE_DOUBLE:
@@ -471,8 +480,8 @@ void toggle_debug(){
 /*
  * Design the mote as a gateway
  */
-void toggle_gateway(){
-	g_gateway = !g_gateway;
+void set_as_gateway(){
+	g_gateway = 1; // !g_gateway;
 	LOG("Design as gateway %s", g_gateway ? "on" : "off");
 }
 
@@ -540,7 +549,7 @@ PROCESS_THREAD(multihop_sense, ev, data)
 
 		/*---- start of multihop call ----*/
 		rimeaddr_t to;
-		to.u8[0] = 158; // ID of our gateway
+		to.u8[0] = GATEWAY_ID; // ID of our gateway
 		to.u8[1] = 0;
 
 		struct NotifyMessage msg;
@@ -558,7 +567,7 @@ PROCESS_THREAD(multihop_sense, ev, data)
 			case 1:
 				msg.measurementType = MSR_HUMIDITY;
 				msg.dataType        = TYPE_INT;
-				msg.unit            = UNT_NONE; // TODO %
+				msg.unit            = UNT_PERCENT;
 				sprintf(msg.data, "%d", sense_humidity());
 				break;
 			case 2:
@@ -630,7 +639,7 @@ PROCESS_THREAD(button_pressed, ev, data)
 
 		/*---- start of multihop call ----*/
 		rimeaddr_t to;
-		to.u8[0] = 158; // ID of our gateway
+		to.u8[0] = GATEWAY_ID; // ID of our gateway
 		to.u8[1] = 0;
 
 		struct NotifyMessage msg;
@@ -683,6 +692,7 @@ PROCESS_THREAD(button_pressed, ev, data)
 
 		LOG("Sensor has id %d (%d)", get_id(), node_id);
 
+		// To test the sensor: read value and printf
 		sense_temperature();
 		sense_humidity();
 		sense_light(); 

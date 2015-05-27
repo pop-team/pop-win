@@ -213,11 +213,7 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 				if(unbufferizeSubscribeMessage(&msg, x_rawMsg.c_str()) <= 0)
 					throw POPException("Cannot unbufferize subscribe message");
 
-				throw POPException("Subscribtion messages not handled yet"); //TODO
-
-				// Define here what to do on reception 
-				// ...
-				
+				throw POPException("Subscribtion messages are not handled yet");
 			}
 
 			break;
@@ -315,6 +311,7 @@ void SensorProxy::Subscribe(int x_measurementType, int x_dataType)
 	msg.dataType        = static_cast<DataType>(x_dataType);
 	msg.id              = m_id;
 
+	// Bufferize message and send to gateway
 	if(bufferizeSubscribeMessage(&msg, buf, BUFFERSIZE) <= 0)
 		throw POPException("Cannot bufferize publish message");
 	// cout<< "Sending " << buf << popcendl;

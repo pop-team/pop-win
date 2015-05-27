@@ -89,6 +89,13 @@ void POPSensor::StartListening()
 		it->StartListening();
 	}
 	SubscribeToResources();
+
+	// Send a command to the gateway mote to set it as the gateway
+	// note: since some mote have trouble with the serial line you may need to set it manually later
+	for(auto it : m_sensorsProxy)
+	{
+		it->Publish(PUB_COMMAND, 8); // 8 is the command id for set_as
+	}
 }
 
 void POPSensor::StopListening()
@@ -161,7 +168,7 @@ void POPSensor::SubscribeToResources()
 
 	for(int i = 0 ; i < root["wsns"]["nodes"].size() ; i++)
 	{
-		enum MeasurementType mtype = translateMeasurementType(root["wsns"]["nodes"][i].get("measureType", "<not found>").asString().c_str()); // TODO replace measurement with measure
+		enum MeasurementType mtype = translateMeasurementType(root["wsns"]["nodes"][i].get("measureType", "<not found>").asString().c_str());
 		enum DataType dtype        = translateDataType       (root["wsns"]["nodes"][i].get("dataType", "<not found>").asString().c_str());
 		bool direction             = root["wsns"]["nodes"][i].get("direction", "<not found>").asString().c_str() == string("IN");
 

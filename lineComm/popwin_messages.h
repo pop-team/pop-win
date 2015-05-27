@@ -17,6 +17,9 @@
 // The size of the data itself (e.g. in Notify messages)
 #define BUFFERDATASIZE 64
 
+// The id of the gateway
+#define GATEWAY_ID     158
+
 // Different types of messages
 enum MessageType
 {
@@ -52,7 +55,8 @@ enum MeasurementUnit
 	UNT_KELVIN      = 2,
 	UNT_SECONDS     = 3,
 	UNT_METERS      = 4,
-	UNT_LUX         = 5
+	UNT_LUX         = 5,
+	UNT_PERCENT     = 6
 	// ... // 
 };
 enum MeasurementUnit translateMeasurementUnit(const char* x_str);
