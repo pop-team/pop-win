@@ -13,6 +13,7 @@
 #include "dev/button-sensor.h"
 #include "dev/light-sensor.h"
 #include "dev/sht11.h"
+// #include "dev/tmp102.h"
 
 #include "DRW.h"
 
@@ -376,6 +377,36 @@ uint16_t sense_temperature(){
 }
 
 float sense_temperature_float(){
+	/* note: this code is unstable on z1 (which uses tmp102 sensor) and unstable on xm1000
+	unsigned u = sht11_temp();
+	float value = 0;
+	if(u == 65535)
+	{
+		int16_t tempint;
+		uint16_t tempfrac;
+		int16_t raw;
+		uint16_t absraw;
+		int16_t sign;
+		char minus = ' ';
+
+		sign = 1;
+		raw = tmp102_read_temp_raw();
+		absraw = raw;
+		if(raw < 0) {               // Perform 2C's if sensor returned negative data
+			absraw = (raw ^ 0xFFFF) + 1;
+			sign = -1;
+		}
+		tempint = (absraw >> 8) * sign;
+		tempfrac = ((absraw >> 4) % 16) * 625;      // Info in 1/10000 of degree
+		minus = ((tempint == 0) & (sign == -1)) ? '-' : ' ';
+		DEBUG("Temp = %c%d.%04d", minus, tempint, tempfrac);
+		value = tempint + tempfrac * 0.01;
+		if(sign == -1)
+			value *= -1;
+	}
+	else
+		value = -39.60 + 0.01 * sht11_temp();
+*/
 	float value = -39.60 + 0.01 * sht11_temp();
 	DEBUG("sense temperature %d.%u (%u)", (int)value, DEC(value), sht11_temp());
 	return value;
@@ -480,6 +511,7 @@ PROCESS_THREAD(sensor_events, ev, data)
 
 	// Initialization of sensor
 	sht11_init();
+	// tmp102_init();
 
 	static struct etimer et;
 

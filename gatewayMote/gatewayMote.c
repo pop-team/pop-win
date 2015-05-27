@@ -24,6 +24,7 @@
 
 #include "dev/serial-line.h"
 #include "dev/temperature-sensor.h"
+// #include "dev/tmp102.h"
 #include "dev/button-sensor.h"
 #include "popwin_messages.h"
 #include "queue.h"
@@ -629,6 +630,7 @@ PROCESS_THREAD(button_pressed, ev, data)
 
 	// Initialization of sensor
 	sht11_init();
+	// tmp102_init();
 
 
 	while(1) {
