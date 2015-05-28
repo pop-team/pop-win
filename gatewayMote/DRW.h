@@ -59,7 +59,7 @@ enum {
 	CANDIDATE_NODE,
 	SEND_EVENT,
 	GW_NOTIFICATION
- 	
+
 };
 
 /* This structure holds information about neighbors. */

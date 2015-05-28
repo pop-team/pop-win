@@ -307,54 +307,54 @@ void gwHandlePublication(const char* data, char fromProxy)
 	switch(msg.dataType)
 	{
 		case TYPE_DOUBLE:
-		{
-			ERROR("notifications of type TYPE_DOUBLE are not handled yet");
-		}
-		break;
-		case TYPE_INT:
-		{
-			int dataInt = atoi(msg.data);
-			switch(msg.publicationType)
 			{
-				case PUB_LED:
-				{
-					DEBUG("Blink led %d", dataInt);
-					switch(dataInt)
-					{
-						case 0:
-							leds_toggle(LEDS_BLUE);
-							break;
-						case 1:
-							leds_toggle(LEDS_GREEN);
-							break;
-						case 2:
-							leds_toggle(LEDS_RED);
-							break;
-						default:
-							leds_toggle(LEDS_ALL);
-					}
-				}
-				break;
-				case PUB_COMMAND:
-				{
-					// Commands can be seen as a type of publication
-					DEBUG("Call command %d", dataInt);
-					if(dataInt >= 0 && dataInt < NB_COMMANDS)
-						g_commands[dataInt]();
-					else
-						ERROR("Unknown command number");
-				}
-				break;
-				default:
-					ERROR("Unknown publication type");
+				ERROR("notifications of type TYPE_DOUBLE are not handled yet");
 			}
-		}
-		break;
+			break;
+		case TYPE_INT:
+			{
+				int dataInt = atoi(msg.data);
+				switch(msg.publicationType)
+				{
+					case PUB_LED:
+						{
+							DEBUG("Blink led %d", dataInt);
+							switch(dataInt)
+							{
+								case 0:
+									leds_toggle(LEDS_BLUE);
+									break;
+								case 1:
+									leds_toggle(LEDS_GREEN);
+									break;
+								case 2:
+									leds_toggle(LEDS_RED);
+									break;
+								default:
+									leds_toggle(LEDS_ALL);
+							}
+						}
+						break;
+					case PUB_COMMAND:
+						{
+							// Commands can be seen as a type of publication
+							DEBUG("Call command %d", dataInt);
+							if(dataInt >= 0 && dataInt < NB_COMMANDS)
+								g_commands[dataInt]();
+							else
+								ERROR("Unknown command number");
+						}
+						break;
+					default:
+						ERROR("Unknown publication type");
+				}
+			}
+			break;
 		case TYPE_STRING:
-		{
-			ERROR("notifications of type TYPE_STRING are not handled yet");
-		}
-		break;
+			{
+				ERROR("notifications of type TYPE_STRING are not handled yet");
+			}
+			break;
 		default:
 			ERROR("Unknown data type");
 	}
@@ -465,6 +465,7 @@ void print_id(){
  * Send a broad_cast message
  */
 void send_broadcast_cmd(){
+	// note: this is only used as a test
 	packetbuf_copyfrom("Hello", 6);
 	broadcast_send(&broadcast);
 	LOG("broadcast message sent");
