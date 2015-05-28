@@ -27,7 +27,6 @@ static int event_sent = 0;
 static int sense_counter = 0;
 
 static struct Message message_to_forward;
-static struct Message message_to_send;
 static rimeaddr_t unicast_target;
 static rimeaddr_t weight_target;
 

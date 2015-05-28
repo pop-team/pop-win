@@ -688,7 +688,7 @@ PROCESS_THREAD(button_pressed, ev, data)
 		//if ((int)node_id == SENDER) // TODO: CM Maybe remove this
 		{
 			// If we are on the sender, go to message state
-			// state = NEW_MESSAGE;
+			state = NEW_MESSAGE;
 		}
 
 		// Toggle the LEDS

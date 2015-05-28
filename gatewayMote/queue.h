@@ -107,6 +107,13 @@ void push (Queue* queue, struct Message item) {
  * Return and remove the first item.
  */
 struct Message pop (Queue* queue) {
+	if(queue->size <= 0)
+	{
+		printf("ERROR: queue size empty for pop\n");
+		struct Message m;
+		memset(&m, 0, sizeof(m));
+		return m;
+	}
 	// get the first item
 	Node* head = queue->head;
 	struct Message item = head->item;

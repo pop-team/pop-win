@@ -155,6 +155,7 @@ extract_messagetosend(const char* message){
 	printf("Extract message character received msg [13] is: %u\n", (char)message[13]);
 
 	struct Message msgextract; 
+	memset(&msgextract, 0, sizeof(msgextract));
 
 	msgextract.type = (uint8_t)message[0];
 	msgextract.tag = (uint8_t)message[1];
@@ -186,6 +187,7 @@ static void send_broadcast(uint8_t type){
 	struct Message m = createMessage();
 	m.type = type;
 	m.tag = tag;
+	printf("push broadcast %d %d\n", m.message, __LINE__);
 	message_queue.push(&message_queue, m);
 }
 
@@ -220,10 +222,12 @@ static void send_weight(){
 	unicast_target = weight_target;
 
 	struct Message m;
+	memset(&m, 0, sizeof(m));
 	m.weight = (uint8_t)(10*w);
 	m.type = UNICAST_TYPE_WEIGHT;
 	m.tag = tag;
 	snprintf(m.message_string, sizeof(m.message_string), "Empty");
+	printf("push weights %d %d\n", m.message, __LINE__);
 	message_queue.push(&message_queue, m);
 
 }
@@ -283,7 +287,7 @@ static void add_neighbor(uint8_t ntag, uint8_t nweight, const rimeaddr_t *from){
 
 //Forward message
 /* This is the function that does the routing to the next mote in the DRW when the DRW is in construction*/
-static void forward_message(){
+static void forward_message(const struct Message *msg){
 
 	//pick neighbor with minimum weight and send a unicast message to it.
 	if(list_length(neighbors_list) > 0) {
@@ -302,13 +306,15 @@ static void forward_message(){
 		unicast_target = t->addr;
 
 		struct Message m;
-		m.message = message_to_forward.message; printf("Message %u\n", m.message);
-		m.value = message_to_forward.value; printf("Value %u\n", m.value);
-		m.nodeid = message_to_forward.nodeid; printf("Nodeid %u\n", m.nodeid);
+		memset(&m, 0, sizeof(m));
+		m.message = msg->message; printf("Message %u\n", m.message);
+		m.value = msg->value; printf("Value %u\n", m.value);
+		m.nodeid = msg->nodeid; printf("Nodeid %u\n", m.nodeid);
 		m.type = UNICAST_TYPE_MESSAGE; printf("Type %u\n", m.type);
 		m.tag = tag; printf("Message %u\n", m.tag);
-		strcpy(m.message_string, message_to_forward.message_string); 
+		strcpy(m.message_string, msg->message_string); 
 
+		printf("push forward msg %d %d\n", m.message, __LINE__);
 		message_queue.push(&message_queue, m);
 	}
 	else printf("ERROR: cannot forward message, no neighbor found\n");
@@ -583,7 +589,10 @@ PROCESS_THREAD(communication_process, ev, data)
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
 		if (message_queue.size > 0){
-			message_to_send = message_queue.pop(&message_queue);
+			struct Message message_to_send;
+			memset(&message_to_send, 0, sizeof(message_to_send));
+			message_to_send = message_queue.pop(&message_queue); // TODO: Use memcpy
+			printf("pop %d %d\n", message_to_send.message, __LINE__);
 
 			waitTime = getWaitTime(message_to_send.type);
 
@@ -603,10 +612,11 @@ PROCESS_THREAD(communication_process, ev, data)
 
 				printf("Message to send nodeid %u\n", message_to_send.nodeid);
 
+				printf("Sending unicast message %u %u\n", message_to_send.message, message_to_send.type);
+				printf("Sending unicast message %s\n", message_to_send.message_string);
 
 				char* tmp = create_messagetosend(message_to_send);
 				memcpy(sending, tmp, strlen(message_to_send.message_string) + 6 + 1);
-				free(tmp);
 
 				printf("Sending unicast message with data sending [0] %u %u\n", sending[0], tmp[0]);
 				printf("Sending unicast message with data sending [1] %u %u\n", sending[1], tmp[1]);
@@ -628,6 +638,7 @@ PROCESS_THREAD(communication_process, ev, data)
 				packetbuf_copyfrom(sending, strlen((const char*)message_to_send.message_string) + 6 + 1);
 				unicast_send(&unicast, &unicast_target);
 
+				free(tmp);
 			}
 
 			//Broadcast message
@@ -733,6 +744,8 @@ PROCESS_THREAD(drw, ev, data)
 
 
 		if (state == NEW_MESSAGE){
+			struct Message message;
+			memset(&message, 0, sizeof(message));
 
 			etimer_set(&et, CLOCK_SECOND * 2);
 			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
@@ -755,28 +768,26 @@ PROCESS_THREAD(drw, ev, data)
 			// Sense one measure and send
 			if(sense_counter % 3 == 0){
 				uint8_t typemessage = MSR_LIGHT;
-				message_to_forward.message = typemessage;
-				message_to_forward.value = sense_light();
+				message.message = typemessage;
+				message.value = sense_light();
 			}
 			else if(sense_counter % 3 == 1){
 				uint8_t typemessage = MSR_TEMPERATURE;
-				message_to_forward.message = typemessage;
-				message_to_forward.value = sense_temperature();
+				message.message = typemessage;
+				message.value = sense_temperature();
 			}
 			else{
 				uint8_t typemessage = MSR_HUMIDITY;
-				message_to_forward.message = typemessage;
-				message_to_forward.value = sense_humidity();
+				message.message = typemessage;
+				message.value = sense_humidity();
 			}
 			sense_counter++;
 
-			message_to_forward.nodeid = node_id;	
-			snprintf(message_to_forward.message_string, sizeof(message_to_forward.message_string), "Empty");
-			char buff[16];
-			sprintf(buff, "%s", (char *)message_to_forward.message_string);
-			printf("Message string  when sensing is: %s\n", buff);
+			message.nodeid = node_id;	
+			snprintf(message.message_string, sizeof(message.message_string), "Empty");
+			printf("Message string  when sensing is: %s\n", message.message_string);
 
-			forward_message();
+			forward_message(&message);
 			leds_off(LEDS_BLUE);
 			leds_toggle(LEDS_ALL);
 
@@ -841,6 +852,8 @@ PROCESS_THREAD(drw, ev, data)
 			}else {
 
 				visited++;
+				struct Message sendevent;
+				memcpy(&sendevent, &message_to_forward, sizeof(message_to_forward)); // copy as a safety
 
 				leds_on(LEDS_BLUE);
 				list_init(neighbors_list);
@@ -851,7 +864,7 @@ PROCESS_THREAD(drw, ev, data)
 				PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
 
-				forward_message();
+				forward_message(&sendevent);
 				send_broadcast(BROADCAST_APPLY_TAG);
 
 				state = IDLE;
@@ -875,8 +888,8 @@ PROCESS_THREAD(drw, ev, data)
 		} else if(state == SEND_EVENT){
 
 			static struct etimer et;
-			static struct Message sendevent;
-			sendevent = message_to_forward;
+			struct Message sendevent;
+			memcpy(&sendevent, &message_to_forward, sizeof(message_to_forward));
 
 			etimer_set(&et, CLOCK_SECOND * 2);
 			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
@@ -895,8 +908,7 @@ PROCESS_THREAD(drw, ev, data)
 			etimer_set(&et, CLOCK_SECOND * 30);
 			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-			message_to_forward = sendevent;
-			forward_message();
+			forward_message(&sendevent);
 			leds_off(LEDS_BLUE);
 			leds_toggle(LEDS_ALL);
 
@@ -927,7 +939,7 @@ PROCESS_THREAD(drw, ev, data)
 			message_to_forward.value = 100;			
 			message_to_forward.nodeid = node_id;	
 			snprintf(message_to_forward.message_string, sizeof(message_to_forward.message_string), "Toggle");
-			forward_message();
+			forward_message(&message_to_forward);
 			leds_off(LEDS_BLUE);
 			leds_toggle(LEDS_ALL);
 
