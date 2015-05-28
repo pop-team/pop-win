@@ -118,13 +118,11 @@ create_messagetosend(struct Message msg){
 	message[4] = msg.value;
 	message[5] = msg.weight;
 
-	char buffcr2[16];
-	sprintf(buffcr2, "%s", (char *)msg.message_string);
-	printf("Create Message msg.message_string is: %s\n", buffcr2);
+	printf("Create Message msg.message_string is: %s\n", msg.message_string);
 
-	memcpy(message + 6, msg.message_string, strlen((const char*)msg.message_string));
+	memcpy(message + 6, msg.message_string, strlen(msg.message_string));
 
-	message[strlen((const char*)msg.message_string)+7] = '\0';
+	message[strlen(msg.message_string)+7] = '\0';
 
 	return message;
 }
@@ -143,10 +141,12 @@ extract_messagetosend(char* message){
 
 	int i=0;
 
-	for (i=6;i<strlen((const char*)message); ++i)
+	for (i=6;i<6+64; ++i)
 	{
-		msgextract.message_string[i-6] = (char)message[i];
+		msgextract.message_string[i-6] = message[i];
 	}
+
+	// printf("EXTRACTED: %s\n", msgextract.message_string);
 
 	return msgextract;
 }
@@ -361,7 +361,7 @@ recv_uc(struct unicast_conn *c, const rimeaddr_t *from)
 {
 
 	/* Grab the pointer to the incoming data. */
-	int8_t* msgrec;
+	char* msgrec;
 	msgrec = packetbuf_dataptr();
 
 	printf("Message string received msg [0] is: %u\n", (uint8_t)msgrec[0]);
@@ -388,7 +388,7 @@ recv_uc(struct unicast_conn *c, const rimeaddr_t *from)
 	printf("Message character received msg [12] is: %c\n", (char)msgrec[12]);
 	printf("Message character received msg [13] is: %c\n", (char)msgrec[13]);
 
-	message_to_forward = extract_messagetosend((char *)msgrec);
+	message_to_forward = extract_messagetosend(msgrec);
 
 
 	printf("RECEIVED Type is: %u\n", message_to_forward.type);
@@ -763,27 +763,36 @@ PROCESS_THREAD(drw, ev, data)
 
 			// Id DATABASE is the id of the gateway
 			if ((int)node_id == DATABASE) {
-
+				leds_on(LEDS_RED);
 				printf("Message has reached the gateway!\n");
 				printf("Message is: %u\n", message_to_forward.message);
 				printf("Value is: %u\n", message_to_forward.value);
 				char buff[16];
-				sprintf(buff, "%s", (char *)message_to_forward.message_string);
+				sprintf(buff, "%s", message_to_forward.message_string);
 				printf("Message string is: %s\n", buff);
 				printf("Nodeid of publisher is: %u\n", message_to_forward.nodeid);
 
 				// Send a notification to POP-C++
 				struct NotifyMessage msg;
 				memset(&msg, 0, sizeof(msg));
-				snprintf(msg.data, sizeof(msg.data), "%d", message_to_forward.value);
 				msg.measurementType = message_to_forward.message;
-				msg.dataType        = TYPE_INT;
+
+				if(message_to_forward.message == MSR_EVENT)
+				{
+					snprintf(msg.data, sizeof(msg.data), "%s", message_to_forward.message_string);
+					msg.dataType        = TYPE_STRING;
+				}else
+				{
+					snprintf(msg.data, sizeof(msg.data), "%d", message_to_forward.value);
+					msg.dataType        = TYPE_INT;
+				}
 				msg.id              = message_to_forward.nodeid;
 				msg.dataSize        = strlen(msg.data);
 				gwSendNotificationSerial(&msg);
+				// printf("message sent to gw %d\n",message_to_forward.message);
 
 				state=IDLE;
-				leds_on(LEDS_ALL);
+				leds_off(LEDS_RED);
 
 			} else if (event_sent == 1) {
 

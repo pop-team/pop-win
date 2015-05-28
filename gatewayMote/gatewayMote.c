@@ -699,10 +699,10 @@ PROCESS_THREAD(button_pressed, ev, data)
 		LOG("Sensor has id %d (%d)", get_id(), node_id);
 
 		// To test the sensor: read value and printf
-		// sense_temperature_float();
-		// sense_humidity_float();
-		// sense_light(); 
-		// sense_infrared(); 
+		sense_temperature_float();
+		sense_humidity_float();
+		sense_light(); 
+		sense_infrared(); 
 	}
 
 exit:
