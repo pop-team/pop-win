@@ -256,6 +256,8 @@ void gwHandleNotification(const char* data, char fromProxy)
 
 	if(fromProxy)
 	{
+		// If the message comes from the GW --> forward it // TODO
+
 		// 
 		// note: the forwarding of messages to the network of sensors is not implemented yet
 		//
@@ -279,6 +281,8 @@ void gwHandleSubscription(const char* data, char fromProxy)
 
 	if(fromProxy)
 	{
+		// If the message comes from the GW --> forward it // TODO
+
 		// 
 		// note: the forwarding of messages to the network of sensors is not implemented yet
 		//
@@ -304,6 +308,10 @@ void gwHandlePublication(const char* data, char fromProxy)
 		gwSendPublicationSerial(&msg);
 		return;
 	}
+
+	// If the message comes from the GW --> forward it // TODO
+
+
 	switch(msg.dataType)
 	{
 		case TYPE_DOUBLE:
@@ -680,7 +688,7 @@ PROCESS_THREAD(button_pressed, ev, data)
 		//if ((int)node_id == SENDER) // TODO: CM Maybe remove this
 		{
 			// If we are on the sender, go to message state
-			state = NEW_MESSAGE;
+			// state = NEW_MESSAGE;
 		}
 
 		// Toggle the LEDS

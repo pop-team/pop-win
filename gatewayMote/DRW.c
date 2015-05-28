@@ -109,7 +109,7 @@ static float getWaitTime(uint8_t type) {
 char*
 create_messagetosend(struct Message msg){
 
-	char *message = (char*)malloc(strlen((const char*)msg.message_string) + 7);
+	char *message = (char*)malloc(strlen(msg.message_string) + 7);
 
 	message[0] = msg.type;
 	message[1] = msg.tag;
@@ -128,7 +128,31 @@ create_messagetosend(struct Message msg){
 }
 
 struct Message
-extract_messagetosend(char* message){
+extract_messagetosend(const char* message){
+
+	printf("Extract message string received msg [0] is: %u\n", (uint8_t)message[0]);
+	printf("Extract message string received msg [1] is: %u\n", (uint8_t)message[1]);
+	printf("Extract message string received msg [2] is: %u\n", (uint8_t)message[2]);
+	printf("Extract message string received msg [3] is: %u\n", (uint8_t)message[3]);
+	printf("Extract message string received msg [4] is: %u\n", (uint8_t)message[4]);
+	printf("Extract message string received msg [5] is: %u\n", (uint8_t)message[5]);
+	printf("Extract message string received msg [6] is: %u\n", (char)message[6]);
+	printf("Extract message string received msg [7] is: %u\n", (char)message[7]);
+	printf("Extract message string received msg [8] is: %u\n", (char)message[8]);
+	printf("Extract message string received msg [9] is: %u\n", (char)message[9]);
+	printf("Extract message string received msg [10] is: %u\n", (char)message[10]);
+	printf("Extract message string received msg [11] is: %u\n", (char)message[11]);
+	printf("Extract message string received msg [12] is: %u\n", (char)message[12]);
+	printf("Extract message string received msg [13] is: %u\n", (char)message[13]);
+
+	printf("Extract message character received msg [6] is: %u\n", (char)message[6]);
+	printf("Extract message character received msg [7] is: %u\n", (char)message[7]);
+	printf("Extract message character received msg [8] is: %u\n", (char)message[8]);
+	printf("Extract message character received msg [9] is: %u\n", (char)message[9]);
+	printf("Extract message character received msg [10] is: %u\n", (char)message[10]);
+	printf("Extract message character received msg [11] is: %u\n", (char)message[11]);
+	printf("Extract message character received msg [12] is: %u\n", (char)message[12]);
+	printf("Extract message character received msg [13] is: %u\n", (char)message[13]);
 
 	struct Message msgextract; 
 
@@ -379,14 +403,14 @@ recv_uc(struct unicast_conn *c, const rimeaddr_t *from)
 	printf("Message string received msg [12] is: %u\n", (char)msgrec[12]);
 	printf("Message string received msg [13] is: %u\n", (char)msgrec[13]);
 
-	printf("Message character received msg [6] is: %c\n", (char)msgrec[6]);
-	printf("Message character received msg [7] is: %c\n", (char)msgrec[7]);
-	printf("Message character received msg [8] is: %c\n", (char)msgrec[8]);
-	printf("Message character received msg [9] is: %c\n", (char)msgrec[9]);
-	printf("Message character received msg [10] is: %c\n", (char)msgrec[10]);
-	printf("Message character received msg [11] is: %c\n", (char)msgrec[11]);
-	printf("Message character received msg [12] is: %c\n", (char)msgrec[12]);
-	printf("Message character received msg [13] is: %c\n", (char)msgrec[13]);
+	printf("Message character received msg [6] is: %u\n", (char)msgrec[6]);
+	printf("Message character received msg [7] is: %u\n", (char)msgrec[7]);
+	printf("Message character received msg [8] is: %u\n", (char)msgrec[8]);
+	printf("Message character received msg [9] is: %u\n", (char)msgrec[9]);
+	printf("Message character received msg [10] is: %u\n", (char)msgrec[10]);
+	printf("Message character received msg [11] is: %u\n", (char)msgrec[11]);
+	printf("Message character received msg [12] is: %u\n", (char)msgrec[12]);
+	printf("Message character received msg [13] is: %u\n", (char)msgrec[13]);
 
 	message_to_forward = extract_messagetosend(msgrec);
 
@@ -573,23 +597,23 @@ PROCESS_THREAD(communication_process, ev, data)
 
 				print_info(message_to_send.type);
 
-				unsigned char* sending = (unsigned char*)malloc(strlen(message_to_send.message_string) + 7);
+				char sending[64]; //  = (char*)malloc(strlen(message_to_send.message_string) + 7);
 
-				char bufs0[16];
-				sprintf(bufs0, "%s", (char *)message_to_send.message_string);
-				printf("Sending unicast message before package with data %s\n", bufs0);
+				printf("Sending unicast message before package with data %s\n", message_to_send.message_string);
 
 				printf("Message to send nodeid %u\n", message_to_send.nodeid);
 
 
-				memcpy(sending, create_messagetosend(message_to_send), strlen((const char*)message_to_send.message_string) + 6 + 1);
+				char* tmp = create_messagetosend(message_to_send);
+				memcpy(sending, tmp, strlen(message_to_send.message_string) + 6 + 1);
+				free(tmp);
 
-				printf("Sending unicast message with data sending [0] %u\n", sending[0]);
-				printf("Sending unicast message with data sending [1] %u\n", sending[1]);
-				printf("Sending unicast message with data sending [2] %u\n", sending[2]);
-				printf("Sending unicast message with data sending [3] %u\n", sending[3]);
-				printf("Sending unicast message with data sending [4] %u\n", sending[4]);
-				printf("Sending unicast message with data sending [5] %u\n", sending[5]);
+				printf("Sending unicast message with data sending [0] %u %u\n", sending[0], tmp[0]);
+				printf("Sending unicast message with data sending [1] %u %u\n", sending[1], tmp[1]);
+				printf("Sending unicast message with data sending [2] %u %u\n", sending[2], tmp[2]);
+				printf("Sending unicast message with data sending [3] %u %u\n", sending[3], tmp[3]);
+				printf("Sending unicast message with data sending [4] %u %u\n", sending[4], tmp[4]);
+				printf("Sending unicast message with data sending [5] %u %u\n", sending[5], tmp[5]);
 				printf("Sending unicast message with data sending [6] %u\n", sending[6]);
 				printf("Sending unicast message with data sending [7] %u\n", sending[7]);
 				printf("Sending unicast message with data sending [8] %u\n", sending[8]);
@@ -794,7 +818,8 @@ PROCESS_THREAD(drw, ev, data)
 				state=IDLE;
 				leds_off(LEDS_RED);
 
-			} else if (event_sent == 1) {
+			} else if (event_sent == 1 && message_to_forward.message == 100) {
+				// if an event is present and message == 100 (an event is produced)
 
 				printf("Message has reached the node that sent a string event!\n");
 				printf("Message is: %u\n", message_to_forward.message);
