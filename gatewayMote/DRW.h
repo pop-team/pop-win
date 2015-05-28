@@ -5,7 +5,7 @@
 /* This #define defines the maximum amount of neighbors we can remember. */
 #define MAX_NEIGHBORS 16
 /* This #define defines the node id corresponding to the database */
-#define DATABASE 5 // Note: Set your gateway id here !!
+#define DATABASE 2 // Note: Set your gateway id here !!
 #define DATABASE_TAG UINT8_MAX
 /* This #define defines the node id corresponding to the sender */
 #define SENDER 1
@@ -23,6 +23,7 @@ static uint8_t state;
 static uint8_t tag;     //should be a list
 static bool tag_asked = false;
 static int visited;
+static int event_sent = 0;
 static int sense_counter = 0;
 
 static struct Message message_to_forward;
@@ -55,7 +56,10 @@ enum {
 	IDLE,
 	NEW_MESSAGE,
 	CURRENT_DRW_NODE,
-	CANDIDATE_NODE  
+	CANDIDATE_NODE,
+	SEND_EVENT,
+	GW_NOTIFICATION
+ 	
 };
 
 /* This structure holds information about neighbors. */

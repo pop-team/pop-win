@@ -12,6 +12,7 @@
 #include "dev/cc2420.h"
 #include "dev/button-sensor.h"
 #include "dev/light-sensor.h"
+#include "dev/light.h"
 #include "dev/sht11.h"
 // #include "dev/tmp102.h"
 
@@ -60,7 +61,7 @@ static void print_info(uint8_t type) {
 
 			case BROADCAST_REPLY_TAG :
 				printf("Replying about the tag\n");
-				break;  
+				break;
 		}
 	}
 }
@@ -95,10 +96,61 @@ static float getWaitTime(uint8_t type) {
 
 		case BROADCAST_REPLY_TAG :
 			return 4.0;
-			break;  
+			break;
 	}
 	return 1.0;
 }
+
+
+/*---------------------------------------------------------------------------*/
+
+// MESSAGE TO SEND USING THE RADIO
+
+char*
+create_messagetosend(struct Message msg){
+
+    char *message = (char*)malloc(strlen((const char*)msg.message_string) + 7);
+
+    message[0] = msg.type;
+    message[1] = msg.tag;
+    message[2] = msg.message;
+    message[3] = msg.nodeid;
+    message[4] = msg.value;
+    message[5] = msg.weight;
+
+    char buffcr2[16];
+    sprintf(buffcr2, "%s", (char *)msg.message_string);
+    printf("Create Message msg.message_string is: %s\n", buffcr2);
+
+    memcpy(message + 6, msg.message_string, strlen((const char*)msg.message_string));
+
+    message[strlen((const char*)msg.message_string)+7] = '\0';
+
+   return message;
+}
+
+struct Message
+extract_messagetosend(char* message){
+
+    struct Message msgextract; 
+
+    msgextract.type = (uint8_t)message[0];
+    msgextract.tag = (uint8_t)message[1];
+    msgextract.message = (uint8_t)message[2];
+    msgextract.nodeid = (uint8_t)message[3];
+    msgextract.value = (uint8_t)message[4];
+    msgextract.weight = (uint8_t)message[5];
+
+    int i=0;
+
+    for (i=6;i<strlen((const char*)message); ++i)
+   {
+        msgextract.message_string[i-6] = (char)message[i];
+   }
+
+   return msgextract;
+}
+
 
 /*---------------------------------------------------------------------------*/
 
@@ -147,6 +199,7 @@ static void send_weight(){
 	m.weight = (uint8_t)(10*w);
 	m.type = UNICAST_TYPE_WEIGHT;
 	m.tag = tag;
+	snprintf(m.message_string, sizeof(m.message_string), "Empty");
 	message_queue.push(&message_queue, m);
 
 }
@@ -225,11 +278,13 @@ static void forward_message(){
 		unicast_target = t->addr;
 
 		struct Message m;
-		m.message = message_to_forward.message;
-		m.value = message_to_forward.value;
-		m.nodeid = message_to_forward.nodeid;
-		m.type = UNICAST_TYPE_MESSAGE;
-		m.tag = tag;
+		m.message = message_to_forward.message; printf("Message %u\n", m.message);
+		m.value = message_to_forward.value; printf("Value %u\n", m.value);
+		m.nodeid = message_to_forward.nodeid; printf("Nodeid %u\n", m.nodeid);
+		m.type = UNICAST_TYPE_MESSAGE; printf("Type %u\n", m.type);
+		m.tag = tag; printf("Message %u\n", m.tag);
+		strcpy(m.message_string, message_to_forward.message_string); 
+
 		message_queue.push(&message_queue, m);
 	}
 	else printf("ERROR: cannot forward message, no neighbor found\n");
@@ -276,11 +331,11 @@ broadcast_recv(struct broadcast_conn *c, const rimeaddr_t *from)
 
 		case BROADCAST_ASK_TAG :
 
-			if (state != CURRENT_DRW_NODE && state != NEW_MESSAGE)  
+			if (state != CURRENT_DRW_NODE && state != NEW_MESSAGE)
 				send_broadcast(BROADCAST_REPLY_TAG);
 			tag_asked = true;
 
-			break;  
+			break;
 
 		case BROADCAST_REPLY_TAG :
 
@@ -289,7 +344,7 @@ broadcast_recv(struct broadcast_conn *c, const rimeaddr_t *from)
 
 			break;
 
-	}  
+	}
 }
 /* This is where we define what function to be called when a broadcast
    is received. We pass a pointer to this structure in the
@@ -304,29 +359,60 @@ static const struct broadcast_callbacks broadcast_call = {broadcast_recv};
 	static void
 recv_uc(struct unicast_conn *c, const rimeaddr_t *from)
 {
-	struct Message *msg;
 
 	/* Grab the pointer to the incoming data. */
-	msg = packetbuf_dataptr();
+	int8_t* msgrec;
+    msgrec = packetbuf_dataptr();
 
-	switch(msg->type){
+    printf("Message string received msg [0] is: %u\n", (uint8_t)msgrec[0]);
+    printf("Message string received msg [1] is: %u\n", (uint8_t)msgrec[1]);
+    printf("Message string received msg [2] is: %u\n", (uint8_t)msgrec[2]);
+    printf("Message string received msg [3] is: %u\n", (uint8_t)msgrec[3]);
+    printf("Message string received msg [4] is: %u\n", (uint8_t)msgrec[4]);
+    printf("Message string received msg [5] is: %u\n", (uint8_t)msgrec[5]);
+    printf("Message string received msg [6] is: %u\n", (char)msgrec[6]);
+    printf("Message string received msg [7] is: %u\n", (char)msgrec[7]);
+    printf("Message string received msg [8] is: %u\n", (char)msgrec[8]);
+    printf("Message string received msg [9] is: %u\n", (char)msgrec[9]);
+    printf("Message string received msg [10] is: %u\n", (char)msgrec[10]);
+    printf("Message string received msg [11] is: %u\n", (char)msgrec[11]);
+    printf("Message string received msg [12] is: %u\n", (char)msgrec[12]);
+    printf("Message string received msg [13] is: %u\n", (char)msgrec[13]);
+
+    printf("Message character received msg [6] is: %c\n", (char)msgrec[6]);
+    printf("Message character received msg [7] is: %c\n", (char)msgrec[7]);
+    printf("Message character received msg [8] is: %c\n", (char)msgrec[8]);
+    printf("Message character received msg [9] is: %c\n", (char)msgrec[9]);
+    printf("Message character received msg [10] is: %c\n", (char)msgrec[10]);
+    printf("Message character received msg [11] is: %c\n", (char)msgrec[11]);
+    printf("Message character received msg [12] is: %c\n", (char)msgrec[12]);
+    printf("Message character received msg [13] is: %c\n", (char)msgrec[13]);
+
+    message_to_forward = extract_messagetosend((char *)msgrec);
+
+
+    printf("RECEIVED Type is: %u\n", message_to_forward.type);
+    printf("RECEIVED Nodeid is: %u\n", message_to_forward.nodeid);
+    printf("RECEIVED Message is: %u\n", message_to_forward.message);
+    printf("RECEIVED Value is: %u\n", message_to_forward.value);
+    printf("RECEIVED Nodeid of publisher is: %u\n", message_to_forward.nodeid);
+
+	switch(message_to_forward.type){
 
 		case UNICAST_TYPE_MESSAGE :
 
 			printf("Unicast ping received from %d.%d\n",
 					from->u8[0], from->u8[1]);
-			tag = msg->tag;
-			message_to_forward.message = msg->message;
-			message_to_forward.value = msg->value;
-			message_to_forward.nodeid = msg->nodeid;
+
 			state = CURRENT_DRW_NODE;
 
 			break;
 
 		case UNICAST_TYPE_WEIGHT :
+
 			printf("Received unicast message: adding neighbor\n");
 
-			add_neighbor(msg->tag, msg->weight, from);
+			add_neighbor(message_to_forward.tag, message_to_forward.weight, from);
 
 			break;
 
@@ -426,27 +512,32 @@ float sense_humidity_float(){
 	return value;
 }
 
-void send_event(const char* message){
+void send_event(char *message, uint8_t event){
 
-	LOG("NOT sending message: %s", message);
-	return; // TODO: fix this sending of messages
-
-
-
-	uint8_t typemessage = MSR_EVENT;
+      if ((int)node_id == SENDER){
+	LOG("Sending message event: %s", (const char *)message);
+	char buf[16];
+	sprintf(buf, "%s", message);
+        printf("Message string event is: %s\n", buf);
+	uint8_t typemessage = event;
 	message_to_forward.message = typemessage;
-	//snprintf(message_to_forward.message_string, sizeof(message_to_forward.message_string), "%s", message); // TODO: Test
 	message_to_forward.nodeid = node_id;
+	message_to_forward.value = 0;
 
-	message_to_forward.type = UNICAST_TYPE_MESSAGE;
-	message_to_forward.value = 222u; // TODO: Handle string messages
 
-	forward_message();
-	printf("size of queue %u\n", message_queue.size);
+	snprintf(message_to_forward.message_string, sizeof(message_to_forward.message_string), message);
 
-	// Go into sending state
-	state = NEW_MESSAGE;
+	printf("SEND EVENT Message string 0 event is: %c, %c\n", message_to_forward.message_string[0], message[0]);
+	printf("SEND EVENT Message string 1 event is: %c, %c\n", message_to_forward.message_string[1], message[1]);
+	printf("SEND EVENT Message string 2 event is: %c, %c\n", message_to_forward.message_string[2], message[2]);
+	printf("SEND EVENT Message string 3 event is: %c, %c\n", message_to_forward.message_string[3], message[3]);
+	printf("SEND EVENT Message string 4 event is: %c, %c\n", message_to_forward.message_string[4], message[4]);
+	printf("SEND EVENT Message string 5 event is: %c, %c\n", message_to_forward.message_string[5], message[5]);
+
+	state = SEND_EVENT;
+	}
 }
+
 
 //Communication Process
 PROCESS_THREAD(communication_process, ev, data)
@@ -482,7 +573,35 @@ PROCESS_THREAD(communication_process, ev, data)
 
 				print_info(message_to_send.type);
 
-				packetbuf_copyfrom(&message_to_send, sizeof(struct Message));
+                		unsigned char* sending = (unsigned char*)malloc(strlen(message_to_send.message_string) + 7);
+				
+				char bufs0[16];
+				sprintf(bufs0, "%s", (char *)message_to_send.message_string);
+				printf("Sending unicast message before package with data %s\n", bufs0);
+
+				printf("Message to send nodeid %u\n", message_to_send.nodeid);
+
+
+				memcpy(sending, create_messagetosend(message_to_send), strlen((const char*)message_to_send.message_string) + 6 + 1);
+
+				printf("Sending unicast message with data sending [0] %u\n", sending[0]);
+				printf("Sending unicast message with data sending [1] %u\n", sending[1]);
+				printf("Sending unicast message with data sending [2] %u\n", sending[2]);
+				printf("Sending unicast message with data sending [3] %u\n", sending[3]);
+				printf("Sending unicast message with data sending [4] %u\n", sending[4]);
+				printf("Sending unicast message with data sending [5] %u\n", sending[5]);
+				printf("Sending unicast message with data sending [6] %u\n", sending[6]);
+				printf("Sending unicast message with data sending [7] %u\n", sending[7]);
+				printf("Sending unicast message with data sending [8] %u\n", sending[8]);
+				printf("Sending unicast message with data sending [9] %u\n", sending[9]);
+				printf("Sending unicast message with data sending [6] %c\n", sending[6]);
+				printf("Sending unicast message with data sending [7] %c\n", sending[7]);
+				printf("Sending unicast message with data sending [8] %c\n", sending[8]);
+				printf("Sending unicast message with data sending [9] %c\n", sending[9]);
+				printf("Sending unicast message with data sending [10] %c\n", sending[10]);
+				printf("Sending unicast message with data sending [11] %c\n", sending[11]);	
+
+				packetbuf_copyfrom(sending, strlen((const char*)message_to_send.message_string) + 6 + 1);
 				unicast_send(&unicast, &unicast_target);
 
 			}
@@ -522,32 +641,35 @@ PROCESS_THREAD(sensor_events, ev, data)
 		static char event_hot = 0;
 		uint8_t temp = sense_temperature();
 
-		if(temp >= 30u){
+		if(temp >= 40u){
 			if(event_hot == 0){
-				send_event("It is hot !");
+				send_event("It is hot !", MSR_EVENT);
 				event_hot = 1;
+				event_sent = 1;
 			}
-		}	
+		}
 		else event_hot = 0;
 
 		static char event_humid = 0;
 		uint8_t humid = sense_humidity();
 
-		if(humid > 80u){
+		if(humid > 60u){
 			if(event_humid == 0){
-				send_event("It is wet !");
+				send_event("It is wet !", MSR_EVENT);
 				event_humid = 1;
+				event_sent = 1;
 			}
 		}
 		else event_humid = 0;
 
 		static char event_dark = 0;
-		uint8_t light = sense_light(); 
+		uint8_t light = sense_light();
 
-		if(light < 120u){
+		if(light < 20u){
 			if(event_dark == 0){
-				send_event("It is dark !");
+				send_event("It is dark !", MSR_EVENT);
 				event_dark = 1;
+				event_sent = 1;
 			}
 		}
 		else event_dark = 0;
@@ -582,6 +704,9 @@ PROCESS_THREAD(drw, ev, data)
 	while(1){
 		etimer_set(&et, CLOCK_SECOND);
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+		
+		//TO READ FROM THE SERIAL IF WE RECEIVE A GW_NOTIFICATION TO GO TO THE APPROPIATE STATE
+
 
 		if (state == NEW_MESSAGE){
 
@@ -605,43 +730,33 @@ PROCESS_THREAD(drw, ev, data)
 
 			// Sense one measure and send
 			if(sense_counter % 3 == 0){
-				/*
-				   uint8_t typemessage = 6;
-				   message_to_forward.message = typemessage;
-				   SENSORS_ACTIVATE(light_sensor);
-				   uint8_t value = (uint8_t)light_sensor.value(0);
-				// printf("Light value1: %u\n", value);
-				printf("Light value2: %d\n", value);
-				message_to_forward.value = value;
-				SENSORS_DEACTIVATE(light_sensor);	
-				message_to_forward.nodeid = node_id;
-				 */
-
 				uint8_t typemessage = MSR_LIGHT;
 				message_to_forward.message = typemessage;
 				message_to_forward.value = sense_light();
-				message_to_forward.nodeid = node_id;
 			}
 			else if(sense_counter % 3 == 1){
 				uint8_t typemessage = MSR_TEMPERATURE;
 				message_to_forward.message = typemessage;
 				message_to_forward.value = sense_temperature();
-				message_to_forward.nodeid = node_id;
 			}
 			else{
 				uint8_t typemessage = MSR_HUMIDITY;
 				message_to_forward.message = typemessage;
 				message_to_forward.value = sense_humidity();
-				message_to_forward.nodeid = node_id;
 			}
 			sense_counter++;
-
+			
+			message_to_forward.nodeid = node_id;	
+			snprintf(message_to_forward.message_string, sizeof(message_to_forward.message_string), "Empty");
+			char buff[16];
+			sprintf(buff, "%s", (char *)message_to_forward.message_string);
+        		printf("Message string  when sensing is: %s\n", buff);
 
 			forward_message();
 			leds_off(LEDS_BLUE);
 			leds_toggle(LEDS_ALL);
 
-			state = IDLE; 
+			state = IDLE;
 
 
 		} else if (state == CURRENT_DRW_NODE){
@@ -652,6 +767,9 @@ PROCESS_THREAD(drw, ev, data)
 				printf("Message has reached the gateway!\n");
 				printf("Message is: %u\n", message_to_forward.message);
 				printf("Value is: %u\n", message_to_forward.value);
+				char buff[16];
+				sprintf(buff, "%s", (char *)message_to_forward.message_string);
+        			printf("Message string is: %s\n", buff);
 				printf("Nodeid of publisher is: %u\n", message_to_forward.nodeid);
 
 				// Send a notification to POP-C++
@@ -664,14 +782,31 @@ PROCESS_THREAD(drw, ev, data)
 				msg.dataSize        = strlen(msg.data);
 				gwSendNotificationSerial(&msg);
 
-				// printf("String content of message:%s", message_to_forward.message_string);
+				state=IDLE;
+				leds_on(LEDS_ALL);
+
+			} else if (event_sent == 1) {
+
+				printf("Message has reached the node that sent a string event!\n");
+				printf("Message is: %u\n", message_to_forward.message);
+				printf("Value is: %u\n", message_to_forward.value);
+				char buff[16];
+				sprintf(buff, "%s", (char *)message_to_forward.message_string);
+        			printf("Message string is: %s\n", buff);
+				printf("Nodeid of publisher is: %u\n", message_to_forward.nodeid);
+				
+				//Toggle the LEDs
+				leds_toggle(LEDS_ALL);
+				leds_toggle(LEDS_ALL);
+
+				event_sent  = 0;
 
 				state=IDLE;
 				leds_on(LEDS_ALL);
 
-			} else {
+			}else {
 
-				visited++; 
+				visited++;
 
 				leds_on(LEDS_BLUE);
 				list_init(neighbors_list);
@@ -701,8 +836,69 @@ PROCESS_THREAD(drw, ev, data)
 			send_weight();
 
 			state = IDLE;
-			leds_off(LEDS_GREEN);      
-		} 
+			leds_off(LEDS_GREEN);
+
+		} else if(state == SEND_EVENT){
+
+			static struct etimer et;
+			static struct Message sendevent;
+			sendevent = message_to_forward;
+
+			etimer_set(&et, CLOCK_SECOND * 2);
+			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+			printf("Starting the DRW for event\n");
+			leds_on(LEDS_RED);
+			leds_on(LEDS_BLUE);
+			tag = 1;
+			send_broadcast(BROADCAST_APPLY_TAG);
+
+			etimer_set(&et, CLOCK_SECOND * 1);
+			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+			send_broadcast(BROADCAST_MAKE_CANDIDATE);
+
+			etimer_set(&et, CLOCK_SECOND * 30);
+			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+			message_to_forward = sendevent;
+			forward_message();
+			leds_off(LEDS_BLUE);
+			leds_toggle(LEDS_ALL);
+
+			state = IDLE;
+		} else if(state == GW_NOTIFICATION){
+
+			static struct etimer et;
+
+			etimer_set(&et, CLOCK_SECOND * 2);
+			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+			printf("Starting the DRW for toggle LEDs due to event\n");
+			leds_on(LEDS_RED);
+			leds_on(LEDS_BLUE);
+			tag = 1;
+			send_broadcast(BROADCAST_APPLY_TAG);
+
+			etimer_set(&et, CLOCK_SECOND * 1);
+			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+			send_broadcast(BROADCAST_MAKE_CANDIDATE);
+
+			etimer_set(&et, CLOCK_SECOND * 30);
+			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+
+			message_to_forward.message = 100;
+			message_to_forward.value = 100;			
+			message_to_forward.nodeid = node_id;	
+			snprintf(message_to_forward.message_string, sizeof(message_to_forward.message_string), "Toggle");
+			forward_message();
+			leds_off(LEDS_BLUE);
+			leds_toggle(LEDS_ALL);
+
+			state = IDLE;
+		}
 	}
 
 	PROCESS_END();

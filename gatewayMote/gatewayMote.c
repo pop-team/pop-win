@@ -162,7 +162,7 @@ PROCESS(multihop_sense                , "Take measurements and transmit via mult
    start when this module is loaded. We put our processes there. */
 
 // note: we can choose here which version of the code we want to run:
-#if 0
+#if 1
 // Processes to run with routing algo of UNIGE
 AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &communication_process, &drw, &sensor_events); // Processes to run with algo of UNIGE
 #else
@@ -698,10 +698,10 @@ PROCESS_THREAD(button_pressed, ev, data)
 		LOG("Sensor has id %d (%d)", get_id(), node_id);
 
 		// To test the sensor: read value and printf
-		sense_temperature_float();
-		sense_humidity_float();
-		sense_light(); 
-		sense_infrared(); 
+		// sense_temperature_float();
+		// sense_humidity_float();
+		// sense_light(); 
+		// sense_infrared(); 
 	}
 
 exit:
