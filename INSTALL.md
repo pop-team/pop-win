@@ -18,19 +18,20 @@ System overview
 ---------------
 POPWin provides a set of tools (based on POP-C++) to build communication between a remote machine and a network of sensors. 
 
-The complete system can be devided in two parts. The high-level part handles the communication between different parallel objects that can run on different machines using the POP-C++ framework. The low-level part contains the sensor that communicate using radio waves. Inbetween the two parts a GatewaySensor must be used. It will forward the messages between the SensorProxy object (running on a PC) and the rest of the sensor network. Communication between the SensorProxy and GatewaySensor is done via USB.
+The complete system can be devided in two parts. The **high-level** part handles the communication between different parallel objects that can run on different machines using the POP-C++ framework. The **low-level** part contains the sensor that communicate using radio waves. Inbetween the two parts a GatewaySensor must be used. It will forward the messages between the SensorProxy object (running on a PC) and the rest of the sensor network. Communication between the SensorProxy and GatewaySensor is done via USB.
 
 
-									        ************
+	                                                                        ************
 	main -------------- POPSensor -- SensorProxy1 === GatewaySensor ***   *Sensor network*
-			            \                                           ************  
-			            |                                           
-			            |
-			            |                                                         
-			            \                                           ************  
-			             --- SensorProxy2 === GatewaySensor ***   *Sensor network*
-									        ************
-				          ...
+	                            \                                           ************  
+	                            |                                           
+	                            |
+	                            |                                                         
+	                            \                                           ************  
+	                             --- SensorProxy2 === GatewaySensor ***   *Sensor network*
+	                                                                        ************
+	                                     ...
+
 	--- TCPIP communication
 	=== USB communication
 	*** Radio communication
@@ -41,24 +42,106 @@ As explained in the documentation of the POPWin project the communication uses d
 
 Specifications
 --------------
-
 ### Resource description
+The resources (or sensors) that the programmer wants to access are specified in the **resource.json** file. It can contain the following fields:
+- gateway: specifies how to access the gateway sensor
+	- url: the machine on which the gateway sensor is connected
+	- connection: the connection between the machine and the gateway sensor (for now only usb is supported)
+- nodes: specifies the types of measurement
+	- measurement type: temperature, humidity, light, ... as specified in [gatewayMote/popwin_messages.h]
+	- direction: "IN" for sensor or "OUT" for actuators
+
+
+TODO: Discuss with PK -> array of gateways
+
+	{
+		"gateways":[
+			{
+				"url": "localhost",
+				"connection": "usb"
+			}
+		],
+		"nodes":[
+			{
+				"measurementType": "temperature",
+				"direction":   "IN"
+			},
+			{
+				"measurementType": "humidity",
+				"direction":   "IN"
+			},
+			{
+				"measurementType": "light",
+				"direction":   "IN"
+			}
+		]
+	}
+
+
 ### Messaging
+In the low-level part of the system (that uses the publish/subscribe messaging model) the following types of models are implemented: notification, publication and subscription. Please note that unsubscriptions are not implemented yet but their structure is identical to subscription messages.
+
+The messages can contain the following fields:
+- **MeasurementType**: An enum that specifies the type of measurement: temperature, vibration, humidity, ...
+- **MeasurementUnit**: An enum that specifies the measurement unit: Celsius, seconds, meters, ...
+- **PublicationType**: An enum that specifies the type of publication: e.g. led
+- **ID**             : The id of the sender
+- **DataType**       : An enum that specifies the type of the data: double, int or string
+- **data**           : A buffer of character (of size BUFFERDATASIZE=64) that contains the data. For compatibility between systems integers and floats are printed to this buffer and not stored as bit value.
+- **DataSize**       : The size of the above data in characters
+
+#### Notification message
+
+	struct NotifyMessage
+	{
+		enum MeasurementType measurementType;
+		enum DataType        dataType;
+		unsigned short       id;
+		enum MeasurementUnit unit;
+		size_t               dataSize;
+		char                 data[BUFFERDATASIZE];
+	};
+
+#### Publication message
+
+	struct PublishMessage
+	{
+		enum PublicationType publicationType;
+		enum DataType        dataType;
+		unsigned short       id;               // not mandatory, for convenience
+		size_t               dataSize;
+		char                 data[BUFFERDATASIZE];
+	};
+
+
+#### Subscription message
+
+	struct SubscribeMessage
+	{
+		unsigned short       id;               // Id is not mandatory. Only for convenience
+		enum MeasurementType measurementType;
+		enum DataType        dataType;
+	};
+
 
 Installation of Contiki
 -----------------------
-Contiki OS is the operation system that runs on the Z1 sensor. There is different way for installation:
+Contiki OS is the operation system that runs on the Z1 sensor. There are different ways of installing:
 
 - With a VM ware virtual machine: http://www.contiki-os.org/start.html
 - Or by installing a cross-compilation toolchain for Ubuntu https://github.com/contiki-os/contiki/wiki/Setup-contiki-toolchain-in-ubuntu-13.04
 
 In this doc we have chosen the second option.
 
-### Z1 sensor
+### Z1 and XM100 sensors
 
 In this demo we use a Zolertia Z1 sensor (also called a mote)
 
 	http://www.contiki-os.org/hardware.html
+
+or AdvanticSys sensors: 
+
+	http://www.advanticsys.com/shop/asxm1000-p-24.html
 
 ### Set the access rights on the USB port
 
@@ -111,6 +194,8 @@ To contact the sensor and visualize the hello-world message type:
 	make login
 
 The application is executed on a reset of the sensor. If you click on the small reset button on the sensor you should see the message appear.
+
+**Important** : For the AdvanticSys XM1000 mote, you also need to install specific files as explained in section (**Installation of contiki files for xm1000**)
 
 
 Demo
@@ -231,6 +316,9 @@ You can find the latest version of the code on page:
 	http://www.advanticsys.com/shop/asxm1000-p-24.html
 	http://www.advanticsys.com/wiki/index.php?title=XM1000
 
+Examples of programmation
+-------------------------
+
 Troubleshooting
 ---------------
 ### Problem
@@ -244,15 +332,6 @@ The sensors outputs garbage characters with serialdump or nothing at all
 	stty -F /dev/ttyUSB0
 
 The SensorProxy class of POPWin will try to reset the value to 115200 but this does apparently not work each time.
-
-- It seems that the upload of a program on the mote does not succeed each time (this problem appeared with contiki 2.6). The upload may have to be repeated many times ... annoying.
-
-
-	*	    Zolertia   xm1000
-	bourqui     ok
-	2.6         random
-	2.7         random
-	master      untested
 
 ### Problem
 Cannot compile application with Contiki 2.6:
@@ -344,18 +423,28 @@ Add this line in contiki/platform/xm1000/dev/sht11-arch.h (http://sourceforge.ne
 	#define SHT11_PxREN  P1REN
 
 ### Problem: Incoming communication problem with xm1000
-Dear support team
+A big problem encountered with the XM1000 sensors happens with the communication PC->sensor. It seems that the XM1000 receives a message from the PC but is unable to read it. This is annoying and I was not able to fix it after contacting both AdvanticSys and Contiki. AdvanticSys was useless for support and on the Contiki mailing list someone replied and suggest a workaround (using the Zolertia Z1 as gateway).
 
-I am having trouble with the XM1000 remote sensor and contiki 2.7. It seems that the incoming communication (PC->sensor) are not handled by the sensor. 
+I ended using the workaround.
 
-It seems that the following program gets stuck at PROCESS_WAIT_EVENT_UNTIL and does not handle any events (ie nothing gets printed)
+The thread on Contiki mailing list:
 
-The code is compiled with the toolchain and contiki 2.7. (The same code works with Zolertia z1 sensors)
+	http://ehc.ac/p/contiki/mailman/message/34129191/
+	
+The e-mail sent to AdvanticSys:
 
-Can you help me ? 
+	Dear support team
 
-Best regards
-Laurent Winkler
+	I am having trouble with the XM1000 remote sensor and contiki 2.7. It seems that the incoming communication (PC->sensor) are not handled by the sensor. 
+
+	It seems that the following program gets stuck at PROCESS_WAIT_EVENT_UNTIL and does not handle any events (ie nothing gets printed)
+
+	The code is compiled with the toolchain and contiki 2.7. (The same code works with Zolertia z1 sensors)
+
+	Can you help me ? 
+
+	Best regards
+	Laurent Winkler
 
 
 

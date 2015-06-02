@@ -1,52 +1,40 @@
 {
-	"machines":{
-		"power":    "50",
-		"memory":   "100,60",
-		"protocol": "socket:http"
-	},
 	"gateway":{
+		"url": "localhost",
 		"connection": "usb"
 	},
 	"wsns":{
 		"nodes":[
 			{
-				"measureType": "temperature",
-				"dataType":    "int",
+				"measurementType": "temperature",
 				"direction":   "IN"
 			},
 			{
-				"measureType": "humidity",
-				"dataType":    "int",
+				"measurementType": "humidity",
 				"direction":   "IN"
 			},
 			{
-				"measureType": "light",
-				"dataType":    "int",
+				"measurementType": "light",
 				"direction":   "IN"
 			},
 			{
-				"measureType": "infrared",
-				"dataType":    "int",
+				"measurementType": "infrared",
 				"direction":   "IN"
 			},
 			{
-				"measureType": "event",
-				"dataType":    "string",
+				"measurementType": "event",
 				"direction":   "IN"
 			},
 			{
-				"measureType": "test",
-				"dataType":    "float",
+				"measurementType": "test",
 				"direction":   "IN"
 			},
 			{
-				"measureType": "test",
-				"dataType":    "int",
+				"measurementType": "test",
 				"direction":   "IN"
 			},
 			{
-				"measureType": "test",
-				"dataType":    "string",
+				"measurementType": "test",
 				"direction":   "IN"
 			}
 		]

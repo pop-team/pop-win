@@ -155,6 +155,7 @@ void POPSensor::Publish(int x_publicationType, int x_data)
 	}
 }
 
+
 void POPSensor::SubscribeToResources()
 {
 	if(m_jsonResources.empty())
@@ -168,20 +169,31 @@ void POPSensor::SubscribeToResources()
 
 	for(int i = 0 ; i < root["wsns"]["nodes"].size() ; i++)
 	{
-		enum MeasurementType mtype = translateMeasurementType(root["wsns"]["nodes"][i].get("measureType", "<not found>").asString().c_str());
-		enum DataType dtype        = translateDataType       (root["wsns"]["nodes"][i].get("dataType", "<not found>").asString().c_str());
-		bool direction             = root["wsns"]["nodes"][i].get("direction", "<not found>").asString().c_str() == string("IN");
+		enum MeasurementType mtype = translateMeasurementType(root["wsns"]["nodes"][i].get("measurementType", "log").asString().c_str());
+		enum DataType dtype        = translateDataType       (root["wsns"]["nodes"][i].get("dataType", "unknown").asString().c_str());
+		bool incoming              = false;
+		string str = root["wsns"]["nodes"][i].get("direction", "<not found>").asString();
+		if(str == "IN")
+		{
+			incoming = true;
+		}
+		else if(str != "OUT")
+		{
+			throw POPException("Error in JSON: direction must be \"IN\" or \"OUT\"");
+		}
 
 		if(mtype == static_cast<int>(MSR_LOG))
-			throw POPException("measureType not found in JSON resources description");
-		if(dtype == static_cast<int>(TYPE_UNKNOWN))
-			throw POPException("dataType not found in JSON resources description");
+			throw POPException("measurementType not found in JSON resources description");
+
+		// note: dataType is not mandatory
+		// if(dtype == static_cast<int>(TYPE_UNKNOWN))
+			// throw POPException("dataType not found in JSON resources description");
 
 		for(auto it : m_sensorsProxy)
 		{
-			if(direction)
+			if(incoming)
 			{
-				cout << "Subscribe to " << explainMeasurementType(mtype) << " " << explainDataType(dtype) << " direction:" << (direction ? "IN" : "OUT") << popcendl;
+				cout << "Subscribe to " << explainMeasurementType(mtype) << " type:" << explainDataType(dtype) << " direction:" << (incoming ? "IN" : "OUT") << popcendl;
 				it->Subscribe(mtype, dtype);
 			}
 		}

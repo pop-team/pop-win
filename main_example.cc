@@ -36,9 +36,9 @@ void generateTestData(POPSensor& xr_popSensor)
 
 int main(int argc, char** argv)
 {
-	if(argc != 1)
+	if(argc != 2)
 	{
-		cout << "usage: popcrun <obj.map> ./main_example" << popcendl;
+		cout << "usage: popcrun <obj.map> ./main_example resource.json" << popcendl;
 		exit(0);
 	}
 	// Input a list of commands
@@ -49,7 +49,7 @@ int main(int argc, char** argv)
 
 	try
 	{
-		POPSensor popSensor("localhost", "resources.json");
+		POPSensor popSensor("localhost", argv[1]);
 		popSensor.StartListening();
 
 		// For testing: generate test data
