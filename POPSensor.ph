@@ -5,10 +5,15 @@
  * @date Dec 2014
  * @brief POPSensor class for the POPWIN project. This object handles the data gathering of a group of sensor proxies.
  *
- *   Gateway----POPSensor--- SensorProxy1 --- RemoteSensorX ---     ^^^^^^^^^^^^
- *                      \                                         ^Sensor network^
- *                       --- SensorProxy2 --- RemoteSensorY ---     ^^^^^^^^^^^^
- *
+ *                                                                  ^^^^^^^^^^^^
+ *   main-------POPSensor--- SensorProxy1 --- RemoteSensorX ---   ^Sensor network^
+ *                      \                                           ^^^^^^^^^^^^  
+ *                      |                                           
+ *                      |
+ *                      |                                                         
+ *                      \                                           ^^^^^^^^^^^^  
+ *                       --- SensorProxy2 --- RemoteSensorY ---   ^Sensor network^
+ *                                                                  ^^^^^^^^^^^^
  *                            ...
  *
  */
