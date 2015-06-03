@@ -17,23 +17,6 @@
 
 using namespace std;
 
-/// Ask the remote to generate test data
-void generateTestData(POPSensor& xr_popSensor)
-{
-	for(int i = 0 ; i < 5 ; i++)
-	{
-		// Each command generates 10 sanples of data (types: double, int, string)
-		xr_popSensor.Publish(PUB_COMMAND, 2);
-		usleep(0.3 * 1000000);
-		xr_popSensor.Publish(PUB_COMMAND, 3);
-		usleep(0.3 * 1000000);
-		xr_popSensor.Publish(PUB_COMMAND, 4);
-
-		// Wait a bit to avoid overloading the mote
-		usleep(0.3 * 1000000);
-	}
-}
-
 int main(int argc, char** argv)
 {
 	if(argc != 2)
@@ -51,9 +34,8 @@ int main(int argc, char** argv)
 	{
 		POPSensor popSensor("localhost", argv[1]);
 
-		// For testing: generate test data
-		generateTestData(popSensor);
-		// TODO sleep
+		cout<<"Broadcast a command that will generate data"<<popcendl;
+		popSensor.Broadcast(PUB_COMMAND, 2);
 
 		cout<<"Print the gathered data"<<popcendl;
 		POPSensorData data(popSensor.Gather());

@@ -35,13 +35,13 @@ void blinkLeds(POPSensor& xr_popSensor)
 	{
 		for(int i = 0 ; i < 2*3 ; i++)
 		{
-			xr_popSensor.Publish(PUB_LED, led);
+			xr_popSensor.Broadcast(PUB_LED, led);
 			usleep(usecs);
 		}
 	}
 
 	// Toggle all leds
-	// xr_popSensor.Publish(PUB_LED, 3);
+	// xr_popSensor.Broadcast(PUB_LED, 3);
 }
 
 /// Ask temperature and acceleration readings 
@@ -51,7 +51,7 @@ void askSensorReadings(POPSensor& xr_popSensor)
 	static const int usecs = 100 * 1000;
 	for(int i = 0 ; i < 10 ; i++)
 	{
-		xr_popSensor.Publish(PUB_COMMAND, 1);
+		xr_popSensor.Broadcast(PUB_COMMAND, 1);
 		usleep(usecs);
 	}
 }
@@ -66,7 +66,7 @@ void customCommand(POPSensor& xr_popSensor)
 	while(num == '\n' - '0')
 		num = getchar() - '0';
 	// cout << "send command " << num << popcendl;
-	xr_popSensor.Publish(PUB_COMMAND, num);
+	xr_popSensor.Broadcast(PUB_COMMAND, num);
 }
 
 
@@ -76,11 +76,11 @@ void generateTestData(POPSensor& xr_popSensor)
 	for(int i = 0 ; i < 5 ; i++)
 	{
 		// Each command generates 10 sanples of data (types: double, int, string)
-		xr_popSensor.Publish(PUB_COMMAND, 2);
+		xr_popSensor.Broadcast(PUB_COMMAND, 2);
 		usleep(0.3 * 1000000);
-		xr_popSensor.Publish(PUB_COMMAND, 3);
+		xr_popSensor.Broadcast(PUB_COMMAND, 3);
 		usleep(0.3 * 1000000);
-		xr_popSensor.Publish(PUB_COMMAND, 4);
+		xr_popSensor.Broadcast(PUB_COMMAND, 4);
 
 		// Wait a bit to avoid overloading the mote
 		usleep(0.3 * 1000000);
@@ -97,7 +97,7 @@ void testCommunication(POPSensor& xr_popSensor)
 	xr_popSensor.Subscribe(MSR_VIBRATION, TYPE_DOUBLE);
 	usleep(0.3 * 1000000);
 	cout<<"Send a test publication to sensors (should send the command list)"<<popcendl;
-	xr_popSensor.Publish(PUB_COMMAND, 0);
+	xr_popSensor.Broadcast(PUB_COMMAND, 0);
 }
 
 
@@ -179,7 +179,7 @@ int main(int argc, char** argv)
 		POPSensor popSensor("localhost", argv[1]);
 
 		//cout<<"Ask to send the list of commands"<<popcendl;
-		//popSensor.Publish(PUB_COMMAND, 0);
+		//popSensor.Broadcast(PUB_COMMAND, 0);
 
 		char c = '\n';
 		while(true)

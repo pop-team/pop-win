@@ -93,8 +93,13 @@ class POPSensorData : public POPBase
 	void Print();
 	void PrintToFile(std::ostream& xr_ostream);
 	void Clear();
+	int  GetSize() const;
+	void Insert(std::pair<RecordHeader, int>&);
+	void Insert(std::pair<RecordHeader, double>&);
+	void Insert(std::pair<RecordHeader, std::string>&);
+	void Insert(const POPSensorData&);
 
-
+private:
 	std::map<RecordHeader, std::string> dataString;
 	std::map<RecordHeader, int>         dataInt;
 	std::map<RecordHeader, double>      dataDouble;

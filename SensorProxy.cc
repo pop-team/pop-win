@@ -235,14 +235,23 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 				switch(msg.dataType)
 				{
 					case TYPE_DOUBLE:
-						m_sensorData.dataDouble.insert(std::pair<RecordHeader, double>(RecordHeader(ms, msg), atof(msg.data))); 
+					{
+						std::pair<RecordHeader, double> pair(RecordHeader(ms, msg), atof(msg.data));
+						m_sensorData.Insert(pair); 
 						break;
+					}
 					case TYPE_INT:
-						m_sensorData.dataInt.insert(std::pair<RecordHeader, int>(RecordHeader(ms, msg), atoi(msg.data))); 
+					{
+						std::pair<RecordHeader, int> pair(RecordHeader(ms, msg), atoi(msg.data)); 
+						m_sensorData.Insert(pair); 
 						break;
+					}
 					case TYPE_STRING:
-						m_sensorData.dataString.insert(std::pair<RecordHeader, std::string>(RecordHeader(ms, msg), std::string(msg.data))); 
+					{
+						std::pair<RecordHeader, std::string> pair(RecordHeader(ms, msg), std::string(msg.data));
+						m_sensorData.Insert(pair); 
 						break;
+					}
 					default:
 						printf("Unknown data type %d in %s\n", msg.dataType, x_rawMsg.c_str());
 				}
@@ -288,6 +297,40 @@ void SensorProxy::Publish(int x_publicationType, int x_data)
 	sprintf(msg.data, "%d", x_data);
 	msg.publicationType = static_cast<PublicationType>(x_publicationType);
 	msg.dataType        = TYPE_INT;
+	msg.id              = m_id;
+	msg.dataSize        = strlen(msg.data);
+
+	char buffer[BUFFERSIZE];
+	if(bufferizePublishMessage(&msg, buffer, BUFFERSIZE) <= 0)
+		throw POPException("Cannot bufferize publish message", buffer);
+	// cout<< "Sending " << buf << popcendl;
+	SendRawData(buffer);
+}
+
+void SensorProxy::Publish(int x_publicationType, double x_data)
+{
+	struct PublishMessage msg;
+	memset(&msg, 0, sizeof(struct PublishMessage));
+	sprintf(msg.data, "%lf", x_data);
+	msg.publicationType = static_cast<PublicationType>(x_publicationType);
+	msg.dataType        = TYPE_DOUBLE;
+	msg.id              = m_id;
+	msg.dataSize        = strlen(msg.data);
+
+	char buffer[BUFFERSIZE];
+	if(bufferizePublishMessage(&msg, buffer, BUFFERSIZE) <= 0)
+		throw POPException("Cannot bufferize publish message", buffer);
+	// cout<< "Sending " << buf << popcendl;
+	SendRawData(buffer);
+}
+
+void SensorProxy::Publish(int x_publicationType, const string& x_data)
+{
+	struct PublishMessage msg;
+	memset(&msg, 0, sizeof(struct PublishMessage));
+	sprintf(msg.data, "%s", x_data.c_str());
+	msg.publicationType = static_cast<PublicationType>(x_publicationType);
+	msg.dataType        = TYPE_STRING;
 	// msg.unit            = UNT_UNKNOWN;
 	msg.id              = m_id;
 	msg.dataSize        = strlen(msg.data);
@@ -316,6 +359,11 @@ void SensorProxy::Subscribe(int x_measurementType, int x_dataType)
 		throw POPException("Cannot bufferize publish message");
 	// cout<< "Sending " << buf << popcendl;
 	SendRawData(buf);
+}
+
+int SensorProxy::GetSize()
+{
+	return m_sensorData.GetSize();
 }
 
 @pack(SensorProxy);

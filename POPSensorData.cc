@@ -97,3 +97,30 @@ void POPSensorData::Clear()
 	dataInt.clear();
 	dataDouble.clear();
 }
+
+int POPSensorData::GetSize() const
+{
+	return dataString.size() + dataInt.size() + dataDouble.size();
+}
+
+void POPSensorData::Insert(const POPSensorData& xr_popSensorData)
+{
+	dataDouble.insert(xr_popSensorData.dataDouble.begin(), xr_popSensorData.dataDouble.end());
+	dataInt.insert(xr_popSensorData.dataInt.begin(), xr_popSensorData.dataInt.end());
+	dataString.insert(xr_popSensorData.dataString.begin(), xr_popSensorData.dataString.end());
+}
+
+void POPSensorData::Insert(pair<RecordHeader, int>& x_pair)
+{
+	dataInt.insert(x_pair);
+}
+
+void POPSensorData::Insert(pair<RecordHeader, double>& x_pair)
+{
+	dataDouble.insert(x_pair);
+}
+
+void POPSensorData::Insert(pair<RecordHeader, std::string>& x_pair)
+{
+	dataString.insert(x_pair);
+}

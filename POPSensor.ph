@@ -36,19 +36,13 @@ public:
 	POPSensor(const std::string& x_url, const std::string& x_resourceFileName) @{ od.url(x_url); };
 	~POPSensor();
 
-	/// Start listening on serial line
-	void StartListening();
-
-	/// Stop listening
-	void StopListening();
-
-	/// Check if connected to any sensor
-	bool IsConnected();
-
 	/// Retrieve data gathered 
 	POPSensorData Gather();
 
-	/// TODO: Maybe scatter
+	/// Broacast data through the network
+	void Broadcast(int x_publicationType, int x_data);
+	void Broadcast(int x_publicationType, double x_data);
+	void Broadcast(int x_publicationType, const std::string& x_data);
 
 	/// Clear data gathered 
 	void Clear();
@@ -57,7 +51,7 @@ public:
 	/// Methods specific to the POPWin project
 
 	/// Send a publication to sensors
-	void Publish(int x_publicationType, int x_data);
+	// void Publish(int x_publicationType, int x_data); --> use broadcast
 
 	/// Send notification to the connected sensor
 	void Notify(int x_measurementType, int x_measurementUnit, const std::string& x_message);
@@ -65,8 +59,20 @@ public:
 	/// Send a subscription to sensors
 	void Subscribe(int x_measurementType, int x_dataType);
 
+	/// Check if connected to any sensor
+	bool IsConnected();
+
+	// Size of collected data
+	sync conc int GetSize();
+
 
 private:
+	/// Start listening on serial line
+	void StartListening();
+
+	/// Stop listening
+	void StopListening();
+
 	/// Subscribe to resources specified at connection
 	void SubscribeToResources();
 

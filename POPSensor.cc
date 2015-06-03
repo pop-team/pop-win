@@ -122,11 +122,7 @@ POPSensorData POPSensor::Gather()
 	POPSensorData fullData;
 	for(auto it : m_sensorsProxy)
 	{
-		POPSensorData data(it->Gather());
-
-		fullData.dataDouble.insert(data.dataDouble.begin(), data.dataDouble.end());
-		fullData.dataInt.insert(data.dataInt.begin(), data.dataInt.end());
-		fullData.dataString.insert(data.dataString.begin(), data.dataString.end());
+		fullData.Insert(it->Gather());
 	}
 	return fullData;
 }
@@ -137,6 +133,30 @@ void POPSensor::Clear()
 	for(auto it : m_sensorsProxy)
 	{
 		it->Clear();
+	}
+}
+
+void POPSensor::Broadcast(int x_publicationType, int x_data)
+{
+	for(auto it : m_sensorsProxy)
+	{
+		it->Publish(x_publicationType, x_data);
+	}
+}
+
+void POPSensor::Broadcast(int x_publicationType, double x_data)
+{
+	for(auto it : m_sensorsProxy)
+	{
+		it->Publish(x_publicationType, x_data);
+	}
+}
+
+void POPSensor::Broadcast(int x_publicationType, const std::string& x_data)
+{
+	for(auto it : m_sensorsProxy)
+	{
+		it->Publish(x_publicationType, x_data);
 	}
 }
 
@@ -157,13 +177,14 @@ void POPSensor::Subscribe(int x_measurementType, int x_dataType)
 	}
 }
 
-
-void POPSensor::Publish(int x_publicationType, int x_data)
+int POPSensor::GetSize()
 {
+	int cpt = 0;
 	for(auto it : m_sensorsProxy)
 	{
-		it->Publish(x_publicationType, x_data);
+		cpt += it->GetSize();
 	}
+	return cpt;
 }
 
 
@@ -212,5 +233,6 @@ void POPSensor::SubscribeToResources()
 		}
 	}
 }
+
 
 @pack(POPSensor);

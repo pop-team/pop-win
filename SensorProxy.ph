@@ -26,24 +26,27 @@ public:
 	~SensorProxy();
 
 	/// Send notification to the connected sensor
-	sync seq void Notify(int x_measurementType, int x_measurementUnit, const std::string& x_message);
+	async seq void Notify(int x_measurementType, int x_measurementUnit, const std::string& x_message);
 
 	/// Send a publication to the connected sensor
-	sync seq void Publish(int x_publicationType, int x_data);
+	async seq void Publish(int x_publicationType, int x_data);
+	async seq void Publish(int x_publicationType, double x_data);
+	async seq void Publish(int x_publicationType, const std::string& x_data);
 
 	/// Send a subscription to the connected sensor
-	sync seq void Subscribe(int x_measurementType, int x_dataType);
+	async seq void Subscribe(int x_measurementType, int x_dataType);
 
 	/// Send data to the remote sensors
 	async conc void StartListening();
 	async conc void StopListening();
-	sync seq POPSensorData Gather(); // TODO: conc
-	sync seq void Clear(); // TODO: conc
 
-	// sync conc Reduce
-	// async seq broadcast
+	/// Retrieve data gathered 
+	sync conc POPSensorData Gather();
 
-	// get_size
+	/// Clear data gathered 
+	async conc void Clear();
+
+	sync conc int GetSize();
 
 private:
 	void SendRawData(const std::string& x_data);
