@@ -107,20 +107,22 @@ The resources (or sensors) that the programmer wants to access are specified in 
 				"connection": "usb"
 			}
 		],
-		"nodes":[
-			{
-				"measurementType": "temperature",
-				"direction":   "IN"
-			},
-			{
-				"measurementType": "humidity",
-				"direction":   "IN"
-			},
-			{
-				"measurementType": "light",
-				"direction":   "IN"
-			}
-		]
+		"wsns":{
+			"nodes":[
+				{
+					"measurementType": "temperature",
+					"direction":   "IN"
+				},
+				{
+					"measurementType": "humidity",
+					"direction":   "IN"
+				},
+				{
+					"measurementType": "light",
+					"direction":   "IN"
+				}
+			]
+		}
 	}
 
 Examples of resource files can be found [resources.json](here) and [multi_gw.json](here).

@@ -210,7 +210,7 @@ void POPSensor::SubscribeToResources()
 
 	for(int i = 0 ; i < root["wsns"]["nodes"].size() ; i++)
 	{
-		enum MeasurementType mtype = translateMeasurementType(root["wsns"]["nodes"][i].get("measurementType", "log").asString().c_str()); // TODO: Maybe remove wsns
+		enum MeasurementType mtype = translateMeasurementType(root["wsns"]["nodes"][i].get("measurementType", "log").asString().c_str());
 		enum DataType dtype        = translateDataType       (root["wsns"]["nodes"][i].get("dataType", "unknown").asString().c_str());
 		bool incoming              = false;
 		string str = root["wsns"]["nodes"][i].get("direction", "<not found>").asString();
