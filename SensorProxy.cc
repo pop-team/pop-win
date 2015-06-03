@@ -88,7 +88,7 @@ SensorProxy::SensorProxy(int x_id, const std::string& x_url, const string& x_dev
 SensorProxy::~SensorProxy()
 {
 	// Destroy object
-	cout<<"Destroy sensor proxy." << popcendl;
+	cout<<"Destroy sensor proxy" << popcendl;
 	close(m_fd);
 	// m_debugOf.close();
 }
@@ -224,8 +224,13 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 					throw POPException("Cannot unbufferize notify message");
 
 				auto it = m_subscriptions.find(msg.measurementType);
-				bool subscibed = it != m_subscriptions.end() && it->second;
-				if(!subscibed)
+				bool subscribed = it != m_subscriptions.end() && it->second;
+				if(msg.measurementType == MSR_LOG)
+				{
+					cout << "Received log from " << msg.id << " : " << msg.data << popcendl;
+					break;
+				}
+				else if(!subscribed)
 				{
 					// Not subscribed to this type of data
 					cout<< "Unstored notification (" << explainMeasurementType(msg.measurementType) << "): '" << msg.data << "'" << popcendl;

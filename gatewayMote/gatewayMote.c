@@ -286,7 +286,7 @@ void gwHandleSubscription(const char* data, char fromProxy)
 		// 
 		// note: the forwarding of messages to the network of sensors is not implemented yet
 		//
-		LOG("Proxy has sent subscription: %s", data);
+		LOG("Proxy has sent subscription to %s", explainMeasurementType(msg.measurementType));
 	}
 	else gwSendSubscriptionSerial(&msg);
 }
@@ -393,9 +393,10 @@ void read_temperature(){
 
 	struct NotifyMessage msg;
 	memset(&msg, 0, sizeof(msg));
-	sprintf(msg.data, "%u", sense_temperature());
+	float fl            = sense_temperature_float();
+	sprintf(msg.data, "%d.%u", (int)fl, DEC(fl));
 	msg.measurementType = MSR_TEMPERATURE;
-	msg.dataType        = TYPE_INT;
+	msg.dataType        = TYPE_DOUBLE;
 	msg.unit            = UNT_CELSIUS;
 	msg.id              = get_id();
 	msg.dataSize        = strlen(msg.data);
