@@ -18,8 +18,29 @@
 
 using namespace std;
 
-
 POPSensor::POPSensor(const std::string& x_url, const std::string& x_resourceFileName)
+{
+	Initialize(x_resourceFileName);
+}
+
+POPSensor::POPSensor(int x_pow, const std::string& x_resourceFileName)
+{
+	Initialize(x_resourceFileName);
+}
+
+POPSensor::~POPSensor()
+{
+	StopListening();
+	m_jsonResources = "";
+	cout<<"Destroying POPSensor and its "<<m_sensorsProxy.size() << " SensorProxy." <<popcendl;
+	for(auto it : m_sensorsProxy)
+	{
+		delete(it);
+	}
+	m_sensorsProxy.clear();
+}
+
+void POPSensor::Initialize(const std::string& x_resourceFileName)
 {
 	// Read json resource file into string
 	ifstream jif(x_resourceFileName);
@@ -82,18 +103,6 @@ POPSensor::POPSensor(const std::string& x_url, const std::string& x_resourceFile
 	{
 		it->Publish(PUB_COMMAND, 8); // 8 is the command id for set_as
 	}
-}
-
-POPSensor::~POPSensor()
-{
-	StopListening();
-	m_jsonResources = "";
-	cout<<"Destroying POPSensor and its "<<m_sensorsProxy.size() << " SensorProxy." <<popcendl;
-	for(auto it : m_sensorsProxy)
-	{
-		delete(it);
-	}
-	m_sensorsProxy.clear();
 }
 
 bool POPSensor::IsConnected()

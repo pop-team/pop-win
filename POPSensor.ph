@@ -34,6 +34,7 @@ parclass POPSensor {
 public:
 	// POPSensor(int newID, int wanted, int minp) @{ od.search(0, 3, 0); };
 	POPSensor(const std::string& x_url, const std::string& x_resourceFileName) @{ od.url(x_url); };
+	POPSensor(int x_pow, const std::string& x_resourceFileName) @{ od.power(x_pow); };
 	~POPSensor();
 
 	/// Retrieve data gathered 
@@ -67,6 +68,9 @@ public:
 
 
 private:
+	/// Initialize from config
+	void Initialize(const std::string& x_resourceFileName);
+
 	/// Start listening on serial line
 	void StartListening();
 

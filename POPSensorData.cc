@@ -13,6 +13,63 @@
 
 using namespace std;
 
+RecordHeader::RecordHeader()
+{
+	measurementType = MSR_LOG;
+	id              = 0;
+	unit            = UNT_NONE;
+	timeStamp       = 0;
+}
+RecordHeader::RecordHeader(unsigned int x_timeStamp, const NotifyMessage& x_msg)
+{
+	// cout << "Create record header id:" << x_msg.id << " units " << x_msg.unit << popcendl;
+	measurementType = x_msg.measurementType;
+	id              = x_msg.id;
+	unit            = x_msg.unit;
+	timeStamp       = x_timeStamp;
+}
+void RecordHeader::Serialize(POPBuffer &buf, bool pack)
+{
+	if(pack)
+	{
+		int mt = static_cast<int>(measurementType);
+		buf.Pack(&mt,1);
+
+		buf.Pack(&id,1);
+
+		int mu = static_cast<int>(unit);
+		buf.Pack(&mu,1);
+
+		int ts = (int)timeStamp;
+		buf.Pack(&timeStamp,1);
+	}
+	else
+	{
+		int mt = -1;
+		buf.UnPack(&mt,1);
+		measurementType = static_cast<enum MeasurementType>(mt);
+
+		buf.UnPack(&id,1);
+
+		int mu = -1;
+		buf.UnPack(&mu,1);
+		unit = static_cast<enum MeasurementUnit>(mu);
+
+		buf.UnPack(&timeStamp,1);
+	}
+}
+
+// Define stream operator for easy printing
+std::ostream& operator<< (std::ostream& x_stream, const RecordHeader& x_rec)
+{
+	// x_stream << "time: " << x_rec.timeStamp << " id:" << x_rec.id << " type:" << explainMeasurementType(x_rec.measurementType) << " unit:" << explainMeasurementUnit(x_rec.unit);
+	x_stream << x_rec.timeStamp << ", " << x_rec.id << ", " << explainMeasurementType(x_rec.measurementType) << ", " << explainMeasurementUnit(x_rec.unit);
+	return x_stream;
+}
+
+
+// ================================================================================================================================================================
+
 template<class T> void serialize(map<RecordHeader, T>& records, POPBuffer &buf, bool pack)
 {
 	if(pack)
