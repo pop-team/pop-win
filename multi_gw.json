@@ -3,6 +3,10 @@
 		{
 			"url": "localhost",
 			"connection": "usb"
+		},
+		{
+			"url": "lw@160.98.117.141",
+			"connection": "usb"
 		}
 	],
 	"wsns":{

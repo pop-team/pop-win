@@ -38,8 +38,8 @@ The complete system is devided into two parts. The **high-level** part handles t
 	*** Radio communication
 
 As explained in the documentation of the POPWin project the communication uses different messaging models:
-- High level: the POP model is used
-- Low level: the publish/subscribe model is used
+- **High level**: the POP model is used
+- **Low level**: the publish/subscribe model is used
 
 Examples of programmation
 -------------------------

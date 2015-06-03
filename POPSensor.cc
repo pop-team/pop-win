@@ -39,35 +39,54 @@ POPSensor::POPSensor(const std::string& x_url, const std::string& x_resourceFile
 		throw POPException("Error while reading json string"); // , m_jsonResources); // note: JSON string may be too long for buffer
 	}
 
-	string connectionType = root["gateway"].get("connection", "<not found>").asString();
+	int counter = 0;
 
-	if(connectionType == "usb")
+	for(int i = 0 ; i < root["gateways"].size() ; i++)
 	{
-		for(int i = 0 ; i < 4 ; i++)
+
+		string connectionType = root["gateways"][i].get("connection", "<not found>").asString();
+		string url            = root["gateways"][i].get("url", "localhost").asString();
+
+		if(connectionType == "usb")
 		{
-			// Scan usb ports for connected gateways
-			stringstream port;
-			port << "/dev/ttyUSB" << i;
-			try
+			for(int j = 0 ; j < 4 ; j++)
 			{
-				m_sensorsProxy.push_back(new SensorProxy(1000 + i, "localhost", port.str()));
-				cout<<"Creating sensor proxy with id="<<(1000+i)<<" on port "<<port.str()<<popcendl;
-			}
-			catch(...)
-			{
-				// cout<<"Cannot create a sensor proxy on port "<<port.str()<<popcendl;
+				// Scan usb ports for connected gateways
+				stringstream port;
+				port << "/dev/ttyUSB" << j;
+				try
+				{
+					m_sensorsProxy.push_back(new SensorProxy(1000 + counter, url, port.str()));
+					cout<<"Creating sensor proxy with id="<<(1000 + counter)<<" on port "<<port.str()<<popcendl;
+					counter++;
+				}
+				catch(...)
+				{
+					// cout<<"Cannot create a sensor proxy on port "<<port.str()<<popcendl;
+				}
 			}
 		}
+		else throw POPException("Only \"usb\" connection is supported for gateway", "connection=" + connectionType);
+		cout<<"Created "<<m_sensorsProxy.size()<<" sensor proxy objects"<<popcendl;
 	}
-	else throw POPException("Only \"usb\" connection is supported for gateway", "connection=" + connectionType);
-	cout<<"Created "<<m_sensorsProxy.size()<<" sensor proxy objects"<<popcendl;
 
 	if(m_sensorsProxy.empty())
 		throw POPException("No sensor proxy could be create. Did you connect the gateway mote via USB ?");
+
+	StartListening();
+	SubscribeToResources();
+
+	// Send a command to the gateway mote to set it as the gateway
+	// note: since some mote have trouble with the serial line you may need to set it manually later
+	for(auto it : m_sensorsProxy)
+	{
+		it->Publish(PUB_COMMAND, 8); // 8 is the command id for set_as
+	}
 }
 
 POPSensor::~POPSensor()
 {
+	StopListening();
 	m_jsonResources = "";
 	cout<<"Destroying POPSensor and its "<<m_sensorsProxy.size() << " SensorProxy." <<popcendl;
 	for(auto it : m_sensorsProxy)
@@ -87,14 +106,6 @@ void POPSensor::StartListening()
 	for(auto it : m_sensorsProxy)
 	{
 		it->StartListening();
-	}
-	SubscribeToResources();
-
-	// Send a command to the gateway mote to set it as the gateway
-	// note: since some mote have trouble with the serial line you may need to set it manually later
-	for(auto it : m_sensorsProxy)
-	{
-		it->Publish(PUB_COMMAND, 8); // 8 is the command id for set_as
 	}
 }
 
@@ -169,7 +180,7 @@ void POPSensor::SubscribeToResources()
 
 	for(int i = 0 ; i < root["wsns"]["nodes"].size() ; i++)
 	{
-		enum MeasurementType mtype = translateMeasurementType(root["wsns"]["nodes"][i].get("measurementType", "log").asString().c_str());
+		enum MeasurementType mtype = translateMeasurementType(root["wsns"]["nodes"][i].get("measurementType", "log").asString().c_str()); // TODO: Maybe remove wsns
 		enum DataType dtype        = translateDataType       (root["wsns"]["nodes"][i].get("dataType", "unknown").asString().c_str());
 		bool incoming              = false;
 		string str = root["wsns"]["nodes"][i].get("direction", "<not found>").asString();
@@ -189,13 +200,15 @@ void POPSensor::SubscribeToResources()
 		// if(dtype == static_cast<int>(TYPE_UNKNOWN))
 			// throw POPException("dataType not found in JSON resources description");
 
+		int cpt = 0;
 		for(auto it : m_sensorsProxy)
 		{
 			if(incoming)
 			{
-				cout << "Subscribe to " << explainMeasurementType(mtype) << " type:" << explainDataType(dtype) << " direction:" << (incoming ? "IN" : "OUT") << popcendl;
+				cout << "Gateway " << 1000 + cpt << " subscribes to " << explainMeasurementType(mtype) << " type:" << explainDataType(dtype) << " direction:" << (incoming ? "IN" : "OUT") << popcendl;
 				it->Subscribe(mtype, dtype);
 			}
+			cpt++;
 		}
 	}
 }

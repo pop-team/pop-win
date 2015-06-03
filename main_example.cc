@@ -50,15 +50,10 @@ int main(int argc, char** argv)
 	try
 	{
 		POPSensor popSensor("localhost", argv[1]);
-		popSensor.StartListening();
 
 		// For testing: generate test data
 		generateTestData(popSensor);
-
-
-		cout<<"Stop listening"<<popcendl;
-		popSensor.StopListening();
-
+		// TODO sleep
 
 		cout<<"Print the gathered data"<<popcendl;
 		POPSensorData data(popSensor.Gather());

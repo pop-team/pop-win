@@ -48,6 +48,8 @@ public:
 	/// Retrieve data gathered 
 	POPSensorData Gather();
 
+	/// TODO: Maybe scatter
+
 	/// Clear data gathered 
 	void Clear();
 

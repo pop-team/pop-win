@@ -37,8 +37,13 @@ public:
 	/// Send data to the remote sensors
 	async conc void StartListening();
 	async conc void StopListening();
-	sync seq POPSensorData Gather();
-	sync seq void Clear();
+	sync seq POPSensorData Gather(); // TODO: conc
+	sync seq void Clear(); // TODO: conc
+
+	// sync conc Reduce
+	// async seq broadcast
+
+	// get_size
 
 private:
 	void SendRawData(const std::string& x_data);

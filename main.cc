@@ -177,7 +177,6 @@ int main(int argc, char** argv)
 	try
 	{
 		POPSensor popSensor("localhost", argv[1]);
-		popSensor.StartListening();
 
 		//cout<<"Ask to send the list of commands"<<popcendl;
 		//popSensor.Publish(PUB_COMMAND, 0);
@@ -211,10 +210,6 @@ int main(int argc, char** argv)
 				c = '\n';
 			}
 		}
-
-		cout<<"Stop listening"<<popcendl;
-		popSensor.StopListening();
-
 
 		cout<<"End of popwin main"<<popcendl;
 	}

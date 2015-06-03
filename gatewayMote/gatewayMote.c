@@ -86,7 +86,7 @@ void logging(const char *format,...);
 /*** GLOBAL VARIABLES       */
 /****************************/
 char g_debug   = 1; // Toggle debug mode
-char g_gateway = 0; // Design as a gateway
+int g_gateway = GATEWAY_ID; // ID of the gateway
 
 // send a subscription message
 void gwSendSubscriptionSerial(const struct SubscribeMessage* msg)
@@ -482,8 +482,9 @@ void toggle_debug(){
  * Design the mote as a gateway
  */
 void set_as_gateway(){
-	g_gateway = 1; // !g_gateway;
-	LOG("Design as gateway %s", g_gateway ? "on" : "off");
+	g_gateway = get_id(); // !g_gateway;
+	printf("%d %d %d\n", get_id(), GATEWAY_ID, g_gateway);
+	LOG("Design as gateway %s", g_gateway == get_id() ? "on" : "off");
 }
 
 
@@ -591,12 +592,10 @@ PROCESS_THREAD(multihop_sense, ev, data)
 		msg.dataSize        = strlen(msg.data);
 		push++;
 
-		if(g_gateway)
-		{
-			// We are on the gateway: send via serial to PC
-			gwSendNotificationSerial(&msg);
-		}
-		else
+		// In case we are on the gateway: send via serial to PC
+		gwSendNotificationSerial(&msg);
+
+		if(g_gateway != get_id())
 		{
 			char buf[BUFFERSIZE];
 			if(bufferizeNotifyMessage(&msg, buf, sizeof(buf)) <= 0)
@@ -656,12 +655,10 @@ PROCESS_THREAD(button_pressed, ev, data)
 		msg.id              = get_id();
 		msg.dataSize        = strlen(msg.data);
 
-		if(g_gateway)
-		{
-			// We are on the gateway: send via serial to PC
-			gwSendNotificationSerial(&msg);
-		}
-		else
+		// In case we are on the gateway: send via serial to PC
+		gwSendNotificationSerial(&msg);
+
+		if(g_gateway != get_id())
 		{
 			char buf[BUFFERSIZE];
 			if(bufferizeNotifyMessage(&msg, buf, sizeof(buf)) <= 0)
