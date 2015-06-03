@@ -45,6 +45,7 @@ public:
 	void Broadcast(int x_publicationType, double x_data);
 	void Broadcast(int x_publicationType, const std::string& x_data);
 
+
 	/// Clear data gathered 
 	void Clear();
 

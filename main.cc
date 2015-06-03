@@ -131,6 +131,32 @@ void printToFile(POPSensor& xr_popSensor)
 	of.close();
 }
 
+/// Display stats (used in reduce)
+template<typename T> void displayStats(const std::string& x_label, enum MeasurementType x_mtype, const POPSensorData& x_data)
+{
+	cout << x_label
+	     << "\tnb:"     << x_data.Reduce<T>(x_mtype, POPSensorData::POPReduceF::size)
+	     << "\tmin:"    << x_data.Reduce<T>(x_mtype, POPSensorData::POPReduceF::min)
+	     << "\tmax:"    << x_data.Reduce<T>(x_mtype, POPSensorData::POPReduceF::max)
+	     << "\tsum:"    << x_data.Reduce<T>(x_mtype, POPSensorData::POPReduceF::sum)
+	     << "\tavg:"    << x_data.Reduce<T>(x_mtype, POPSensorData::POPReduceF::aver)
+	     << "\tstdev:"  << x_data.Reduce<T>(x_mtype, POPSensorData::POPReduceF::stdev)
+	     << popcendl;
+}
+
+/// Apply reduce to data
+void reduce(POPSensor& xr_popSensor)
+{
+	POPSensorData data(xr_popSensor.Gather());
+	displayStats<double>("Temperature (double)", MSR_TEMPERATURE, data);
+	displayStats<double>("Humidity (double)   ", MSR_HUMIDITY, data);
+	displayStats<double>("Light (double)      ", MSR_LIGHT, data);
+	displayStats<double>("Infrared (double)   ", MSR_INFRARED, data);
+	displayStats<double>("Test data (double)  ", MSR_TEST, data);
+	displayStats<int>   ("Test data (int)     ", MSR_TEST, data);
+}
+
+
 
 int main(int argc, char** argv)
 {
@@ -170,6 +196,9 @@ int main(int argc, char** argv)
 
 	cout << " t: Test communication" <<popcendl;
 	commands['t'] = testCommunication;
+
+	cout << " r: Apply reduce to data" <<popcendl;
+	commands['r'] = reduce;
 	cout << "---------------------------------------------------------------------------------------" <<popcendl;
 	cout << popcendl;
 

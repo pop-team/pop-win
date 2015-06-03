@@ -13,6 +13,16 @@
 
 using namespace std;
 
+template<> std::map<RecordHeader, int>&         POPSensorData::RefData()   {return dataInt;}
+template<> std::map<RecordHeader, double>&      POPSensorData::RefData()   {return dataDouble;}
+template<> std::map<RecordHeader, string>&      POPSensorData::RefData()   {return dataString;}
+
+template<> const std::map<RecordHeader, int>&         POPSensorData::GetData() const   {return dataInt;}
+template<> const std::map<RecordHeader, double>&      POPSensorData::GetData() const   {return dataDouble;}
+template<> const std::map<RecordHeader, string>&      POPSensorData::GetData() const   {return dataString;}
+
+
+
 RecordHeader::RecordHeader()
 {
 	measurementType = MSR_LOG;
@@ -167,17 +177,4 @@ void POPSensorData::Insert(const POPSensorData& xr_popSensorData)
 	dataString.insert(xr_popSensorData.dataString.begin(), xr_popSensorData.dataString.end());
 }
 
-void POPSensorData::Insert(pair<RecordHeader, int>& x_pair)
-{
-	dataInt.insert(x_pair);
-}
 
-void POPSensorData::Insert(pair<RecordHeader, double>& x_pair)
-{
-	dataDouble.insert(x_pair);
-}
-
-void POPSensorData::Insert(pair<RecordHeader, std::string>& x_pair)
-{
-	dataString.insert(x_pair);
-}

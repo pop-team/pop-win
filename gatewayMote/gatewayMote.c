@@ -492,7 +492,6 @@ void toggle_debug(){
  */
 void set_as_gateway(){
 	g_gateway = get_id(); // !g_gateway;
-	printf("%d %d %d\n", get_id(), GATEWAY_ID, g_gateway);
 	LOG("Design as gateway %s", g_gateway == get_id() ? "on" : "off");
 }
 

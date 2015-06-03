@@ -41,8 +41,12 @@ As explained in the documentation of the POPWin project the communication uses d
 - **High level**: the POP model is used
 - **Low level**: the publish/subscribe model is used
 
+TODO: Add UML schemes of PK
+
 Examples of programmation
 -------------------------
+
+TODO: Write a manual
 
 ### main_example.cpp
 This file contains the a simple example on how to uses the different classes of the POPWin project. The main code of this examples is:
@@ -96,8 +100,6 @@ The resources (or sensors) that the programmer wants to access are specified in 
 	- **direction**: "IN" for sensor or "OUT" for actuators
 
 
-TODO: Discuss with PK -> array of gateways
-
 	{
 		"gateways":[
 			{
@@ -121,6 +123,8 @@ TODO: Discuss with PK -> array of gateways
 		]
 	}
 
+Examples of resource files can be found [resources.json](here) and [multi_gw.json](here).
+
 
 ### Messaging
 In the low-level part of the system (that uses the publish/subscribe messaging model) the following types of models are implemented: notification, publication and subscription. Please note that unsubscriptions are not implemented yet but their structure is identical to subscription messages.
@@ -133,6 +137,8 @@ The messages can contain the following fields:
 - **DataType**       : An enum that specifies the type of the data: double, int or string
 - **data**           : A buffer of character (of size BUFFERDATASIZE=64) that contains the data. For compatibility between systems integers and floats are printed to this buffer and not stored as bit value.
 - **DataSize**       : The size of the above data in characters
+
+TODO: Add buffering functions (2 ways) + link to .h
 
 #### Notification message
 
