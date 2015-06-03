@@ -5,6 +5,9 @@
 #include <stdlib.h>
 #include "net/rime.h"
 #include "contiki.h"
+
+void * memset ( void * ptr, int value, size_t num );
+
 /**
  * This sample is about how to implement a queue in c
  *

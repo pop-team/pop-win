@@ -162,7 +162,7 @@ PROCESS(multihop_sense                , "Take measurements and transmit via mult
    start when this module is loaded. We put our processes there. */
 
 // note: we can choose here which version of the code we want to run:
-#if 1
+#if 0
 // Processes to run with routing algo of UNIGE
 AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &communication_process, &drw, &sensor_events); // Processes to run with algo of UNIGE
 #else
