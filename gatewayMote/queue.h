@@ -17,15 +17,12 @@
 
 typedef struct Message {
 	uint8_t type;
-	uint8_t tag;   
+	uint8_t tag;
 	uint8_t message;
-	// char    message_string[16];
 	uint8_t nodeid;
 	uint8_t value;
 	uint8_t weight;
-	float wait_time;
-	rimeaddr_t target;
-
+	char message_string[64];
 } Message;
 
 /**
@@ -63,7 +60,7 @@ typedef struct Queue {
    queue.display(&queue);
 
    printf("push item 2\n");
-   queue.push(&queue, 2);    
+   queue.push(&queue, 2);
    printf("push item 3\n");
    queue.push(&queue, 3);
    printf("push item 6\n");
@@ -110,6 +107,13 @@ void push (Queue* queue, struct Message item) {
  * Return and remove the first item.
  */
 struct Message pop (Queue* queue) {
+	if(queue->size <= 0)
+	{
+		printf("ERROR: queue size empty for pop\n");
+		struct Message m;
+		memset(&m, 0, sizeof(m));
+		return m;
+	}
 	// get the first item
 	Node* head = queue->head;
 	struct Message item = head->item;
@@ -169,10 +173,9 @@ Message createMessage () {
 	m.message = 0;
 	m.tag = 0;
 	m.weight = 0;
-	m.wait_time = 0;
 	m.value = 0;
 	m.nodeid = 0;
-	// memset(m.message_string, 0, sizeof(m.message));
+	snprintf(m.message_string, sizeof(m.message_string), "Empty");
 	return m;
 }
 
