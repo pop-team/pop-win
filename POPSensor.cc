@@ -186,12 +186,12 @@ void POPSensor::Subscribe(int x_measurementType, int x_dataType)
 	}
 }
 
-int POPSensor::GetSize()
+int POPSensor::GetDataSize()
 {
 	int cpt = 0;
 	for(auto it : m_sensorsProxy)
 	{
-		cpt += it->GetSize();
+		cpt += it->GetDataSize();
 	}
 	return cpt;
 }
@@ -243,5 +243,37 @@ void POPSensor::SubscribeToResources()
 	}
 }
 
+double POPSensor::Reduce(int x_mtype, int x_dataType, int x_fct)
+{
+	std::vector<double> vect;
+
+	for(auto it : m_sensorsProxy)
+	{
+		vect.push_back(it->Reduce(x_mtype, x_dataType, x_fct));
+	}
+
+	if(vect.empty())
+		return 0;
+
+	switch(x_fct)
+	{
+		case POPSensorData::size:  return vect.size();
+		case POPSensorData::min:   return *std::min_element(vect.begin(), vect.end());
+		case POPSensorData::max:   return *std::max_element(vect.begin(), vect.end());
+		case POPSensorData::aver:  return std::accumulate(vect.begin(), vect.end(), 0.0) / vect.size();
+		case POPSensorData::sum:   return std::accumulate(vect.begin(), vect.end(), 0.0);
+		case POPSensorData::stdev:
+			    {
+				    double sum = std::accumulate(vect.begin(), vect.end(), 0.0);
+				    double mean = sum / vect.size();
+				    std::vector<double> diff(vect.size());
+				    std::transform(vect.begin(), vect.end(), diff.begin(),
+						    std::bind2nd(std::minus<double>(), mean));
+				    double sq_sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
+				    return std::sqrt(sq_sum / vect.size());
+			    }
+
+	}
+}
 
 @pack(POPSensor);

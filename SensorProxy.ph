@@ -33,6 +33,9 @@ public:
 	async seq void Publish(int x_publicationType, double x_data);
 	async seq void Publish(int x_publicationType, const std::string& x_data);
 
+	// Apply a reduce function to the data {size, min, max, aver, sum, stdev}
+	sync seq double Reduce(int x_mtype, int x_dataType, int x_fct);
+
 	/// Send a subscription to the connected sensor
 	async seq void Subscribe(int x_measurementType, int x_dataType);
 
@@ -46,7 +49,7 @@ public:
 	/// Clear data gathered 
 	async conc void Clear();
 
-	sync conc int GetSize();
+	sync conc int GetDataSize();
 
 private:
 	void SendRawData(const std::string& x_data);

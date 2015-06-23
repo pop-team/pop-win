@@ -366,9 +366,22 @@ void SensorProxy::Subscribe(int x_measurementType, int x_dataType)
 	SendRawData(buf);
 }
 
-int SensorProxy::GetSize()
+int SensorProxy::GetDataSize()
 {
 	return m_sensorData.GetSize();
+}
+
+double SensorProxy::Reduce(int x_mtype, int x_dataType, int x_fct)
+{
+	switch(x_dataType)
+	{
+		case TYPE_INT:
+		return m_sensorData.Reduce<int>(static_cast<enum MeasurementType>(x_mtype), static_cast<POPSensorData::POPReduceF>(x_fct));
+		case TYPE_DOUBLE:
+		return m_sensorData.Reduce<int>(static_cast<enum MeasurementType>(x_mtype), static_cast<POPSensorData::POPReduceF>(x_fct));
+		default:
+		throw POPException("No reduce operation for type " + string(explainDataType(static_cast<enum DataType>(x_dataType))));
+	}
 }
 
 @pack(SensorProxy);
