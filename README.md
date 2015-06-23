@@ -24,6 +24,7 @@ The complete system is devided into two parts:
 - The **low-level** part contains the sensor that communicate using radio waves. 
 - In between the two parts a **Gateway sensor** must be used. It will forward the messages between the SensorProxy object (running on a PC) and the rest of the sensor network. Communication between the SensorProxy and gateway sensor is done via USB.
 
+### Schema of the POPWin network
 
 	                                                                        ************
 	main -------------- POPSensor -- SensorProxy1 === GatewaySensor ***   *Sensor network*
