@@ -3,7 +3,7 @@ Technical documentation
 - **Author:** Laurent Winkler
 - **Date:**   Decembre 2014
 
-This documentation describes the more advanced aspects and is meant for developers only. 
+This documentation describes the more advanced aspects of the development of POPWin and is meant for developers only. 
 
 Contacts
 --------
@@ -379,3 +379,19 @@ The e-mail sent to AdvanticSys:
 		PROCESS_END();
 	}
 	
+
+Limitations
+-----------
+- **Broadcast of messages**: In the current state of advancement the communication is enabled from the PC to the sensor but not the other way around since the sensors are not yet allowed to emit messages (to be done by UNIGE)
+- **Full implementation of routing** : So far the routing of message is implemented twice: the first implementation is a full implementation made by UNIGE (slow), the second is a faster implementation using the libraries of Contiki (fast). The second implementation was used for tests.
+
+	// note: we can choose here which version of the code we want to run:
+	#if 0
+	// Processes to run with routing algo of UNIGE
+	AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &communication_process, &drw, &sensor_events); // Processes to run with algo of UNIGE
+	#else
+	// Processes to use the routing of messages given by the multihop example
+	AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &multihop_announce, &multihop_sense);
+	#endif
+
+

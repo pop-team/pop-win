@@ -19,7 +19,10 @@ System overview
 ---------------
 POPWin provides a set of tools (based on POP-C++) to build communication between a remote machine and a network of sensors. 
 
-The complete system is devided into two parts. The **high-level** part handles the communication between different parallel objects that can run on different machines using the POP-C++ framework. The **low-level** part contains the sensor that communicate using radio waves. Inbetween the two parts a GatewaySensor must be used. It will forward the messages between the SensorProxy object (running on a PC) and the rest of the sensor network. Communication between the SensorProxy and GatewaySensor is done via USB.
+The complete system is devided into two parts:
+- The **high-level** part handles the communication between different parallel objects that can run on different machines using the POP-C++ framework.
+- The **low-level** part contains the sensor that communicate using radio waves. 
+- In between the two parts a **Gateway sensor** must be used. It will forward the messages between the SensorProxy object (running on a PC) and the rest of the sensor network. Communication between the SensorProxy and gateway sensor is done via USB.
 
 
 	                                                                        ************
@@ -41,28 +44,21 @@ As explained in the documentation of the POPWin project the communication uses d
 - **High level**: the POP model is used
 - **Low level**: the publish/subscribe model is used
 
-A more complete scheme of the network:
-
-![POPWin architecture](POPWINarchi.pdf "POPWin architecture") !
+A more complete scheme of the network: [POPWin architecture](POPWINarchi.pdf "POPWin architecture")
 
 Resource description and messaging system
 -----------------------------------------
-To configure easily where sensors (described as resources) can be found the application uses a resource file in JSON format. This file indicates how to connect to sensors and to which data the user wants to subscribe.
+To configure easily where to find sensors (described as resources) the application uses a **resource file** in JSON format. This file indicates how to connect to sensors and to which data the user wants to subscribe.
 
-To set up communication between the different sensors of the low-level part and the nodes of the high-level parts of the system a messaging interface was developed. This interface allows to easily transcribe message from the publish-subscribe used in the low-level system to the POP model used on the higher level.
+To set up communication between the different sensors of the low-level part and the nodes of the high-level parts of the system **a messaging interface** was developed. This interface allows to easily transcribe message from the publish-subscribe communication model used in the low-level system to the POP communication model used on the higher level.
 
 Specifications of resource description and messaging can be found [here](SPECIFICATIONS.md). 
 
-
 Programming
 -----------
-One goal of the POPWin project is to provide an easy programming interface to the developer. This interface allows to acquire data from different sensor types in a transparent way.
+The goal of the POPWin project is to provide an easy programming interface to the developer. This interface allows to acquire data from different sensor types in a transparent way.
 
 The full programming guide for POPWin can be found [here](PROGRAMMING.md). 
-
-### Example
-
-
 
 Quick start
 -----------

@@ -4,11 +4,6 @@ Programming manual
 Examples of programmation
 -------------------------
 
-TODO: Write a manual
-
-POPSensor.ph
-POPSensorData.h
-
 ### main_example.cpp
 This file contains the a simple example on how to uses the different classes of the POPWin project. The main code of this examples is:
 
@@ -58,6 +53,7 @@ POPSensor is the primary class to use in a POPWin application. It allows the use
 - **Constructor**: specifies the name of the JSON file that describes resources and start acquiring data from the remote sensors.
 - **Gather**     : returns the data that was gathered in the form of a POPSensorData object.
 - **Broadcast**  : broadcast one message to all sensors
+- **Reduce**      : Compute and returns statistics on the data (size, min, max, aver, sum, stdev)
 
 [Full definition](POPSensor.ph). 
 
@@ -76,18 +72,12 @@ A POPSensorData object is returned by the Gather() method. It contains all the d
 
 Additionally this class provides the mothods:
 
-- **Print** : Prints the data to the standard output
+- **Print**       : Prints the data to the standard output
 - **PrintToFile** : Outputs the data to a file in .csv format
-- **Clear** : Clears the data
-- **GetSize** : Returns the number of records
-- **Insert**: Insert new data into the structure
-- **Reduce**: Compute and returns statistics on the data (size, min, max, aver, sum, stdev)
+- **Clear**       : Clears the data
+- **GetSize**     : Returns the number of records
+- **Insert**      : Insert new data into the structure
+- **Reduce**      : Compute and returns statistics on the data (size, min, max, aver, sum, stdev)
 
 [Full definition](POPSensorData.h). 
-
-
-Limitations
------------
-Broadcast of messages TODO
-Different firmwares for sensors
 
