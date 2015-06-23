@@ -5,10 +5,6 @@ POPWin
 
 This document contains a general description of the POPWin project, specifications and examples of programmation. 
 
-1. For a more technical documentation (installation, troubleshooting, ...) the developer documentation can be found here [here](INSTALL.md). 
-2. The full programming guide for POPWin can be found [here](PROGRAMMING.md). 
-3. Specifications of resource description and messaging can be found [here](SPECIFICATIONS.md). 
-
 Contacts
 --------
 - EIFR
@@ -45,8 +41,40 @@ As explained in the documentation of the POPWin project the communication uses d
 - **High level**: the POP model is used
 - **Low level**: the publish/subscribe model is used
 
-A more complete scheme of the network can be found [here](POPWINarchi.pdf) !
+A more complete scheme of the network:
+
+![POPWin architecture](POPWINarchi.pdf "POPWin architecture") !
+
+Resource description and messaging system
+-----------------------------------------
+To configure easily where sensors (described as resources) can be found the application uses a resource file in JSON format. This file indicates how to connect to sensors and to which data the user wants to subscribe.
+
+To set up communication between the different sensors of the low-level part and the nodes of the high-level parts of the system a messaging interface was developed. This interface allows to easily transcribe message from the publish-subscribe used in the low-level system to the POP model used on the higher level.
+
+Specifications of resource description and messaging can be found [here](SPECIFICATIONS.md). 
+
+
+Programming
+-----------
+One goal of the POPWin project is to provide an easy programming interface to the developer. This interface allows to acquire data from different sensor types in a transparent way.
+
+The full programming guide for POPWin can be found [here](PROGRAMMING.md). 
+
+### Example
 
 
 
+Quick start
+-----------
+To start the main example of POPWin:
+
+1. Install POP-C++ on your computer
+2. Connect the gateway sensor to your computer via USB (Zolertia z1 in recommended)
+3. Compile and launch POPWin main application
+
+	cd pop-win
+	make
+	popcrun objects.map ./main resources.json
+
+For details on installation and troubleshooting please look at the [development documentation](INSTALL.md). 
 

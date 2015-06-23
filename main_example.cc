@@ -68,7 +68,7 @@ int main(int argc, char** argv)
 		sleep(3);
 
 		cout<<"\nPrint the gathered data to screen"<<popcendl;
-		POPSensorData data(popSensor.Gather());
+		POPSensorData data = popSensor.Gather();
 		data.Print();
 
 		cout<<"\nTemperature average is "<<data.Reduce<double>(MSR_TEMPERATURE, POPSensorData::POPReduceF::aver)<< popcendl;

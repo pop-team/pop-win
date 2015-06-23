@@ -45,6 +45,8 @@ public:
 	void Broadcast(int x_publicationType, double x_data);
 	void Broadcast(int x_publicationType, const std::string& x_data);
 
+	// TODO: Reduce
+
 
 	/// Clear data gathered 
 	void Clear();
@@ -65,7 +67,7 @@ public:
 	bool IsConnected();
 
 	// Size of collected data
-	sync conc int GetSize();
+	sync conc int GetSize(); // TODO rename to GetDataSize
 
 
 private:
