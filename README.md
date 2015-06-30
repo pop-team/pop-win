@@ -42,8 +42,8 @@ The complete system is devided into two parts:
 	*** Radio communication
 
 As explained in the documentation of the POPWin project the communication uses different messaging models:
-- **High level**: the POP model is used
-- **Low level**: the publish/subscribe model is used
+- **High level**: the POP communication model (by TCP/IP)
+- **Low level**: the publish/subscribe model is used (using the libraries of Contiki OS)
 
 A more complete scheme of the network: [POPWin architecture](POPWINarchi.pdf "POPWin architecture")
 
@@ -65,13 +65,16 @@ Quick start
 -----------
 To start the main example of POPWin:
 
-1. Install POP-C++ on your computer
+1. Install POP-C++ on your computer (https://github.com/pop-team/pop-cpp)
 2. Connect the gateway sensor to your computer via USB (Zolertia z1 in recommended)
-3. Compile and launch POPWin main application
+3. Compile the files in directory **gatewayMote/** and upload them to your gateway sensor
+4. Compile and launch POPWin main application
 
+```
 	cd pop-win
 	make
 	popcrun objects.map ./main resources.json
+```
 
 For details on installation and troubleshooting please look at the [development documentation](INSTALL.md). 
 

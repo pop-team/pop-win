@@ -42,9 +42,11 @@ This can be done with a chmod 777 command or better by adding your user (in this
 
 	ll /dev/ttyUSB0 
 
-gives you:
+should give you:
 
 	crw-rw---- 1 root dialout 188, 0 Dez  5 17:02 /dev/ttyUSB0
+
+You can give permission to your user (in this case lwinkler) to read-write to the USB port:
 
 	sudo adduser lwinkler dialout
 
@@ -378,6 +380,8 @@ The e-mail sent to AdvanticSys:
 		leds_off(LEDS_ALL);
 		PROCESS_END();
 	}
+
+I was not able to fix this problem so I used a workaround instead: I used the Zolertia Z1 as a gateway sensor. It works pretty much ok.
 	
 
 Limitations
@@ -394,4 +398,5 @@ Limitations
 	AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &multihop_announce, &multihop_sense);
 	#endif
 
+- **Temperature sensor on Zolertia Z1**: The temperature sensor works ok on AdvanticSys xm1000 sensors but is currently broken on Zolertia Z1.
 

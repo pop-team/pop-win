@@ -29,9 +29,11 @@ As shown here the POPSensor object can be used in a very simple and efficient ma
 
 To compile and run this example use:
 
+```
 	cd pop-win
 	make
 	popcrun objects.map ./main_example resources.json
+```
 
 
 ### main.cpp
@@ -39,9 +41,11 @@ This file contains a more complete use of the POPWin objects. It also instantiat
 
 To compile and run this example use:
 
+```
 	cd pop-win
 	make
 	popcrun objects.map ./main resources.json
+```
 
 Main parallel classes
 ---------------------

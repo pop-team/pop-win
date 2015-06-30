@@ -2,7 +2,7 @@
 Specifications
 --------------
 ### Resource description
-The resources (or sensors) that the programmer wants to access are specified in the **resource.json** file. It can contain the following fields:
+The remote sensors that the programmer wants to access are specified in the **resource.json** file. It can contain the following fields:
 - **gateway**: specifies how to access the gateway sensor
 	- **url**: the machine on which the gateway sensor is connected
 	- **connection**: the connection between the machine and the gateway sensor (for now only usb is supported)
