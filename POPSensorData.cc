@@ -13,12 +13,22 @@
 
 using namespace std;
 
+/// Return a reference to the data
 template<> std::map<RecordHeader, int>&         POPSensorData::RefData()   {return dataInt;}
+
+/// Return a reference to the data
 template<> std::map<RecordHeader, double>&      POPSensorData::RefData()   {return dataDouble;}
+
+/// Return a reference to the data
 template<> std::map<RecordHeader, string>&      POPSensorData::RefData()   {return dataString;}
 
+/// Return the data
 template<> const std::map<RecordHeader, int>&         POPSensorData::GetData() const   {return dataInt;}
+
+/// Return the data
 template<> const std::map<RecordHeader, double>&      POPSensorData::GetData() const   {return dataDouble;}
+
+/// Return the data
 template<> const std::map<RecordHeader, string>&      POPSensorData::GetData() const   {return dataString;}
 
 

@@ -28,6 +28,7 @@
 
 class SensorProxy;
 
+/// A POPSensor object organizes communication with the remote sensors by creating a set of SensorProxies. This is transparent to the user.
 parclass POPSensor {
 	classuid(1902);
 
