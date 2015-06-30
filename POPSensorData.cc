@@ -10,26 +10,27 @@
 
 
 #include "POPSensorData.h"
+#include "fstream"
 
 using namespace std;
 
 /// Return a reference to the data
-template<> std::map<RecordHeader, int>&         POPSensorData::RefData()   {return dataInt;}
+template<> map<RecordHeader, int>&         POPSensorData::RefData()   {return dataInt;}
 
 /// Return a reference to the data
-template<> std::map<RecordHeader, double>&      POPSensorData::RefData()   {return dataDouble;}
+template<> map<RecordHeader, double>&      POPSensorData::RefData()   {return dataDouble;}
 
 /// Return a reference to the data
-template<> std::map<RecordHeader, string>&      POPSensorData::RefData()   {return dataString;}
+template<> map<RecordHeader, string>&      POPSensorData::RefData()   {return dataString;}
 
 /// Return the data
-template<> const std::map<RecordHeader, int>&         POPSensorData::GetData() const   {return dataInt;}
+template<> const map<RecordHeader, int>&         POPSensorData::GetData() const   {return dataInt;}
 
 /// Return the data
-template<> const std::map<RecordHeader, double>&      POPSensorData::GetData() const   {return dataDouble;}
+template<> const map<RecordHeader, double>&      POPSensorData::GetData() const   {return dataDouble;}
 
 /// Return the data
-template<> const std::map<RecordHeader, string>&      POPSensorData::GetData() const   {return dataString;}
+template<> const map<RecordHeader, string>&      POPSensorData::GetData() const   {return dataString;}
 
 
 
@@ -81,7 +82,7 @@ void RecordHeader::Serialize(POPBuffer &buf, bool pack)
 }
 
 // Define stream operator for easy printing
-std::ostream& operator<< (std::ostream& x_stream, const RecordHeader& x_rec)
+ostream& operator<< (ostream& x_stream, const RecordHeader& x_rec)
 {
 	// x_stream << "time: " << x_rec.timeStamp << " id:" << x_rec.id << " type:" << explainMeasurementType(x_rec.measurementType) << " unit:" << explainMeasurementUnit(x_rec.unit);
 	x_stream << x_rec.timeStamp << ", " << x_rec.id << ", " << explainMeasurementType(x_rec.measurementType) << ", " << explainMeasurementUnit(x_rec.unit);
@@ -129,7 +130,7 @@ void POPSensorData::Serialize(POPBuffer &buf, bool pack)
 	 // cout << "serialize "<<pack << " " << dataDouble.size() << popcendl;
 }
 
-void POPSensorData::Print()
+void POPSensorData::Print() const
 {
 	for(auto elem : dataDouble)
 	{
@@ -149,7 +150,7 @@ void POPSensorData::Print()
 	}
 }
 
-void POPSensorData::PrintToFile(ostream& xr_ostream)
+void POPSensorData::PrintToFile(ostream& xr_ostream) const
 {
 	for(auto elem : dataDouble)
 	{
@@ -168,6 +169,78 @@ void POPSensorData::PrintToFile(ostream& xr_ostream)
 		xr_ostream << elem.first << ", " << elem.second << endl;
 	}
 }
+
+void POPSensorData::ReadFromFile(istream& xr_istream)
+{
+	string line;
+
+	dataInt.clear();    // Note: limitation: for now, only double is read since we cannot really differenciate int and double
+	dataDouble.clear();
+	dataString.clear();
+
+	// Read line containing titles
+	assert(getline(xr_istream,line));
+
+	// Read each line
+	while(getline(xr_istream,line))
+	{
+		unsigned int timeStamp; // TODO: unsigned long ?
+		RecordHeader rec;
+		stringstream lineStream(line);
+		string       cell;
+
+		getline(lineStream,cell,',');
+		rec.timeStamp = atof(cell.c_str());
+
+		getline(lineStream,cell,',');
+		rec.id = atoi(cell.c_str());
+
+		getline(lineStream,cell,',');
+		rec.measurementType = translateMeasurementType(cell.c_str() + 1);
+
+		getline(lineStream,cell,',');
+		rec.unit = translateMeasurementUnit(cell.c_str() + 1);
+		
+		getline(lineStream,cell,',');
+		dataDouble[rec] = atof(cell.c_str());
+	}
+}
+
+
+void POPSensorData::PrintToPlot(const string& x_fileName) const
+{
+	// copy html header to target
+	stringstream ss1;
+	ss1 << "cat plots/index.head.html > " << x_fileName;
+	system(ss1.str().c_str());
+
+	ofstream of(x_fileName.c_str(), fstream::app);
+
+	enum MeasurementType mt = MSR_HUMIDITY;
+
+	of << "'" << explainMeasurementType(mt) << "': {\nlabel: '" << explainMeasurementType(mt) << "',\ndata: [\n";
+	unsigned long initialTime = 0;
+	
+	for(const auto& elem : dataDouble)
+	{
+		if(elem.first.measurementType == mt && elem.first.id == 199)
+		{
+			if(initialTime == 0)
+				initialTime = elem.first.timeStamp;
+			// cout << "[" << elem.first.measurementType << "," << elem.first.id << "], " << popcendl;
+			of << "[" << (elem.first.timeStamp - initialTime) / 3600000 << "," << elem.second << "], ";
+		}
+	}
+
+	of << "]}\n";
+
+	of.close();
+
+	stringstream ss2;
+	ss2 << "cat plots/index.foot.html >> " << x_fileName;
+	system(ss2.str().c_str());
+}
+
 
 void POPSensorData::Clear()
 {

@@ -75,10 +75,16 @@ class POPSensorData : public POPBase
 	void Serialize(POPBuffer &buf, bool pack);
 
 	/// Print the data to stdout
-	void Print();
+	void Print() const;
 
 	/// Print the data to a .csv file
-	void PrintToFile(std::ostream& xr_ostream);
+	void PrintToFile(std::ostream& xr_ostream) const;
+
+	/// Read the data from a .csv file
+	void ReadFromFile(std::istream& xr_istream);
+
+	/// Print the data into a html and javascript plot
+	void PrintToPlot(const std::string& x_fileName) const;
 
 	/// Clear the data
 	void Clear();
