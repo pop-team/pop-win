@@ -18,16 +18,19 @@
 
 using namespace std;
 
+/// Constructor (URL of target platteform is specified)
 POPSensor::POPSensor(const std::string& x_url, const std::string& x_resourceFileName)
 {
 	Initialize(x_resourceFileName);
 }
 
+/// Constructor (power requirement of target platteform is specified)
 POPSensor::POPSensor(int x_pow, const std::string& x_resourceFileName)
 {
 	Initialize(x_resourceFileName);
 }
 
+/// Destructor
 POPSensor::~POPSensor()
 {
 	StopListening();
@@ -40,6 +43,7 @@ POPSensor::~POPSensor()
 	m_sensorsProxy.clear();
 }
 
+/// Initialization using parameters in resource.json
 void POPSensor::Initialize(const std::string& x_resourceFileName)
 {
 	// Read json resource file into string
@@ -105,11 +109,13 @@ void POPSensor::Initialize(const std::string& x_resourceFileName)
 	}
 }
 
+/// Return true if the POPSensor is connected to at least one sensor
 bool POPSensor::IsConnected()
 {
 	return !m_sensorsProxy.empty();
 }
 
+/// Start listening to messages coming from sensors
 void POPSensor::StartListening()
 {
 	for(auto it : m_sensorsProxy)
@@ -118,6 +124,7 @@ void POPSensor::StartListening()
 	}
 }
 
+/// Stop listening to messages coming from sensors
 void POPSensor::StopListening()
 {
 	for(auto it : m_sensorsProxy)
@@ -126,6 +133,7 @@ void POPSensor::StopListening()
 	}
 }
 
+/// Return a POPSensorData structure containing the messages received from sensors
 POPSensorData POPSensor::Gather()
 {
 	POPSensorData fullData;
@@ -136,7 +144,7 @@ POPSensorData POPSensor::Gather()
 	return fullData;
 }
 
-
+/// Clear the stored messages
 void POPSensor::Clear()
 {
 	for(auto it : m_sensorsProxy)
@@ -145,6 +153,7 @@ void POPSensor::Clear()
 	}
 }
 
+/// Broadcast a message to all sensors
 void POPSensor::Broadcast(int x_publicationType, int x_data)
 {
 	for(auto it : m_sensorsProxy)
@@ -153,6 +162,7 @@ void POPSensor::Broadcast(int x_publicationType, int x_data)
 	}
 }
 
+/// Broadcast a message to all sensors
 void POPSensor::Broadcast(int x_publicationType, double x_data)
 {
 	for(auto it : m_sensorsProxy)
@@ -161,6 +171,7 @@ void POPSensor::Broadcast(int x_publicationType, double x_data)
 	}
 }
 
+/// Broadcast a message to all sensors
 void POPSensor::Broadcast(int x_publicationType, const std::string& x_data)
 {
 	for(auto it : m_sensorsProxy)
@@ -169,6 +180,7 @@ void POPSensor::Broadcast(int x_publicationType, const std::string& x_data)
 	}
 }
 
+/// Send a notification to all sensors
 void POPSensor::Notify(int x_measurementType, int x_measurementUnit, const std::string& x_message)
 {
 	for(auto it : m_sensorsProxy)
@@ -177,7 +189,7 @@ void POPSensor::Notify(int x_measurementType, int x_measurementUnit, const std::
 	}
 }
 
-
+/// Subscribe to messages of given type and data type
 void POPSensor::Subscribe(int x_measurementType, int x_dataType)
 {
 	for(auto it : m_sensorsProxy)
@@ -186,6 +198,7 @@ void POPSensor::Subscribe(int x_measurementType, int x_dataType)
 	}
 }
 
+/// Return the size of the stored data
 int POPSensor::GetDataSize()
 {
 	int cpt = 0;
@@ -196,7 +209,7 @@ int POPSensor::GetDataSize()
 	return cpt;
 }
 
-
+/// Subscribe to all resources contained in resource.json
 void POPSensor::SubscribeToResources()
 {
 	if(m_jsonResources.empty())
@@ -243,6 +256,7 @@ void POPSensor::SubscribeToResources()
 	}
 }
 
+/// Apply a reduce operation to the stored data {size, min, max, aver, sum, stdev}
 double POPSensor::Reduce(int x_mtype, int x_dataType, int x_fct)
 {
 	std::vector<double> vect;

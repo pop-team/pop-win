@@ -41,3 +41,10 @@ objects.map: POPSensor.obj SensorProxy.obj
 
 run:
 	popcrun objects.map ./main resources.json
+
+documentation:
+	ln -s POPSensor.ph POPSensor.h
+	ln -s SensorProxy.ph SensorProxy.h
+	doxygen
+	rm POPSensor.h
+	rm SensorProxy.h

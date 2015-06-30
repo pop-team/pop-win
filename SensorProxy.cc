@@ -31,6 +31,10 @@
 
 using namespace std;
 
+/// Constructor
+/// @param x_id  Id to set to this object (for low-level communication)
+/// @param x_url URL on which this parallel object is allocated
+/// @param x_device Device name e.g. /dev/ttyUSB0
 SensorProxy::SensorProxy(int x_id, const std::string& x_url, const string& x_device)
 {
 	m_id = x_id;
@@ -85,6 +89,7 @@ SensorProxy::SensorProxy(int x_id, const std::string& x_url, const string& x_dev
 	// m_debugOf.open("debug.txt");
 }
 
+/// Destructur
 SensorProxy::~SensorProxy()
 {
 	// Destroy object
@@ -93,6 +98,7 @@ SensorProxy::~SensorProxy()
 	// m_debugOf.close();
 }
 
+/// Send raw data to the gateway
 void SensorProxy::SendRawData(const std::string& x_data)
 {
 	// m_debugOf << x_data; m_debugOf.flush();
@@ -122,6 +128,7 @@ void SensorProxy::SendRawData(const std::string& x_data)
 
 }
 
+/// Read data coming from the gateway
 void SensorProxy::ReadData(std::ostream& xr_ostream)
 {
 	while(m_listening.load()) {   
@@ -151,6 +158,7 @@ void SensorProxy::ReadData(std::ostream& xr_ostream)
 	}
 }
 
+/// Start listening to messages coming from sensors
 void SensorProxy::StartListening()
 {
 	m_listening.store(true);
@@ -175,18 +183,20 @@ void SensorProxy::StartListening()
 	}
 }
 
+/// Stop listening to messages coming from sensors
 void SensorProxy::StopListening()
 {
 	m_listening.store(false);
 }
 
+/// Return a POPSensorData structure containing the messages received from sensors
 POPSensorData SensorProxy::Gather()
 {
 	// cout << "Retrieve " << m_doubleData.size() << " records of type double" <<popcendl;
 	return m_sensorData;
 }
 
-
+/// Clear the stored messages
 void SensorProxy::Clear()
 {
 	m_sensorData.Clear();
@@ -275,7 +285,7 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 }
 
 
-
+/// Send a notification to the gateway
 void SensorProxy::Notify(int x_measurementType, int x_measurementUnit, const std::string& x_message)
 {
 	// note: only string messages are implemented. Other types can be trivially implemented
@@ -295,6 +305,7 @@ void SensorProxy::Notify(int x_measurementType, int x_measurementUnit, const std
 	SendRawData(buffer);
 }
 
+/// Send a publication to the gateway
 void SensorProxy::Publish(int x_publicationType, int x_data)
 {
 	struct PublishMessage msg;
@@ -312,6 +323,7 @@ void SensorProxy::Publish(int x_publicationType, int x_data)
 	SendRawData(buffer);
 }
 
+/// Send a publication to the gateway
 void SensorProxy::Publish(int x_publicationType, double x_data)
 {
 	struct PublishMessage msg;
@@ -329,6 +341,7 @@ void SensorProxy::Publish(int x_publicationType, double x_data)
 	SendRawData(buffer);
 }
 
+/// Send a publication to the gateway
 void SensorProxy::Publish(int x_publicationType, const string& x_data)
 {
 	struct PublishMessage msg;
@@ -347,6 +360,7 @@ void SensorProxy::Publish(int x_publicationType, const string& x_data)
 	SendRawData(buffer);
 }
 
+/// Send a subscription to the gateway
 void SensorProxy::Subscribe(int x_measurementType, int x_dataType)
 {
 	char buf[BUFFERSIZE];
@@ -366,11 +380,13 @@ void SensorProxy::Subscribe(int x_measurementType, int x_dataType)
 	SendRawData(buf);
 }
 
+/// Return the size of the stored data
 int SensorProxy::GetDataSize()
 {
 	return m_sensorData.GetSize();
 }
 
+/// Apply a reduce operation to the stored data {size, min, max, aver, sum, stdev}
 double SensorProxy::Reduce(int x_mtype, int x_dataType, int x_fct)
 {
 	switch(x_dataType)

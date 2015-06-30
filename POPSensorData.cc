@@ -38,6 +38,7 @@ RecordHeader::RecordHeader(unsigned int x_timeStamp, const NotifyMessage& x_msg)
 	unit            = x_msg.unit;
 	timeStamp       = x_timeStamp;
 }
+
 void RecordHeader::Serialize(POPBuffer &buf, bool pack)
 {
 	if(pack)

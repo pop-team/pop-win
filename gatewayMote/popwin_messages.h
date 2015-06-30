@@ -5,7 +5,7 @@
  */
 
 //----------------------------------------------------------------- 
-/// This file contains all messages and format that are common to both the PC and the remote sensor
+// This file contains all messages and format that are common to both the PC and the remote sensor
 
 #ifndef POPWIN_MESSAGES_H
 #define POPWIN_MESSAGES_H
@@ -20,7 +20,7 @@
 // The id of the gateway
 #define GATEWAY_ID     158
 
-// Different types of messages
+/// Different types of messages
 enum MessageType
 {
 	MSG_UNKNOWN   = 0, // only used for error handling
@@ -29,7 +29,7 @@ enum MessageType
 	MSG_PUBLISH   = 3  // publication message
 };
 
-// Different types of measurement
+/// Different types of measurement
 enum MeasurementType
 {
 	MSR_LOG         = 0,  // logging  can be seen as a notification. This is useful for debug but can be removed in the final version
@@ -44,10 +44,14 @@ enum MeasurementType
 	MSR_EVENT       = 9   // a specific event is sent
 	// ... //
 };
+
+/// Translate a measurement type from text to enum
 enum MeasurementType translateMeasurementType(const char* x_str);
+
+/// Translate a measurement type enum to text
 const char* explainMeasurementType(enum MeasurementType x);
 
-// Different types of measurement
+/// Different types of measurement
 enum MeasurementUnit
 {
 	UNT_NONE        = 0,
@@ -59,10 +63,14 @@ enum MeasurementUnit
 	UNT_PERCENT     = 6
 	// ... // 
 };
+
+/// Translate a measurement unit from text to enum
 enum MeasurementUnit translateMeasurementUnit(const char* x_str);
+
+/// Translate a measurement unit enum to text
 const char* explainMeasurementUnit(enum MeasurementUnit x);
 
-// Different types of publication
+/// Different types of publication
 enum PublicationType
 {
 	PUB_COMMAND     = 0, // commands can be seen as publications
@@ -70,7 +78,7 @@ enum PublicationType
 	// ... //
 };
 
-// Different types of measurement
+/// Different types of measurement
 enum DataType
 {
 	TYPE_UNKNOWN    = 0,
@@ -79,46 +87,58 @@ enum DataType
 	TYPE_STRING     = 3
 };
 
+/// Translate a data type from text to enum
 enum DataType translateDataType(const char* x_str);
+
+/// Translate a data type enum to text
 const char* explainDataType(enum DataType x);
 
-/// TYPES OF MESSAGES ///
+//
+// TYPES OF MESSAGES 
+//
 
-// -------------------------------------------------------------------------------- //
-// Subscription message
-
+/// Subscription message
 struct SubscribeMessage
 {
-	unsigned short       id;               // Id is not mandatory. Only for convenience
+	/// Id of emitter: Id is not mandatory. Only for convenience
+	unsigned short       id;
+	/// Type of measurement
 	enum MeasurementType measurementType;
+	/// Type of the data
 	enum DataType        dataType;
 };
 
 // note: UnSubscribe message has the same structure as publish messages
 
-// Print message to buffer
+/// Print message to buffer
 ///
 /// @param x_msg     Incoming message
 /// @param xp_buffer Output buffer
 /// @param x_bufferSize Size of the buffer for safety
 int bufferizeSubscribeMessage(const struct SubscribeMessage* x_msg, char* xp_buffer, size_t x_bufferSize);
 
-// Read message from buffer
+/// Read message from buffer
 /// 
 /// @param xp_msg         Output: message structure
 /// @param x_buffer       Input:  message is read from here
 int unbufferizeSubscribeMessage(struct SubscribeMessage* xp_msg, const char* x_buffer);
 
 // -------------------------------------------------------------------------------- //
-// A structure representing a notification message
+/// A structure representing a notification message
 
 struct NotifyMessage
 {
+	/// Type of measurement
 	enum MeasurementType measurementType;
+	/// Type of data
 	enum DataType        dataType;
+	/// Id of emitter: Id is not mandatory. Only for convenience
 	unsigned short       id;
+	/// Unit of measurement
 	enum MeasurementUnit unit;
+	/// Size of the data, for storage in buffer
 	size_t               dataSize;
+	/// Buffer containing the data on text format
 	char                 data[BUFFERDATASIZE];
 };
 
@@ -129,7 +149,7 @@ struct NotifyMessage
 /// @param x_bufferSize Size of the buffer for safety
 int bufferizeNotifyMessage(const struct NotifyMessage* x_msg, char* xp_buffer, size_t x_bufferSize);
 
-// Read message from buffer
+/// Read message from buffer
 /// 
 /// @param xp_msg         Output: message structure
 /// @param x_buffer       Input:  message is read from here
@@ -137,28 +157,32 @@ int bufferizeNotifyMessage(const struct NotifyMessage* x_msg, char* xp_buffer, s
 int unbufferizeNotifyMessage(struct NotifyMessage* x_msg, const char* x_buffer, size_t x_dataSize);
 
 // -------------------------------------------------------------------------------- //
-// Publication message
+/// Publication message
 
 struct PublishMessage
 {
+	/// Type of the publication
 	enum PublicationType publicationType;
+	/// Type of the data
 	enum DataType        dataType;
+	/// Id of emitter
 	unsigned short       id;               // not mandatory, for convenience
-	// enum MeasurementUnit unit;
+	/// Size of the data for buffering
 	size_t               dataSize;
+	/// Buffer containing the serialized data
 	char                 data[BUFFERDATASIZE];
 };
 
 // Note: no unpublish message for the first version. The structure will be similar to publish messages
 
-// Print message to buffer
+/// Print message to buffer
 ///
 /// @param x_msg     Incoming message
 /// @param xp_buffer Output buffer
 /// @param x_bufferSize Size of the buffer for safety
 int bufferizePublishMessage(const struct PublishMessage* x_msg, char* xp_buffer, size_t x_bufferSize);
 
-// Read message from buffer
+/// Read message from buffer
 /// 
 /// @param xp_msg         Output: message structure
 /// @param x_buffer       Input:  message is read from here
@@ -167,7 +191,7 @@ int unbufferizePublishMessage(struct PublishMessage* xp_msg, const char* x_buffe
 
 // -------------------------------------------------------------------------------- //
 
-// Retrieve the type of the message (first 2 bytes)
+/// Retrieve the type of the message (first 2 bytes)
 enum MessageType getMessageType(const char* x_msg);
 
 

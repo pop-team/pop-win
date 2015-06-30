@@ -18,28 +18,40 @@
 #include <algorithm>
 #include "popwin_messages.h"
 
-// Data structure to store a record that comes from a notification message
+/// Data structure to store a record that comes from a notification message
 class RecordHeader : POPBase
 {
 public:
+	/// Constructor
 	RecordHeader();
+
+	/// Constructor
 	RecordHeader(unsigned int x_timeStamp, const NotifyMessage& x_msg);
+
+	/// Serialize the object
 	void Serialize(POPBuffer &buf, bool pack);
 
-	// We need to define this operator to use this structure as key for maps
+	/// We need to define this operator to use this structure as key for maps
 	inline bool operator<(RecordHeader const& n2) const
 	{
 		return timeStamp != n2.timeStamp ? timeStamp < n2.timeStamp : this < &n2;
 	}
 
+	/// A time stamp that indicates when the record was created
 	unsigned int         timeStamp;
+
+	/// The type of measurement
 	enum MeasurementType measurementType;
 	// enum DataType        dataType;
+
+	/// Id of the emitter
 	int                  id;
+
+	/// Unit of measurement
 	enum MeasurementUnit unit;
 };
 
-// Define stream operator for easy printing
+/// Define stream operator for easy printing
 std::ostream& operator<< (std::ostream& x_stream, const RecordHeader& x_rec);
 
 // ================================================================================
@@ -51,17 +63,33 @@ template<typename T> T map_acc(T lhs, const std::pair<RecordHeader, T> & rhs)
 
 // ================================================================================
 
+/// A serializable object that can store the results of data acquisition
 class POPSensorData : public POPBase
 {
 	public:
+
+	/// The different reduce functions
 	typedef enum reduceFunctions {size, min, max, aver, sum, stdev} POPReduceF;
 
+	/// Serialize and deserialize the class
 	void Serialize(POPBuffer &buf, bool pack);
+
+	/// Print the data to stdout
 	void Print();
+
+	/// Print the data to a .csv file
 	void PrintToFile(std::ostream& xr_ostream);
+
+	/// Clear the data
 	void Clear();
+
+	/// Return the size of the data
 	int  GetSize() const;
+
+	/// Insert a new record into the data
 	void Insert(const POPSensorData&);
+
+	/// Insert a new record into the data
 	template<typename T>void Insert(std::pair<RecordHeader, T>& x_pair){RefData<T>().insert(x_pair);}
 
 	/// Apply reduce on all the content
