@@ -11,6 +11,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <fstream>
+#include <sstream>
 #include "POPSensorData.h"
 
 using namespace std;
@@ -32,10 +33,25 @@ int main(int argc, char** argv)
 		ifs.close();
 		cout << "Read " << data.GetSize() << " records" << popcendl;
 
-		string target = string(argv[1]) + ".html";
+		stringstream ss;
+		ss << "mkdir -p " << argv[1] << "_plots";
+		system(ss.str().c_str());
 
-		cout << "Create " << target << popcendl;
-		data.PrintToPlot(target);
+		// Create one plot per sensor id with all measurement
+		for(auto id : data.GroupAllIds())
+		{
+			string target = string(argv[1]) + "_plots/sensor"  + to_string(id) + ".html";
+			cout << "Create " << target << popcendl;
+			data.PrintToPlot(target, id);
+		}
+
+		// Create one plot per measurement with all sensors
+		for(auto mt : data.GroupAllMeasurementTypes())
+		{
+			string target = string(argv[1]) + "_plots/"  + explainMeasurementType(mt) + ".html";
+			cout << "Create " << target << popcendl;
+			data.PrintToPlot(target, mt);
+		}
 	}
 	catch(std::exception &e)
 	{

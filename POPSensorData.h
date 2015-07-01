@@ -12,6 +12,7 @@
 #define POPSENSOR_DATA_H
 
 #include <map>
+#include <set>
 #include <string>
 #include <limits>
 #include <numeric>
@@ -84,7 +85,16 @@ class POPSensorData : public POPBase
 	void ReadFromFile(std::istream& xr_istream);
 
 	/// Print the data into a html and javascript plot
-	void PrintToPlot(const std::string& x_fileName) const;
+	void PrintToPlot(const std::string& x_fileName, enum MeasurementType x_measurementType) const;
+
+	/// Print the data into a html and javascript plot
+	void PrintToPlot(const std::string& x_fileName, int x_id) const;
+
+	/// Return all sensor ids in database for the given measurement
+	std::set<int> GroupAllIds(enum MeasurementType x_measurementType = MSR_LOG) const;
+
+	/// Return all measurements in database for the sensor
+	std::set<enum MeasurementType> GroupAllMeasurementTypes(int x_id = 0) const;
 
 	/// Clear the data
 	void Clear();

@@ -47,6 +47,13 @@ To compile and run this example use:
 	popcrun objects.map ./main resources.json
 ```
 
+### main_plot.cpp
+This file contains a small utility that can be used to plot data from a csv file. The csv must have been generated previously. Here is an example of command:
+
+```
+	popcrun objects.map ./main_plot out/data_20150527_08:29:46.csv
+```
+
 Main parallel classes
 ---------------------
 This chapter describes in more details the main classes used in this project.

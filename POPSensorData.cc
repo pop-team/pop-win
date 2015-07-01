@@ -206,8 +206,41 @@ void POPSensorData::ReadFromFile(istream& xr_istream)
 	}
 }
 
+/// Return all sensor ids in database for the given measurement
+set<int> POPSensorData::GroupAllIds(enum MeasurementType x_measurementType) const
+{
+	set<int> res;
+	for(const auto& elem : dataDouble)
+		if(x_measurementType == MSR_LOG || elem.first.measurementType == x_measurementType)
+			res.insert(elem.first.id);
+	for(const auto& elem : dataInt)
+		if(x_measurementType == MSR_LOG || elem.first.measurementType == x_measurementType)
+			res.insert(elem.first.id);
+	for(const auto& elem : dataString)
+		if(x_measurementType == MSR_LOG || elem.first.measurementType == x_measurementType)
+			res.insert(elem.first.id);
 
-void POPSensorData::PrintToPlot(const string& x_fileName) const
+	return res;
+}
+
+/// Return all measurements in database for the sensor
+set<enum MeasurementType> POPSensorData::GroupAllMeasurementTypes(int x_id) const
+{
+	set<enum MeasurementType> res;
+	for(const auto& elem : dataDouble)
+		if(x_id == 0 || elem.first.id == x_id)
+			res.insert(elem.first.measurementType);
+	for(const auto& elem : dataInt)
+		if(x_id == 0 || elem.first.id == x_id)
+			res.insert(elem.first.measurementType);
+	for(const auto& elem : dataString)
+		if(x_id == 0 || elem.first.id == x_id)
+			res.insert(elem.first.measurementType);
+	return res;
+}
+
+
+void POPSensorData::PrintToPlot(const string& x_fileName, enum MeasurementType x_measurementType) const
 {
 	// copy html header to target
 	stringstream ss1;
@@ -216,23 +249,25 @@ void POPSensorData::PrintToPlot(const string& x_fileName) const
 
 	ofstream of(x_fileName.c_str(), fstream::app);
 
-	enum MeasurementType mt = MSR_HUMIDITY;
-
-	of << "'" << explainMeasurementType(mt) << "': {\nlabel: '" << explainMeasurementType(mt) << "',\ndata: [\n";
 	unsigned long initialTime = 0;
 	
-	for(const auto& elem : dataDouble)
+	for(auto id : GroupAllIds())
 	{
-		if(elem.first.measurementType == mt && elem.first.id == 199)
+		of << "'sensor" << id << "': {\nlabel: 'sensor" << id << "',\ndata: [\n";
+		for(const auto& elem : dataDouble)
 		{
-			if(initialTime == 0)
-				initialTime = elem.first.timeStamp;
-			// cout << "[" << elem.first.measurementType << "," << elem.first.id << "], " << popcendl;
-			of << "[" << (elem.first.timeStamp - initialTime) / 3600000 << "," << elem.second << "], ";
+			if(elem.first.measurementType == x_measurementType && elem.first.id == id)
+			{
+				if(initialTime == 0)
+					initialTime = elem.first.timeStamp;
+				// cout << "[" << elem.first.measurementType << "," << elem.first.id << "], " << popcendl;
+				if(elem.first.timeStamp > initialTime)
+					of << "[" << (elem.first.timeStamp - initialTime) / 24. / 3600000. << "," << elem.second << "], ";
+			}
 		}
+		of << "]},\n";
 	}
 
-	of << "]}\n";
 
 	of.close();
 
@@ -240,6 +275,43 @@ void POPSensorData::PrintToPlot(const string& x_fileName) const
 	ss2 << "cat plots/index.foot.html >> " << x_fileName;
 	system(ss2.str().c_str());
 }
+
+void POPSensorData::PrintToPlot(const string& x_fileName, int x_id) const
+{
+	// copy html header to target
+	stringstream ss1;
+	ss1 << "cat plots/index.head.html > " << x_fileName;
+	system(ss1.str().c_str());
+
+	ofstream of(x_fileName.c_str(), fstream::app);
+
+	unsigned long initialTime = 0;
+	
+	for(auto mt : GroupAllMeasurementTypes())
+	{
+		of << "'" << explainMeasurementType(mt) << "': {\nlabel: '" << explainMeasurementType(mt) << "',\ndata: [\n";
+		for(const auto& elem : dataDouble)
+		{
+			if(elem.first.measurementType == mt && elem.first.id == x_id)
+			{
+				if(initialTime == 0)
+					initialTime = elem.first.timeStamp;
+				// cout << "[" << elem.first.measurementType << "," << elem.first.id << "], " << popcendl;
+				if(elem.first.timeStamp > initialTime)
+					of << "[" << (elem.first.timeStamp - initialTime) / 24. / 3600000. << "," << elem.second << "], ";
+			}
+		}
+		of << "]},\n";
+	}
+
+
+	of.close();
+
+	stringstream ss2;
+	ss2 << "cat plots/index.foot.html >> " << x_fileName;
+	system(ss2.str().c_str());
+}
+
 
 
 void POPSensorData::Clear()
