@@ -219,6 +219,9 @@ set<int> POPSensorData::GroupAllIds(enum MeasurementType x_measurementType) cons
 	for(const auto& elem : dataString)
 		if(x_measurementType == MSR_LOG || elem.first.measurementType == x_measurementType)
 			res.insert(elem.first.id);
+	
+	// TODO: This is a workaround that suppresses one sensor with wrong measurement
+	res.erase(158);
 
 	return res;
 }
@@ -274,6 +277,9 @@ void POPSensorData::PrintToPlot(const string& x_fileName, enum MeasurementType x
 	stringstream ss2;
 	ss2 << "cat plots/index.foot.html >> " << x_fileName;
 	system(ss2.str().c_str());
+	stringstream ss3;
+	ss3 << "sed " << " -i 's/###TITLE###/" << explainMeasurementType(x_measurementType) << "/g' " << x_fileName;
+	system(ss3.str().c_str());
 }
 
 void POPSensorData::PrintToPlot(const string& x_fileName, int x_id) const
@@ -310,6 +316,9 @@ void POPSensorData::PrintToPlot(const string& x_fileName, int x_id) const
 	stringstream ss2;
 	ss2 << "cat plots/index.foot.html >> " << x_fileName;
 	system(ss2.str().c_str());
+	stringstream ss3;
+	ss3 << "sed " << " -i 's/###TITLE###/sensor" << x_id << "/g' " << x_fileName;
+	system(ss3.str().c_str());
 }
 
 
