@@ -1,4 +1,4 @@
-POPCC=popcc -cpp11 -g
+POPCC=popcc -cpp11 -g -no-async-allocation
 INC=-IlineComm -I/usr/include/jsoncpp
 LIBS=-ljsoncpp
 
