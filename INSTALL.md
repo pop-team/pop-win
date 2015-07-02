@@ -219,6 +219,7 @@ Troubleshooting
 You can't run the hello-world example inside contiki/examples/hello-world
 
 Message:
+	
 	using saved target 'z1'
 	../../tools/sky/serialdump-linux -b115200 /dev/ttyUSB0
 	connecting to /dev/ttyUSB0 (115200)
@@ -406,13 +407,13 @@ Limitations
 - **Full implementation of routing** : So far the routing of message is implemented twice: the first implementation is a full implementation made by UNIGE (slow), the second is a faster implementation using the libraries of Contiki (fast). The second implementation was used for tests.
 
 	// note: we can choose here which version of the code we want to run:
-	#if 0
+	\#if 0
 	// Processes to run with routing algo of UNIGE
 	AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &communication_process, &drw, &sensor_events); // Processes to run with algo of UNIGE
-	#else
+	\#else
 	// Processes to use the routing of messages given by the multihop example
 	AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &multihop_announce, &multihop_sense);
-	#endif
+	\#endif
 
 - **Temperature sensor on Zolertia Z1**: The temperature sensor works ok on AdvanticSys xm1000 sensors but is currently broken on Zolertia Z1.
 
