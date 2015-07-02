@@ -113,7 +113,7 @@ In case of problem with the installation, please refer to the README file contai
 
 ```
 	sudo apt-get install git-core g++ flex bison cxxtest zlib1g-dev
-	git clone https://github.com/pop-team/pop-win.git -b develop
+	git clone https://github.com/pop-team/pop-cpp.git -b develop
 	cd pop-cpp
 	cmake .
 	make
@@ -215,6 +215,22 @@ Examples of programmation
 
 Troubleshooting
 ---------------
+### Problem
+You can't run the hello-world example inside contiki/examples/hello-world
+
+Message:
+	using saved target 'z1'
+	../../tools/sky/serialdump-linux -b115200 /dev/ttyUSB0
+	connecting to /dev/ttyUSB0 (115200)
+	open: Invalid argument
+	make: *** [login] Error 255
+
+### Solution
+
+Use the same contiki version as for the demo (2.6), doing inside contiki/ folder
+
+	git checkout -b 2.6 2.6-rc0
+
 ### Problem
 The sensors outputs garbage characters with serialdump or nothing at all
 ### Solution
