@@ -168,6 +168,9 @@ AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &communicat
 #else
 // Processes to use the routing of messages given by the multihop example
 AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &multihop_announce, &multihop_sense);
+
+
+// TODO for broadcast: add our own broadcast_recv function here
 #endif
 /*---------------------------------------------------------------------------*/
 
@@ -190,7 +193,7 @@ PROCESS_THREAD(gateway_communication_process, ev, data)
 
 
 	// LOG("set broadcast callback");
-	// broadcast_open(&broadcast, 129, &broadcast_call); // Commented LW : use the version in DRW.c
+	// broadcast_open(&broadcast, 129, &broadcast_call); // Commented LW : use the version in DRW.c // TODO for broadcast: restore this and check if they are conflicts with the code in DRW.c
 	static char g_busy  = 0;
 
 	while(1) {
@@ -254,9 +257,10 @@ void gwHandleNotification(const char* data, char fromProxy)
 	if(unbufferizeNotifyMessage(&msg, data, sizeof(msg.data)) <= 0)
 		ERROR("Cannot read message from buffer");
 
+	// Proxy: the SensorProxy of POPWin
 	if(fromProxy)
 	{
-		// If the message comes from the GW --> forward it // TODO
+		// If the message comes from the GW --> forward it // TODO for broadcast
 
 		// 
 		// note: the forwarding of messages to the network of sensors is not implemented yet
@@ -281,7 +285,7 @@ void gwHandleSubscription(const char* data, char fromProxy)
 
 	if(fromProxy)
 	{
-		// If the message comes from the GW --> forward it // TODO
+		// If the message comes from the GW --> forward it // Future work
 
 		// 
 		// note: the forwarding of messages to the network of sensors is not implemented yet
@@ -309,7 +313,7 @@ void gwHandlePublication(const char* data, char fromProxy)
 		return;
 	}
 
-	// If the message comes from the GW --> forward it // TODO
+	// If the message comes from the GW --> forward it // TODO for broadcast
 
 
 	switch(msg.dataType)
@@ -473,7 +477,7 @@ void print_id(){
 /*
  * Send a broad_cast message
  */
-void send_broadcast_cmd(){
+void send_broadcast_cmd(){ // TODO broadcast: use this function to send messages
 	// note: this is only used as a test
 	packetbuf_copyfrom("Hello", 6);
 	broadcast_send(&broadcast);
