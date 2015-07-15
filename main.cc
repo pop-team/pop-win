@@ -224,6 +224,7 @@ int main(int argc, char** argv)
 				auto cmd = commands.find(c);
 				if(cmd != commands.end())
 				{
+					// here we call the command associated with the letter
 					(*cmd->second)(popSensor);
 					c = '\n';
 				}
