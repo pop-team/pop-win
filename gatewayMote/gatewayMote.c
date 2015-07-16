@@ -169,7 +169,15 @@ AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &communicat
 // Processes to use the routing of messages given by the multihop example
 AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &multihop_announce, &multihop_sense);
 
+static void
+broadcast_recv(struct broadcast_conn *c, const rimeaddr_t *from)
+{
+	printf("broadcast message received from %d.%d: '%s'\n",from->u8[0], from->u8[1], (char *)packetbuf_dataptr());
+	leds_toggle(LEDS_GREEN);
+}
 
+static const struct broadcast_callbacks broadcast_call = {broadcast_recv};
+static struct broadcast_conn broadcast;
 // TODO for broadcast: add our own broadcast_recv function here
 #endif
 /*---------------------------------------------------------------------------*/
@@ -193,7 +201,7 @@ PROCESS_THREAD(gateway_communication_process, ev, data)
 
 
 	// LOG("set broadcast callback");
-	// broadcast_open(&broadcast, 129, &broadcast_call); // Commented LW : use the version in DRW.c // TODO for broadcast: restore this and check if they are conflicts with the code in DRW.c
+	broadcast_open(&broadcast, 129, &broadcast_call); // Commented LW : use the version in DRW.c // TODO for broadcast: restore this and check if they are conflicts with the code in DRW.c
 	static char g_busy  = 0;
 
 	while(1) {
