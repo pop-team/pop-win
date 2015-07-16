@@ -170,13 +170,14 @@ AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &communicat
 AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &multihop_announce, &multihop_sense);
 
 static void
-broadcast_recv(struct broadcast_conn *c, const rimeaddr_t *from)
+broadcast_recvGM(struct broadcast_conn *c, const rimeaddr_t *from)
 {
 	printf("broadcast message received from %d.%d: '%s'\n",from->u8[0], from->u8[1], (char *)packetbuf_dataptr());
 	leds_toggle(LEDS_GREEN);
+	gwHandleMessage((char *)packetbuf_dataptr(), 0);
 }
 
-static const struct broadcast_callbacks broadcast_call = {broadcast_recv};
+static const struct broadcast_callbacks broadcast_call = {broadcast_recvGM};
 static struct broadcast_conn broadcast;
 // TODO for broadcast: add our own broadcast_recv function here
 #endif
@@ -321,8 +322,14 @@ void gwHandlePublication(const char* data, char fromProxy)
 		return;
 	}
 
-	// If the message comes from the GW --> forward it // TODO for broadcast
-
+	// If the message comes from the Proxy --> forward it // TODO for broadcast
+	if(g_gateway == get_id())
+	{
+		packetbuf_copyfrom(data, strlen(data) + 1);
+		//packetbuf_copyfrom("Hello", 6);
+		broadcast_send(&broadcast);
+		LOG("broadcast message sent");
+	}
 
 	switch(msg.dataType)
 	{

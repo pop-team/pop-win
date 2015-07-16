@@ -329,7 +329,7 @@ static void forward_message(const struct Message *msg){
 
 //BROADCAST RECEIVE
 /* This function is called whenever a broadcast message is received. */
-/*	static void // TODO : check why broadcast_recv would be duplicated in gatewayMote.c, 
+	static void // TODO : check why broadcast_recv would be duplicated in gatewayMote.c, 
 		    // why DRW.c included in gatewayMote.c
 broadcast_recv(struct broadcast_conn *c, const rimeaddr_t *from)
 {
@@ -337,7 +337,7 @@ broadcast_recv(struct broadcast_conn *c, const rimeaddr_t *from)
 
 	/* The packetbuf_dataptr() returns a pointer to the first data byte
 	   in the received packet. */
-/*	msg = packetbuf_dataptr();
+	msg = packetbuf_dataptr();
 	printf("Received broadcast message\n");
 
 	switch (msg->type) {
@@ -376,7 +376,7 @@ broadcast_recv(struct broadcast_conn *c, const rimeaddr_t *from)
 			break;
 
 	}
-}*/
+}
 /* This is where we define what function to be called when a broadcast
    is received. We pass a pointer to this structure in the
    broadcast_open() call below. */
