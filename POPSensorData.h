@@ -27,7 +27,7 @@ public:
 	RecordHeader();
 
 	/// Constructor
-	RecordHeader(unsigned int x_timeStamp, const NotifyMessage& x_msg);
+	RecordHeader(unsigned long x_timeStamp, const NotifyMessage& x_msg);
 
 	/// Serialize the object
 	void Serialize(POPBuffer &buf, bool pack);
@@ -39,7 +39,7 @@ public:
 	}
 
 	/// A time stamp that indicates when the record was created
-	unsigned int         timeStamp;
+	unsigned long         timeStamp;
 
 	/// The type of measurement
 	enum MeasurementType measurementType;
@@ -109,9 +109,6 @@ class POPSensorData : public POPBase
 	template<typename T>void Insert(std::pair<RecordHeader, T>& x_pair){RefData<T>().insert(x_pair);}
 
 	/// Apply reduce on all the content
-	/// note that there are two template types. The second is meant for the accumulator:
-	/// 	for int use <int,long long>
-	/// 	for double use <double,double>
 	template<typename T> double Reduce(enum MeasurementType x_mtype, POPReduceF x_fct) const
 	{
 		std::vector<T> vect;
@@ -145,9 +142,13 @@ class POPSensorData : public POPBase
 		}
 	}
 
-private:
+	/// Return the map containing the data
 	template<typename T>std::map<RecordHeader, T>&       RefData();
+
+	/// Return the map containing the data (constant)
 	template<typename T>const std::map<RecordHeader, T>& GetData() const;
+
+private:
 
 	std::map<RecordHeader, std::string> dataString;
 	std::map<RecordHeader, int>         dataInt;

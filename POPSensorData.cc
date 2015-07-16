@@ -41,7 +41,8 @@ RecordHeader::RecordHeader()
 	unit            = UNT_NONE;
 	timeStamp       = 0;
 }
-RecordHeader::RecordHeader(unsigned int x_timeStamp, const NotifyMessage& x_msg)
+
+RecordHeader::RecordHeader(unsigned long x_timeStamp, const NotifyMessage& x_msg)
 {
 	// cout << "Create record header id:" << x_msg.id << " units " << x_msg.unit << popcendl;
 	measurementType = x_msg.measurementType;
@@ -62,7 +63,7 @@ void RecordHeader::Serialize(POPBuffer &buf, bool pack)
 		int mu = static_cast<int>(unit);
 		buf.Pack(&mu,1);
 
-		int ts = (int)timeStamp;
+		unsigned long ts = timeStamp;
 		buf.Pack(&timeStamp,1);
 	}
 	else
@@ -184,7 +185,7 @@ void POPSensorData::ReadFromFile(istream& xr_istream)
 	// Read each line
 	while(getline(xr_istream,line))
 	{
-		unsigned int timeStamp; // TODO: unsigned long ?
+		unsigned long timeStamp;
 		RecordHeader rec;
 		stringstream lineStream(line);
 		string       cell;
