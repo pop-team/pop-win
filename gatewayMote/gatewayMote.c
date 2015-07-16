@@ -173,8 +173,8 @@ static void
 broadcast_recvGM(struct broadcast_conn *c, const rimeaddr_t *from)
 {
 	printf("broadcast message received from %d.%d: '%s'\n",from->u8[0], from->u8[1], (char *)packetbuf_dataptr());
-	leds_toggle(LEDS_GREEN);
-	gwHandleMessage((char *)packetbuf_dataptr(), 0);
+//	leds_toggle(LEDS_GREEN);
+	gwHandleMessage((char *)packetbuf_dataptr(), 1); // careful with parameter fromProxy ! (here 1)
 }
 
 static const struct broadcast_callbacks broadcast_call = {broadcast_recvGM};
