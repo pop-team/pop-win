@@ -27,7 +27,7 @@ public:
 	RecordHeader();
 
 	/// Constructor
-	RecordHeader(unsigned long x_timeStamp, const NotifyMessage& x_msg);
+	RecordHeader(unsigned int x_timeStamp, const NotifyMessage& x_msg);
 
 	/// Serialize the object
 	void Serialize(POPBuffer &buf, bool pack);
@@ -39,7 +39,7 @@ public:
 	}
 
 	/// A time stamp that indicates when the record was created
-	unsigned long         timeStamp;
+	unsigned int         timeStamp;
 
 	/// The type of measurement
 	enum MeasurementType measurementType;
