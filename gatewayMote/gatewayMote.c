@@ -121,6 +121,9 @@ void gwSendPublicationSerial(const struct PublishMessage* msg)
 	printf("%s\n", buf);
 }
 
+// send notification via multi hop from sensor
+void sensorSendNotification(struct NotifyMessage* msg);
+
 
 /// Return the id of the node
 int get_id()
@@ -173,13 +176,12 @@ static void
 broadcast_recvGM(struct broadcast_conn *c, const rimeaddr_t *from)
 {
 	printf("broadcast message received from %d.%d: '%s'\n",from->u8[0], from->u8[1], (char *)packetbuf_dataptr());
-//	leds_toggle(LEDS_GREEN);
+	//	leds_toggle(LEDS_GREEN);
 	gwHandleMessage((char *)packetbuf_dataptr(), 1); // careful with parameter fromProxy ! (here 1)
 }
 
 static const struct broadcast_callbacks broadcast_call = {broadcast_recvGM};
 static struct broadcast_conn broadcast;
-// TODO for broadcast: add our own broadcast_recv function here
 #endif
 /*---------------------------------------------------------------------------*/
 
@@ -202,7 +204,7 @@ PROCESS_THREAD(gateway_communication_process, ev, data)
 
 
 	// LOG("set broadcast callback");
-	broadcast_open(&broadcast, 129, &broadcast_call); // Commented LW : use the version in DRW.c // TODO for broadcast: restore this and check if they are conflicts with the code in DRW.c
+	broadcast_open(&broadcast, 129, &broadcast_call);
 	static char g_busy  = 0;
 
 	while(1) {
@@ -227,7 +229,7 @@ PROCESS_THREAD(gateway_communication_process, ev, data)
 		}
 		else ERROR("Device is busy. Cannot process message");
 	}		
-exit:
+	exit:
 	LOG("Exiting process");
 	leds_off(LEDS_ALL);
 	PROCESS_END();
@@ -242,17 +244,17 @@ void gwHandleMessage(const char* data, char fromProxy)
 	DEBUG("Handle msg type %d", getMessageType(data));
 	switch(mt)
 	{
-		case MSG_SUBSCRIBE:
-			gwHandleSubscription(data, fromProxy);
-			break;
-		case MSG_NOTIFY:
-			gwHandleNotification(data, fromProxy);
-			break;
-		case MSG_PUBLISH:
-			gwHandlePublication(data, fromProxy);
-			break;
-		default:
-			ERROR("Received message of unknown type");
+	case MSG_SUBSCRIBE:
+		gwHandleSubscription(data, fromProxy);
+		break;
+	case MSG_NOTIFY:
+		gwHandleNotification(data, fromProxy);
+		break;
+	case MSG_PUBLISH:
+		gwHandlePublication(data, fromProxy);
+		break;
+	default:
+		ERROR("Received message of unknown type");
 	}
 }
 
@@ -322,68 +324,67 @@ void gwHandlePublication(const char* data, char fromProxy)
 		return;
 	}
 
-	// If the message comes from the Proxy --> forward it // TODO for broadcast
+	// If on GW and the message comes from the Proxy --> forward it
 	if(g_gateway == get_id())
 	{
 		packetbuf_copyfrom(data, strlen(data) + 1);
-		//packetbuf_copyfrom("Hello", 6);
 		broadcast_send(&broadcast);
 		LOG("broadcast message sent");
 	}
 
 	switch(msg.dataType)
 	{
-		case TYPE_DOUBLE:
+	case TYPE_DOUBLE:
+	{
+		ERROR("notifications of type TYPE_DOUBLE are not handled yet");
+	}
+	break;
+	case TYPE_INT:
+	{
+		int dataInt = atoi(msg.data);
+		switch(msg.publicationType)
+		{
+		case PUB_LED:
+		{
+			DEBUG("Blink led %d", dataInt);
+			switch(dataInt)
 			{
-				ERROR("notifications of type TYPE_DOUBLE are not handled yet");
+			case 0:
+				leds_toggle(LEDS_BLUE);
+				break;
+			case 1:
+				leds_toggle(LEDS_GREEN);
+				break;
+			case 2:
+				leds_toggle(LEDS_RED);
+				break;
+			default:
+				leds_toggle(LEDS_ALL);
 			}
-			break;
-		case TYPE_INT:
-			{
-				int dataInt = atoi(msg.data);
-				switch(msg.publicationType)
-				{
-					case PUB_LED:
-						{
-							DEBUG("Blink led %d", dataInt);
-							switch(dataInt)
-							{
-								case 0:
-									leds_toggle(LEDS_BLUE);
-									break;
-								case 1:
-									leds_toggle(LEDS_GREEN);
-									break;
-								case 2:
-									leds_toggle(LEDS_RED);
-									break;
-								default:
-									leds_toggle(LEDS_ALL);
-							}
-						}
-						break;
-					case PUB_COMMAND:
-						{
-							// Commands can be seen as a type of publication
-							DEBUG("Call command %d", dataInt);
-							if(dataInt >= 0 && dataInt < NB_COMMANDS)
-								g_commands[dataInt]();
-							else
-								ERROR("Unknown command number");
-						}
-						break;
-					default:
-						ERROR("Unknown publication type");
-				}
-			}
-			break;
-		case TYPE_STRING:
-			{
-				ERROR("notifications of type TYPE_STRING are not handled yet");
-			}
-			break;
+		}
+		break;
+		case PUB_COMMAND:
+		{
+			// Commands can be seen as a type of publication
+			DEBUG("Call command %d", dataInt);
+			if(dataInt >= 0 && dataInt < NB_COMMANDS)
+				g_commands[dataInt]();
+			else
+				ERROR("Unknown command number");
+		}
+		break;
 		default:
-			ERROR("Unknown data type");
+			ERROR("Unknown publication type");
+		}
+	}
+	break;
+	case TYPE_STRING:
+	{
+		ERROR("notifications of type TYPE_STRING are not handled yet");
+	}
+	break;
+	default:
+		ERROR("Unknown data type");
 	}
 }
 
@@ -419,7 +420,9 @@ void read_temperature(){
 	msg.unit            = UNT_CELSIUS;
 	msg.id              = get_id();
 	msg.dataSize        = strlen(msg.data);
-	gwSendNotificationSerial(&msg);
+	// TODO for broadcast
+	//gwSendNotificationSerial(&msg);
+	sensorSendNotification(&msg);
 }
 
 /*
@@ -490,9 +493,9 @@ void print_id(){
 }
 
 /*
- * Send a broad_cast message
+ * Send a test broadcast message
  */
-void send_broadcast_cmd(){ // TODO broadcast: use this function to send messages
+void send_broadcast_cmd(){
 	// note: this is only used as a test
 	packetbuf_copyfrom("Hello", 6);
 	broadcast_send(&broadcast);
@@ -517,6 +520,39 @@ void set_as_gateway(){
 
 
 #include "example-multihop.c"
+
+void sensorSendNotification(struct NotifyMessage* msg)
+{
+	// declare destination
+	rimeaddr_t to;
+	to.u8[0] = GATEWAY_ID; // ID of our gateway
+	to.u8[1] = 0;
+
+	// In case we are on the gateway: send via serial to PC
+	gwSendNotificationSerial(msg);
+
+	if(g_gateway != get_id())
+	{
+		char buf[BUFFERSIZE];
+		if(bufferizeNotifyMessage(msg, buf, sizeof(buf)) <= 0)
+			ERROR("Cannot write message to buffer");
+
+		// Use the multihop method to send a message
+		/* Copy the "Hello" to the packet buffer. */
+		packetbuf_copyfrom(buf, strlen(buf) + 1);
+
+		/* Send the packet. */
+		multihop_send(&multihop, &to);
+	}
+}
+
+unsigned char sense_leds()
+{
+	unsigned char value = leds_get();
+	DEBUG("sense leds status %u", value);
+	return value;
+}
+
 /*---------------------------------------------------------------------------*/
 // For communication based on multihop: init and announce periodically
 
@@ -578,52 +614,54 @@ PROCESS_THREAD(multihop_sense, ev, data)
 		// send_broadcast_cmd();
 
 		/*---- start of multihop call ----*/
-		rimeaddr_t to;
-		to.u8[0] = GATEWAY_ID; // ID of our gateway
-		to.u8[1] = 0;
-
 		struct NotifyMessage msg;
 		memset(&msg, 0, sizeof(msg));
 
 		// Alternate the type of measurement
 		float fl = 0;
-		switch(push%4)
+		switch(push%5)
 		{
-			case 0:
-				msg.measurementType = MSR_TEMPERATURE;
-				msg.dataType        = TYPE_DOUBLE;
-				msg.unit            = UNT_CELSIUS;
-				fl                  = sense_temperature_float();
-				sprintf(msg.data, "%d.%u", (int)fl, DEC(fl));
-				break;
-			case 1:
-				msg.measurementType = MSR_HUMIDITY;
-				msg.dataType        = TYPE_DOUBLE;
-				msg.unit            = UNT_PERCENT;
-				fl                  = sense_humidity_float();
-				sprintf(msg.data, "%d.%u", (int)fl, DEC(fl));
-				break;
-			case 2:
-				msg.measurementType = MSR_LIGHT;
-				msg.dataType        = TYPE_INT;
-				msg.unit            = UNT_LUX;
-				sprintf(msg.data, "%d", sense_light());
-				break;
-			case 3:
-				msg.measurementType = MSR_INFRARED;
-				msg.dataType        = TYPE_INT;
-				msg.unit            = UNT_LUX;
-				sprintf(msg.data, "%d", sense_infrared());
-				break;
+		case 0:
+			msg.measurementType = MSR_TEMPERATURE;
+			msg.dataType        = TYPE_DOUBLE;
+			msg.unit            = UNT_CELSIUS;
+			fl                  = sense_temperature_float();
+			sprintf(msg.data, "%d.%u", (int)fl, DEC(fl));
+			break;
+		case 1:
+			msg.measurementType = MSR_HUMIDITY;
+			msg.dataType        = TYPE_DOUBLE;
+			msg.unit            = UNT_PERCENT;
+			fl                  = sense_humidity_float();
+			sprintf(msg.data, "%d.%u", (int)fl, DEC(fl));
+			break;
+		case 2:
+			msg.measurementType = MSR_LIGHT;
+			msg.dataType        = TYPE_INT;
+			msg.unit            = UNT_LUX;
+			sprintf(msg.data, "%d", sense_light());
+			break;
+		case 3:
+			msg.measurementType = MSR_INFRARED;
+			msg.dataType        = TYPE_INT;
+			msg.unit            = UNT_LUX;
+			sprintf(msg.data, "%d", sense_infrared());
+			break;
+		case 4:
+			msg.measurementType = MSR_LED;
+			msg.dataType        = TYPE_INT;
+			msg.unit            = UNT_NONE;
+			sprintf(msg.data, "%d", sense_leds());
+			break;
 		}
 		msg.id              = get_id();
 		msg.dataSize        = strlen(msg.data);
 		push++;
 
 		// In case we are on the gateway: send via serial to PC
-		gwSendNotificationSerial(&msg);
+		//gwSendNotificationSerial(&msg);
 
-		if(g_gateway != get_id())
+		/*if(g_gateway != get_id())
 		{
 			char buf[BUFFERSIZE];
 			if(bufferizeNotifyMessage(&msg, buf, sizeof(buf)) <= 0)
@@ -631,11 +669,13 @@ PROCESS_THREAD(multihop_sense, ev, data)
 
 			// Use the multihop method to send a message
 			/* Copy the "Hello" to the packet buffer. */
-			packetbuf_copyfrom(buf, strlen(buf) + 1);
+		//packetbuf_copyfrom(buf, strlen(buf) + 1);
 
-			/* Send the packet. */
-			multihop_send(&multihop, &to);
-		}
+		/* Send the packet. */
+		//multihop_send(&multihop, &to);
+		//}
+
+		sensorSendNotification(&msg);
 
 		leds_off(LEDS_BLUE);
 	}
@@ -729,7 +769,7 @@ PROCESS_THREAD(button_pressed, ev, data)
 		sense_infrared(); 
 	}
 
-exit:
+	exit:
 	leds_off(LEDS_ALL);
 	PROCESS_END();
 }

@@ -41,7 +41,8 @@ enum MeasurementType
 	MSR_LIGHT       = 6,  // acceleration measurement
 	MSR_HUMIDITY    = 7,  // humidity measurement
 	MSR_INFRARED    = 8,  // infrared measurement
-	MSR_EVENT       = 9   // a specific event is sent
+	MSR_EVENT       = 9,  // a specific event is sent
+	MSR_LED         = 10  // led status measurement
 	// ... //
 };
 

@@ -211,6 +211,7 @@ enum MeasurementType translateMeasurementType(const char* x_str)
 	if(!strcmp(x_str, "humidity"))    return MSR_HUMIDITY;
 	if(!strcmp(x_str, "infrared"))    return MSR_INFRARED;
 	if(!strcmp(x_str, "event"))       return MSR_EVENT;
+	if(!strcmp(x_str, "led"))         return MSR_LED;
 
 	printf("ERROR: Unknown measurement type %s\n", x_str);
 	return MSR_LOG;
@@ -231,6 +232,7 @@ const char* explainMeasurementType(enum MeasurementType x)
 		case MSR_HUMIDITY:    return "humidity";
 		case MSR_INFRARED:    return "infrared";
 		case MSR_EVENT:       return "event";
+		case MSR_LED:         return "led";
 	}
 	printf("ERROR: Unknown measurement type %d\n", (int)x);
 	return "unknown";
