@@ -1,7 +1,7 @@
 {
 	"gateways":[
 		{
-			"url": "localhost",
+			"url": "160.98.61.138",
 			"connection": "usb"
 		}
 	],

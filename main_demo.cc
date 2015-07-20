@@ -81,11 +81,13 @@ int main(int argc, char** argv)
 	catch(std::exception &e)
 	{
 		cerr<<"Exception caught in popwin main loop: " << e.what() << popcendl;
+		exit(0);
 		return 1;
 	}
 	catch(...)
 	{
 		cerr<<"Exception caught in popwin main loop" << popcendl;
+		exit(0);
 		return 1;
 	}
 

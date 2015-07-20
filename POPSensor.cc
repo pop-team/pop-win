@@ -245,7 +245,10 @@ void POPSensor::SubscribeToResources()
 			throw POPException("Error in JSON: direction must be \"IN\" or \"OUT\"");
 		}
 
-		if(mtype == static_cast<int>(MSR_LOG))
+		if(str == "IN" && mtype == static_cast<int>(MSR_LOG))
+			throw POPException("measurementType not found in JSON resources description");
+
+		if(str == "OUT" && ptype == static_cast<int>(PUB_UNKNOWN))
 			throw POPException("measurementType not found in JSON resources description");
 
 		// note: dataType is not mandatory
