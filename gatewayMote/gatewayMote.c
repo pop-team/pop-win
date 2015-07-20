@@ -206,7 +206,7 @@ PROCESS_THREAD(gateway_communication_process, ev, data)
 	{
 		struct PublishMessage msg;
 		memset(&msg, 0, sizeof(struct PublishMessage));
-		msg.publicationType = static_cast<PublicationType>(PUB_GW_ALIVE);
+		msg.publicationType = PUB_GW_ALIVE;
 		msg.id = g_gateway;
 		gwSendPublicationSerial(&msg);
 	}
