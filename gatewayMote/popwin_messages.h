@@ -77,8 +77,9 @@ enum PublicationType
 {
 	PUB_UNKNOWN     = 0,    // Unknown publication
 	PUB_COMMAND     = 1,    // commands can be seen as publications
-	PUB_LED         = 2,    // blink a led
-	PUB_SWITCH      = 3     // on/off a switch
+	PUB_LED         = 2,    // blink/on/off a led
+	PUB_SWITCH      = 3,     // on/off a switch
+	PUB_GW_ALIVE	= 4
 	// ... //
 };
 

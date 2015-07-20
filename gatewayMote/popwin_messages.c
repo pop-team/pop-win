@@ -304,6 +304,7 @@ enum PublicationType translatePublicationType(const char* x_str)
 	if(!strcmp(x_str, "led"))         return PUB_LED;
 	if(!strcmp(x_str, "command"))     return PUB_COMMAND;
 	if(!strcmp(x_str, "switch"))      return PUB_SWITCH;
+	if(!strcmp(x_str, "gw_alive"))    return PUB_GW_ALIVE;
 
 	printf("ERROR: Unknown publication type %s\n", x_str);
 
@@ -318,6 +319,7 @@ const char* explainPublicationType(enum PublicationType x)
 		case PUB_COMMAND    : return "command";
 		case PUB_LED        : return "led";
 		case PUB_SWITCH		: return "switch";
+		case PUB_GW_ALIVE 	: return "gw_alive";
 	}
 	printf("ERROR: Unknown publication type %d\n", (int)x);
 	return "unknown";

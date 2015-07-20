@@ -60,7 +60,7 @@ int main(int argc, char** argv)
 		of.open("outputfile.csv");
 
 		cout << "Gather temperatures..." << popcendl;
-		for(int i = 0 ; i < 10 ; i++)
+		for(int i = 0 ; i < 60 ; i++)
 		{
 			//temps = popTemp.Gather();
 			//popTemp.Clear();

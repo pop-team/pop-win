@@ -70,6 +70,7 @@ void gwHandleMessage(const char* data, char fromProxy);
 void gwHandlePublication(const char* data, char fromProxy);
 void gwHandleNotification(const char* data, char fromProxy);
 void gwHandleSubscription(const char* data, char fromProxy);
+void sensorSendNotification(struct NotifyMessage* msg);
 
 int sscanf ( const char * s, const char * format, ...);
 size_t strlen ( const char * str );
@@ -201,7 +202,14 @@ PROCESS_THREAD(gateway_communication_process, ev, data)
 	printf("+   INIT/START SERIAL COM    +\n");
 	printf("++++++++++++++++++++++++++++++\n");  
 	leds_off(LEDS_ALL);
-
+	if(g_gateway == get_id())
+	{
+		struct PublishMessage msg;
+		memset(&msg, 0, sizeof(struct PublishMessage));
+		msg.publicationType = static_cast<PublicationType>(PUB_GW_ALIVE);
+		msg.id = g_gateway;
+		gwSendPublicationSerial(&msg);
+	}
 
 	// LOG("set broadcast callback");
 	broadcast_open(&broadcast, 129, &broadcast_call);

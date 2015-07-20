@@ -217,6 +217,15 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 	{
 		switch(getMessageType(x_rawMsg.c_str()))
 		{
+		case MSG_PUBLISH:
+		{
+			PublishMessage msg;
+			if(unbufferizePublishMessage(&msg, x_rawMsg.c_str(),x_rawMsg.size()) <= 0)
+				throw POPException("Cannot unbufferize subscribe message");
+			if(msg.publicationType == static_cast<PublicationType>(PUB_GW_ALIVE))
+				cout << "Received alive signal from GW " << msg.id << popcendl;
+		}
+		break;
 		case MSG_SUBSCRIBE:
 		{
 			SubscribeMessage msg;
