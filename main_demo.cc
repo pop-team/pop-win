@@ -34,7 +34,6 @@ int main(int argc, char** argv)
 	{
 		cout << "Creating POPSensor for temperature" << popcendl;
 		POPSensor popTemp(argv[1], argv[2]);
-		POPSensorData temps;
 
 		cout << "Creating POPSensor for leds" << popcendl;
 		POPSensor popLed(argv[3], argv[4]);
@@ -61,15 +60,21 @@ int main(int argc, char** argv)
 		of.open("outputfile.csv");
 
 		cout << "Gather temperatures..." << popcendl;
-		for(int i = 1 ; i < 10 ; i++)
+		for(int i = 0 ; i < 10 ; i++)
 		{
-			temps = popTemp.Gather();
-			popTemp.Clear();
-			temps.Print();
-			temps.PrintToFile(of);
+			//temps = popTemp.Gather();
+			//popTemp.Clear();
+			//temps.Print();
+			//temps.PrintToFile(of);
+			cout << "sleeping..." << popcendl;
 			sleep(1);
 		}
 		cout << "Finished gathering temperatures" << popcendl;
+		POPSensorData temps = POPSensorData(popTemp.Gather());
+		popTemp.Clear();
+		//temps = popTemp.Gather();
+		temps.Print();
+		temps.PrintToFile(of);
 
 		of.close();
 

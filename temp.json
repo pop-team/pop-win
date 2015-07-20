@@ -10,6 +10,10 @@
 			{
 				"measurementType": "temperature",
 				"direction":   "IN"
+			},
+			{
+				"measurementType": "command",
+				"direction":   "OUT"
 			}
 		]
 	}

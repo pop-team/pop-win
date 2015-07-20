@@ -10,6 +10,10 @@
 			{
 				"measurementType": "led",
 				"direction":   "OUT"
+			},
+			{
+				"measurementType": "command",
+				"direction":   "OUT"
 			}
 		]
 	}
