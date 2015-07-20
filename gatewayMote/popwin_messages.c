@@ -298,3 +298,28 @@ const char* explainDataType(enum DataType x)
 	return "unknown";
 }
 
+// Return data types from string
+enum PublicationType translatePublicationType(const char* x_str)
+{
+	if(!strcmp(x_str, "led"))         return PUB_LED;
+	if(!strcmp(x_str, "command"))     return PUB_COMMAND;
+	if(!strcmp(x_str, "switch"))      return PUB_SWITCH;
+
+	printf("ERROR: Unknown publication type %s\n", x_str);
+
+	return PUB_UNKNOWN;
+}
+
+// String to explain data types
+const char* explainPublicationType(enum PublicationType x)
+{
+	switch(x)
+	{
+		case PUB_COMMAND    : return "command";
+		case PUB_LED        : return "led";
+		case PUB_SWITCH		: return "switch";
+	}
+	printf("ERROR: Unknown publication type %d\n", (int)x);
+	return "unknown";
+}
+

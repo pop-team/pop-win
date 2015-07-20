@@ -36,6 +36,9 @@ public:
 	// Apply a reduce function to the data {size, min, max, aver, sum, stdev}
 	sync seq double Reduce(int x_mtype, int x_dataType, int x_fct);
 
+	// Gateway can send publications to actuators
+	async seq void CanPublish(int x_publicationType);
+
 	/// Send a subscription to the connected sensor
 	async seq void Subscribe(int x_measurementType, int x_dataType);
 
@@ -60,6 +63,7 @@ private:
 	int m_id;
 	std::atomic<bool>  m_listening;
 	std::map<int,bool> m_subscriptions;
+	std::map<int,bool> m_publications;
 
 	// Different containers of data
 	POPSensorData m_sensorData;

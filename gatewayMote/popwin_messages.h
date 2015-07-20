@@ -18,7 +18,8 @@
 #define BUFFERDATASIZE 64
 
 // The id of the gateway
-#define GATEWAY_ID     158
+#define GATEWAY_ID     0
+//#define GATEWAY_ID     158
 
 /// Different types of messages
 enum MessageType
@@ -74,10 +75,18 @@ const char* explainMeasurementUnit(enum MeasurementUnit x);
 /// Different types of publication
 enum PublicationType
 {
-	PUB_COMMAND     = 0, // commands can be seen as publications
-	PUB_LED         = 1  // blink a led
+	PUB_UNKNOWN     = 0,    // Unknown publication
+	PUB_COMMAND     = 1,    // commands can be seen as publications
+	PUB_LED         = 2,    // blink a led
+	PUB_SWITCH      = 3     // on/off a switch
 	// ... //
 };
+
+/// Translate a publication type from text to enum
+enum PublicationType translatePublicationType(const char* x_str);
+
+/// Translate a measurement unit enum to text
+const char* explainPublicationType(enum PublicationType x);
 
 /// Different types of measurement
 enum DataType

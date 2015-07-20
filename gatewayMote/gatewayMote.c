@@ -206,6 +206,7 @@ PROCESS_THREAD(gateway_communication_process, ev, data)
 	// LOG("set broadcast callback");
 	broadcast_open(&broadcast, 129, &broadcast_call);
 	static char g_busy  = 0;
+	print_id();
 
 	while(1) {
 		/* Do the rest of the stuff here. */ 

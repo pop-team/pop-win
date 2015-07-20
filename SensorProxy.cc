@@ -139,7 +139,7 @@ void SensorProxy::ReadData(std::ostream& xr_ostream)
 		for(int i = 0; i < n; i++) {
 			printf("%c", buf[i]);
 		}
-		*/
+		 */
 		if(n==0)
 		{
 			// read(...) is not blocking. Add a sleep to reduce the charge when inactive
@@ -217,71 +217,71 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 	{
 		switch(getMessageType(x_rawMsg.c_str()))
 		{
-			case MSG_SUBSCRIBE:
+		case MSG_SUBSCRIBE:
+		{
+			SubscribeMessage msg;
+			if(unbufferizeSubscribeMessage(&msg, x_rawMsg.c_str()) <= 0)
+				throw POPException("Cannot unbufferize subscribe message");
+
+			throw POPException("Subscribtion messages are not handled yet");
+		}
+
+		break;
+		case MSG_NOTIFY:
+		{
+			NotifyMessage msg;
+			if(unbufferizeNotifyMessage(&msg, x_rawMsg.c_str(), x_rawMsg.size()) <= 0)
+				throw POPException("Cannot unbufferize notify message");
+
+			auto it = m_subscriptions.find(msg.measurementType);
+			bool subscribed = it != m_subscriptions.end() && it->second;
+			if(msg.measurementType == MSR_LOG)
 			{
-				SubscribeMessage msg;
-				if(unbufferizeSubscribeMessage(&msg, x_rawMsg.c_str()) <= 0)
-					throw POPException("Cannot unbufferize subscribe message");
-
-				throw POPException("Subscribtion messages are not handled yet");
+				cout << "Received log from " << msg.id << " : " << msg.data << popcendl;
+				break;
 			}
-
-			break;
-			case MSG_NOTIFY:
+			else if(!subscribed)
 			{
-				NotifyMessage msg;
-				if(unbufferizeNotifyMessage(&msg, x_rawMsg.c_str(), x_rawMsg.size()) <= 0)
-					throw POPException("Cannot unbufferize notify message");
-
-				auto it = m_subscriptions.find(msg.measurementType);
-				bool subscribed = it != m_subscriptions.end() && it->second;
-				if(msg.measurementType == MSR_LOG)
-				{
-					cout << "Received log from " << msg.id << " : " << msg.data << popcendl;
-					break;
-				}
-				else if(!subscribed)
-				{
-					// Not subscribed to this type of data
-					cout<< "Unstored notification (" << explainMeasurementType(msg.measurementType) << "): '" << msg.data << "'" << popcendl;
-					break;
-				}
-				cout<< "Stored notification   (" << explainMeasurementType(msg.measurementType) << "): '" << msg.data << "'" << popcendl;
-				switch(msg.dataType)
-				{
-					case TYPE_DOUBLE:
-					{
-						std::pair<RecordHeader, double> pair(RecordHeader(ms, msg), atof(msg.data));
-						m_sensorData.Insert(pair); 
-						break;
-					}
-					case TYPE_INT:
-					{
-						std::pair<RecordHeader, int> pair(RecordHeader(ms, msg), atoi(msg.data)); 
-						m_sensorData.Insert(pair); 
-						break;
-					}
-					case TYPE_STRING:
-					{
-						std::pair<RecordHeader, std::string> pair(RecordHeader(ms, msg), std::string(msg.data));
-						m_sensorData.Insert(pair); 
-						break;
-					}
-					default:
-						printf("Unknown data type %d in %s\n", msg.dataType, x_rawMsg.c_str());
-				}
+				// Not subscribed to this type of data
+				cout<< "Unstored notification (" << explainMeasurementType(msg.measurementType) << "): '" << msg.data << "'" << popcendl;
+				break;
 			}
-			break;
+			cout<< "Stored notification   (" << explainMeasurementType(msg.measurementType) << "): '" << msg.data << "'" << popcendl;
+			switch(msg.dataType)
+			{
+			case TYPE_DOUBLE:
+			{
+				std::pair<RecordHeader, double> pair(RecordHeader(ms, msg), atof(msg.data));
+				m_sensorData.Insert(pair);
+				break;
+			}
+			case TYPE_INT:
+			{
+				std::pair<RecordHeader, int> pair(RecordHeader(ms, msg), atoi(msg.data));
+				m_sensorData.Insert(pair);
+				break;
+			}
+			case TYPE_STRING:
+			{
+				std::pair<RecordHeader, std::string> pair(RecordHeader(ms, msg), std::string(msg.data));
+				m_sensorData.Insert(pair);
+				break;
+			}
 			default:
-				// Unknown message: print
-				cout << "Received raw message: '" << x_rawMsg << "'" << popcendl;
+				printf("Unknown data type %d in %s\n", msg.dataType, x_rawMsg.c_str());
+			}
+		}
+		break;
+		default:
+			// Unknown message: print
+			cout << "Received raw message: '" << x_rawMsg << "'" << popcendl;
 		}
 	}
 	catch(std::exception &e)
 	{
 		cout << "Error at reception of message '" << x_rawMsg << "': " << e.what() << popcendl;
 	}
-	
+
 }
 
 
@@ -308,6 +308,18 @@ void SensorProxy::Notify(int x_measurementType, int x_measurementUnit, const std
 /// Send a publication to the gateway
 void SensorProxy::Publish(int x_publicationType, int x_data)
 {
+	enum PublicationType pubType = static_cast<PublicationType>(x_publicationType);
+	// Check publication rights
+	auto it = m_publications.find(pubType);
+	bool canPublish = it != m_publications.end() && it->second;
+
+	if(!canPublish)
+	{
+		// Not subscribed to this type of data
+		cout<< "Cannot publish " << explainPublicationType(pubType) << " commands" << popcendl;
+		return;
+	}
+
 	struct PublishMessage msg;
 	memset(&msg, 0, sizeof(struct PublishMessage));
 	sprintf(msg.data, "%d", x_data);
@@ -360,6 +372,12 @@ void SensorProxy::Publish(int x_publicationType, const string& x_data)
 	SendRawData(buffer);
 }
 
+/// Gateway can send publications to actuators (== actuators subscribed to gateway)
+void SensorProxy::CanPublish(int x_publicationType)
+{
+	m_publications[x_publicationType] = true;
+}
+
 /// Send a subscription to the gateway
 void SensorProxy::Subscribe(int x_measurementType, int x_dataType)
 {
@@ -391,11 +409,11 @@ double SensorProxy::Reduce(int x_mtype, int x_dataType, int x_fct)
 {
 	switch(x_dataType)
 	{
-		case TYPE_INT:
+	case TYPE_INT:
 		return m_sensorData.Reduce<int>(static_cast<enum MeasurementType>(x_mtype), static_cast<POPSensorData::POPReduceF>(x_fct));
-		case TYPE_DOUBLE:
+	case TYPE_DOUBLE:
 		return m_sensorData.Reduce<int>(static_cast<enum MeasurementType>(x_mtype), static_cast<POPSensorData::POPReduceF>(x_fct));
-		default:
+	default:
 		throw POPException("No reduce operation for type " + string(explainDataType(static_cast<enum DataType>(x_dataType))));
 	}
 }

@@ -2,7 +2,7 @@ POPCC=popcc -cpp11 -g -no-async-allocation
 INC=-IlineComm -I/usr/include/jsoncpp
 LIBS=-ljsoncpp
 
-all: POPSensor.obj SensorProxy.obj main main_example main_plot objects.map
+all: POPSensor.obj SensorProxy.obj main main_example main_plot main_demo objects.map
 
 clean:
 	rm -f *.o *.obj main objects.map
@@ -37,6 +37,9 @@ main_example: main_example.o POPSensor.stub.o SensorProxy.stub.o popwin_messages
 
 main_plot: main_plot.o POPSensorData.o popwin_messages.o
 	${POPCC} ${INC} -o main_plot main_plot.o popwin_messages.o POPSensorData.o ${LIBS}
+	
+main_demo: main_demo.o POPSensor.stub.o SensorProxy.stub.o popwin_messages.o POPSensorData.o
+	${POPCC} ${INC} -o main_demo main_demo.o POPSensor.stub.o SensorProxy.stub.o popwin_messages.o POPSensorData.o ${LIBS}
 
 objects.map: POPSensor.obj SensorProxy.obj
 	./POPSensor.obj -listlong > objects.map
@@ -44,6 +47,9 @@ objects.map: POPSensor.obj SensorProxy.obj
 
 run:
 	popcrun objects.map ./main resources.json
+	
+demo:
+	popcrun objects.map ./main_demo 160.98.61.138 temp.json 160.98.61.128 led.json
 
 documentation:
 	ln -s POPSensor.ph POPSensor.h

@@ -223,13 +223,22 @@ void POPSensor::SubscribeToResources()
 
 	for(int i = 0 ; i < root["wsns"]["nodes"].size() ; i++)
 	{
-		enum MeasurementType mtype = translateMeasurementType(root["wsns"]["nodes"][i].get("measurementType", "log").asString().c_str());
-		enum DataType dtype        = translateDataType       (root["wsns"]["nodes"][i].get("dataType", "unknown").asString().c_str());
+		enum MeasurementType mtype;
+		enum DataType dtype;
+		enum PublicationType ptype;
 		bool incoming              = false;
+		bool outgoing			   = false;
 		string str = root["wsns"]["nodes"][i].get("direction", "<not found>").asString();
 		if(str == "IN")
 		{
 			incoming = true;
+			mtype = translateMeasurementType(root["wsns"]["nodes"][i].get("measurementType", "log").asString().c_str());
+			dtype = translateDataType(root["wsns"]["nodes"][i].get("dataType", "unknown").asString().c_str());
+		}
+		else if(str == "OUT")
+		{
+			outgoing = true;
+			ptype = translatePublicationType(root["wsns"]["nodes"][i].get("measurementType", "unknown").asString().c_str());
 		}
 		else if(str != "OUT")
 		{
@@ -250,6 +259,11 @@ void POPSensor::SubscribeToResources()
 			{
 				cout << "Gateway " << 1000 + cpt << " subscribes to " << explainMeasurementType(mtype) << " type:" << explainDataType(dtype) << " direction:" << (incoming ? "IN" : "OUT") << popcendl;
 				it->Subscribe(mtype, dtype);
+			}
+			if(outgoing)
+			{
+				cout << "Gateway " << 1000 + cpt << " can publish " << explainPublicationType(ptype) << " commands," << " direction:" << (incoming ? "IN" : "OUT") << popcendl;
+				it->CanPublish(ptype);
 			}
 			cpt++;
 		}
