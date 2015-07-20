@@ -1,0 +1,17 @@
+{
+	"gateways":[
+		{
+			"url": "localhost",
+			"connection": "usb"
+		}
+	],
+	"wsns":{
+		"nodes":[
+			{
+				"measurementType": "led",
+				"direction":   "OUT"
+			}
+		]
+	}
+}
+
