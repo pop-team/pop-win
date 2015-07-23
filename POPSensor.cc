@@ -240,7 +240,7 @@ void POPSensor::SubscribeToResources()
 			outgoing = true;
 			ptype = translatePublicationType(root["wsns"]["nodes"][i].get("measurementType", "unknown").asString().c_str());
 		}
-		else if(str != "OUT")
+		else
 		{
 			throw POPException("Error in JSON: direction must be \"IN\" or \"OUT\"");
 		}

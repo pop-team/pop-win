@@ -12,10 +12,33 @@
 				"direction":   "IN"
 			},
 			{
+				"measurementType": "humidity",
+				"direction":   "IN"
+			},
+			{
+				"measurementType": "light",
+				"direction":   "IN"
+			},
+			{
+				"measurementType": "infrared",
+				"direction":   "IN"
+			},
+			{
+				"measurementType": "event",
+				"direction":   "IN"
+			},
+			{
+				"measurementType": "test",
+				"direction":   "IN"
+			},
+			{
+				"measurementType": "led",
+				"direction":   "IN"
+			},
+			{
 				"measurementType": "command",
 				"direction":   "OUT"
 			}
 		]
 	}
 }
-

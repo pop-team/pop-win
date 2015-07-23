@@ -172,6 +172,7 @@ AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &communicat
 #else
 // Processes to use the routing of messages given by the multihop example
 AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &multihop_announce, &multihop_sense);
+#endif
 
 static void
 broadcast_recvGM(struct broadcast_conn *c, const rimeaddr_t *from)
@@ -183,7 +184,7 @@ broadcast_recvGM(struct broadcast_conn *c, const rimeaddr_t *from)
 
 static const struct broadcast_callbacks broadcast_call = {broadcast_recvGM};
 static struct broadcast_conn broadcast;
-#endif
+
 /*---------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------*/
@@ -202,6 +203,7 @@ PROCESS_THREAD(gateway_communication_process, ev, data)
 	printf("+   INIT/START SERIAL COM    +\n");
 	printf("++++++++++++++++++++++++++++++\n");  
 	leds_off(LEDS_ALL);
+	// If we are the GW, broadcast we are available to communicate via serial line
 	if(g_gateway == get_id())
 	{
 		struct PublishMessage msg;
@@ -581,9 +583,10 @@ PROCESS_THREAD(multihop_announce, ev, data)
 	multihop_open(&multihop, CHANNEL, &multihop_call);
 
 	static struct etimer et;
+	const unsigned int WAIT_ANNOUNCE = 15;
 
 	while(1){
-		etimer_set(&et, 22 * CLOCK_SECOND);
+		etimer_set(&et, WAIT_ANNOUNCE * CLOCK_SECOND);
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
 		leds_on(LEDS_GREEN);
@@ -612,8 +615,10 @@ PROCESS_THREAD(multihop_sense, ev, data)
 
 	static uint8_t push = 0;	// Keeps the number of times the user pushes the button sensor
 
+	const unsigned int WAIT_SENSE = 10;
+
 	while(1){
-		etimer_set(&et, 30 * CLOCK_SECOND);
+		etimer_set(&et, WAIT_SENSE * CLOCK_SECOND);
 		// PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et) || ((ev==sensors_event) && (data == &button_sensor)));
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
@@ -736,6 +741,7 @@ PROCESS_THREAD(button_pressed, ev, data)
 		gwSendNotificationSerial(&msg);
 
 		if(g_gateway != get_id())
+		//if(0)
 		{
 			char buf[BUFFERSIZE];
 			if(bufferizeNotifyMessage(&msg, buf, sizeof(buf)) <= 0)

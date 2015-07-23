@@ -49,7 +49,7 @@ run:
 	popcrun objects.map ./main resources.json
 	
 demo:
-	popcrun objects.map ./main_demo 160.98.61.138 temp.json 160.98.61.128 led.json
+	popcrun objects.map ./main_demo 160.98.61.138 temp.json 160.98.61.172 led.json
 
 documentation:
 	ln -s POPSensor.ph POPSensor.h
