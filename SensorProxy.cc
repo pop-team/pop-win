@@ -29,6 +29,8 @@
 // Note: check baudrate of USB port with : stty -F /dev/ttyUSB0
 #define BAUDRATE B115200
 
+//#define EN_COUTS 1 // enable cout to std out, comment to disable
+
 using namespace std;
 
 /// Constructor
@@ -246,16 +248,22 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 			bool subscribed = it != m_subscriptions.end() && it->second;
 			if(msg.measurementType == MSR_LOG)
 			{
-				cout << "Received log from " << msg.id << " : " << msg.data << popcendl;
+//#ifdef EN_COUTS
+				cout << "Proxy received log from " << msg.id << " : " << msg.data << popcendl;
+//#endif
 				break;
 			}
 			else if(!subscribed)
 			{
 				// Not subscribed to this type of data
+#ifdef EN_COUTS
 				cout<< "Unstored notification (" << explainMeasurementType(msg.measurementType) << "): '" << msg.data << "'" << popcendl;
+#endif
 				break;
 			}
+#ifdef EN_COUTS
 			cout<< "Stored notification   (" << explainMeasurementType(msg.measurementType) << "): '" << msg.data << "'" << popcendl;
+#endif
 			switch(msg.dataType)
 			{
 			case TYPE_DOUBLE:
@@ -281,9 +289,12 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 			}
 		}
 		break;
+
+#ifdef EN_COUTS
 		default:
 			// Unknown message: print
-			cout << "Received raw message: '" << x_rawMsg << "'" << popcendl;
+			cout << "Proxy received raw message: '" << x_rawMsg << "'" << popcendl;
+#endif
 		}
 	}
 	catch(std::exception &e)

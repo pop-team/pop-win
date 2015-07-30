@@ -346,7 +346,7 @@ broadcast_recv(struct broadcast_conn *c, const rimeaddr_t *from)
 
 			printf("Asked to apply tag %d\n",msg->tag);
 			if ((int)node_id != DATABASE)tag = msg->tag;
-			leds_on(LEDS_RED);
+			//leds_on(LEDS_RED);
 
 			break;
 
@@ -455,7 +455,7 @@ static const struct unicast_callbacks unicast_callbacks = {recv_uc};
 uint16_t sense_light(){
 	SENSORS_ACTIVATE(light_sensor);
 	unsigned int value = light_sensor.value(LIGHT_SENSOR_PHOTOSYNTHETIC);
-	DEBUG("Light value: %u", value);
+	//DEBUG("Light value: %u", value);
 	SENSORS_DEACTIVATE(light_sensor);
 
 	return value;
@@ -464,7 +464,7 @@ uint16_t sense_light(){
 uint16_t sense_infrared(){
 	SENSORS_ACTIVATE(light_sensor);
 	unsigned int value = light_sensor.value(LIGHT_SENSOR_TOTAL_SOLAR);
-	DEBUG("Infrared value: %u", value);
+	//DEBUG("Infrared value: %u", value);
 	SENSORS_DEACTIVATE(light_sensor);
 
 	return value;
@@ -489,7 +489,7 @@ uint16_t sense_temperature(){
 	// SEND( "{\"status\":\"OK\", \"infos\":{\"temperature\":\"%c%d.%04d\"}}", minus, tempint, tempfrac);
 
 	unsigned int value = (unsigned int) (-39.60 + 0.01 * sht11_temp());
-	DEBUG("sense temperature %u", value);
+	//DEBUG("sense temperature %u", value);
 	return value;
 }
 
@@ -525,21 +525,21 @@ float sense_temperature_float(){
 	   value = -39.60 + 0.01 * sht11_temp();
 	 */
 	float value = -39.60 + 0.01 * sht11_temp();
-	DEBUG("sense temperature %d.%u (%u)", (int)value, DEC(value), sht11_temp());
+	//DEBUG("sense temperature %d.%u (%u)", (int)value, DEC(value), sht11_temp());
 	return value;
 }
 
 uint16_t sense_humidity(){
 	unsigned int rh = sht11_humidity();
 	unsigned int value = -4 + 0.0405*rh - 2.8e-6*(rh*rh);
-	DEBUG("sense humidity %u percent (%u)", value, rh);
+	//DEBUG("sense humidity %u percent (%u)", value, rh);
 	return value;
 }
 
 float sense_humidity_float(){
 	unsigned int rh = sht11_humidity();
 	float value = -4 + 0.0405*rh - 2.8e-6*(rh*rh);
-	DEBUG("sense humidity %d.%u percent (%u)", (int)value, DEC(value), rh);
+	//DEBUG("sense humidity %d.%u percent (%u)", (int)value, DEC(value), rh);
 	return value;
 }
 
@@ -730,7 +730,7 @@ PROCESS_THREAD(drw, ev, data)
 	visited = 0;
 	tag = 0;	//not part of DRW
 	if ((int)node_id == DATABASE) tag = DATABASE_TAG;
-	leds_off(LEDS_ALL);
+	//leds_off(LEDS_ALL);
 
 	static struct etimer et;
 
@@ -752,8 +752,8 @@ PROCESS_THREAD(drw, ev, data)
 			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
 			printf("Starting the DRW\n");
-			leds_on(LEDS_RED);
-			leds_on(LEDS_BLUE);
+			//leds__on(LEDS_RED);
+			//leds_on(LEDS_BLUE);
 
 			tag = 1;
 			send_broadcast(BROADCAST_APPLY_TAG);
@@ -789,8 +789,8 @@ PROCESS_THREAD(drw, ev, data)
 			printf("Message string  when sensing is: %s\n", message.message_string);
 
 			forward_message(&message);
-			leds_off(LEDS_BLUE);
-			leds_toggle(LEDS_ALL);
+			//leds_off(LEDS_BLUE);
+			//leds_toggle(LEDS_ALL);
 
 			state = IDLE;
 
@@ -799,7 +799,7 @@ PROCESS_THREAD(drw, ev, data)
 
 			// Id DATABASE is the id of the gateway
 			if ((int)node_id == DATABASE) {
-				leds_on(LEDS_RED);
+				//leds_on(LEDS_RED);
 				printf("Message has reached the gateway!\n");
 				printf("Message is: %u\n", message_to_forward.message);
 				printf("Value is: %u\n", message_to_forward.value);
@@ -828,7 +828,7 @@ PROCESS_THREAD(drw, ev, data)
 				// printf("message sent to gw %d\n",message_to_forward.message);
 
 				state=IDLE;
-				leds_off(LEDS_RED);
+				//leds_off(LEDS_RED);
 
 			} else if (event_sent == 1 && message_to_forward.message == 100) {
 				// if an event is present and message == 100 (an event is produced)
@@ -842,13 +842,13 @@ PROCESS_THREAD(drw, ev, data)
 				printf("Nodeid of publisher is: %u\n", message_to_forward.nodeid);
 
 				//Toggle the LEDs
-				leds_toggle(LEDS_ALL);
-				leds_toggle(LEDS_ALL);
+				//leds_toggle(LEDS_ALL);
+				//leds_toggle(LEDS_ALL);
 
 				event_sent  = 0;
 
 				state=IDLE;
-				leds_on(LEDS_ALL);
+				//leds_on(LEDS_ALL);
 
 			}else {
 
@@ -856,7 +856,7 @@ PROCESS_THREAD(drw, ev, data)
 				struct Message sendevent;
 				memcpy(&sendevent, &message_to_forward, sizeof(message_to_forward)); // copy as a safety
 
-				leds_on(LEDS_BLUE);
+				//leds_on(LEDS_BLUE);
 				list_init(neighbors_list);
 
 				send_broadcast(BROADCAST_MAKE_CANDIDATE);
@@ -869,12 +869,12 @@ PROCESS_THREAD(drw, ev, data)
 				send_broadcast(BROADCAST_APPLY_TAG);
 
 				state = IDLE;
-				leds_off(LEDS_BLUE);
+				//leds_off(LEDS_BLUE);
 			}
 
 		} else if(state == CANDIDATE_NODE){
 
-			leds_on(LEDS_GREEN);
+			//leds_on(LEDS_GREEN);
 
 			send_broadcast(BROADCAST_ASK_TAG);
 
@@ -884,7 +884,7 @@ PROCESS_THREAD(drw, ev, data)
 			send_weight();
 
 			state = IDLE;
-			leds_off(LEDS_GREEN);
+			//leds_off(LEDS_GREEN);
 
 		} else if(state == SEND_EVENT){
 
@@ -896,8 +896,8 @@ PROCESS_THREAD(drw, ev, data)
 			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
 			printf("Starting the DRW for event\n");
-			leds_on(LEDS_RED);
-			leds_on(LEDS_BLUE);
+			//leds_on(LEDS_RED);
+			//leds_on(LEDS_BLUE);
 			tag = 1;
 			send_broadcast(BROADCAST_APPLY_TAG);
 
@@ -910,8 +910,8 @@ PROCESS_THREAD(drw, ev, data)
 			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
 			forward_message(&sendevent);
-			leds_off(LEDS_BLUE);
-			leds_toggle(LEDS_ALL);
+			//leds_off(LEDS_BLUE);
+			//leds_toggle(LEDS_ALL);
 
 			state = IDLE;
 		} else if(state == GW_NOTIFICATION){
@@ -922,8 +922,8 @@ PROCESS_THREAD(drw, ev, data)
 			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
 			printf("Starting the DRW for toggle LEDs due to event\n");
-			leds_on(LEDS_RED);
-			leds_on(LEDS_BLUE);
+			//leds_on(LEDS_RED);
+			//leds_on(LEDS_BLUE);
 			tag = 1;
 			send_broadcast(BROADCAST_APPLY_TAG);
 
@@ -941,8 +941,8 @@ PROCESS_THREAD(drw, ev, data)
 			message_to_forward.nodeid = node_id;	
 			snprintf(message_to_forward.message_string, sizeof(message_to_forward.message_string), "Toggle");
 			forward_message(&message_to_forward);
-			leds_off(LEDS_BLUE);
-			leds_toggle(LEDS_ALL);
+			//leds_off(LEDS_BLUE);
+			//leds_toggle(LEDS_ALL);
 
 			state = IDLE;
 		}

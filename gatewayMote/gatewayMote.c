@@ -44,6 +44,9 @@
 
 #define ABS(x) ((x) < 0 ? (-x) : (x))
 
+//#define EN_LOGS 1 // enable log messages, comment to disable
+//#define EN_DEBUG 1 // enable debug messages, comment to disable
+
 /****************************/
 /*** COMMANDS TO BE CALLED  */
 /****************************/
@@ -172,13 +175,22 @@ AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &communicat
 #else
 // Processes to use the routing of messages given by the multihop example
 AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &multihop_announce, &multihop_sense);
+//AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &multihop_sense);
 #endif
 
 static void
 broadcast_recvGM(struct broadcast_conn *c, const rimeaddr_t *from)
 {
-	printf("broadcast message received from %d.%d: '%s'\n",from->u8[0], from->u8[1], (char *)packetbuf_dataptr());
+	//printf("broadcast message received from %d.%d: '%s'\n",from->u8[0], from->u8[1], (char *)packetbuf_dataptr());
 	//	leds_toggle(LEDS_GREEN);
+	if(g_gateway == get_id())
+	{
+		printf("received broadcast on GW\n");
+	}
+	else
+	{
+		printf("received broadcast on sensor\n");
+	}
 	gwHandleMessage((char *)packetbuf_dataptr(), 1); // careful with parameter fromProxy ! (here 1)
 }
 
@@ -202,7 +214,7 @@ PROCESS_THREAD(gateway_communication_process, ev, data)
 	printf("++++++++++++++++++++++++++++++\n");
 	printf("+   INIT/START SERIAL COM    +\n");
 	printf("++++++++++++++++++++++++++++++\n");  
-	leds_off(LEDS_ALL);
+	//leds_off(LEDS_ALL);
 	// If we are the GW, broadcast we are available to communicate via serial line
 	if(g_gateway == get_id())
 	{
@@ -211,10 +223,14 @@ PROCESS_THREAD(gateway_communication_process, ev, data)
 		msg.publicationType = PUB_GW_ALIVE;
 		msg.id = g_gateway;
 		gwSendPublicationSerial(&msg);
+
+#ifdef EN_LOGS
+		LOG("set broadcast callback");
+#endif
 	}
 
-	// LOG("set broadcast callback");
 	broadcast_open(&broadcast, 129, &broadcast_call);
+
 	static char g_busy  = 0;
 	print_id();
 
@@ -225,15 +241,18 @@ PROCESS_THREAD(gateway_communication_process, ev, data)
 		// printf("RECEIVED DATA\n");
 		if(data == NULL)
 		{
+#ifdef EN_LOGS
 			LOG("Received empty data");
+#endif
 			continue;
 		}
 
 		if(g_busy == 0)
 		{
 			g_busy = 1;
+#ifdef EN_DEBUG
 			DEBUG("The mote received an interruption on serial line: %s", data);
-
+#endif
 			// We received a message from gateway:
 			gwHandleMessage(data, 1);
 			g_busy = 0;
@@ -241,8 +260,11 @@ PROCESS_THREAD(gateway_communication_process, ev, data)
 		else ERROR("Device is busy. Cannot process message");
 	}		
 	exit:
-	LOG("Exiting process");
-	leds_off(LEDS_ALL);
+#ifdef EN_LOGS
+	LOG("Exiting process gateway_communication_process");
+#endif
+	//leds_off(LEDS_ALL);
+	broadcast_close(&broadcast);
 	PROCESS_END();
 }
 
@@ -252,7 +274,9 @@ PROCESS_THREAD(gateway_communication_process, ev, data)
 void gwHandleMessage(const char* data, char fromProxy)
 {
 	enum MessageType mt = getMessageType(data);
+#ifdef EN_DEBUG
 	DEBUG("Handle msg type %d", getMessageType(data));
+#endif
 	switch(mt)
 	{
 	case MSG_SUBSCRIBE:
@@ -287,7 +311,9 @@ void gwHandleNotification(const char* data, char fromProxy)
 		// 
 		// note: the forwarding of messages to the network of sensors is not implemented yet
 		//
+#ifdef EN_LOGS
 		LOG("Proxy has sent notification: %s", data);
+#endif
 	}
 	else gwSendNotificationSerial(&msg);
 }
@@ -312,7 +338,9 @@ void gwHandleSubscription(const char* data, char fromProxy)
 		// 
 		// note: the forwarding of messages to the network of sensors is not implemented yet
 		//
+#ifdef EN_LOGS
 		LOG("Proxy has sent subscription to %s", explainMeasurementType(msg.measurementType));
+#endif
 	}
 	else gwSendSubscriptionSerial(&msg);
 }
@@ -327,7 +355,9 @@ void gwHandlePublication(const char* data, char fromProxy)
 	if(unbufferizePublishMessage(&msg, data, sizeof(data)) <= 0)
 		ERROR("Cannot read message from buffer");
 
+#ifdef EN_DEBUG
 	DEBUG("Handle publication dataType=%d", msg.dataType);
+#endif
 
 	if(!fromProxy)
 	{
@@ -335,12 +365,27 @@ void gwHandlePublication(const char* data, char fromProxy)
 		return;
 	}
 
+	int isGWCmd = 0;
+	if(msg.dataType == TYPE_INT && msg.publicationType == PUB_COMMAND)
+	{
+		int dataInt = atoi(msg.data);
+		if(dataInt == 8)
+			isGWCmd = 1;
+	}
+
 	// If on GW and the message comes from the Proxy --> forward it
-	if(g_gateway == get_id())
+	// do not rebroadcast set_as_gateway command
+	if(g_gateway == get_id() && !isGWCmd)
 	{
 		packetbuf_copyfrom(data, strlen(data) + 1);
 		broadcast_send(&broadcast);
-		LOG("broadcast message sent");
+		//#ifdef EN_LOGS
+		LOG("broadcast message sent from GW to sensors");
+		//#endif
+	}
+	else
+	{
+		printf("on sensor, don't broadcast\n");
 	}
 
 	switch(msg.dataType)
@@ -357,7 +402,18 @@ void gwHandlePublication(const char* data, char fromProxy)
 		{
 		case PUB_LED:
 		{
-			DEBUG("Blink led %d", dataInt);
+			//#ifdef EN_DEBUG
+			if(g_gateway == get_id())
+			{
+				DEBUG("On GW, blink led %d", dataInt);
+				//printf("On GW, blink led %d\n", dataInt);
+			}
+			else
+			{
+				DEBUG("On sensor, blink led %d", dataInt);
+				//printf("On sensor, blink led %d\n", dataInt);
+			}
+			//#endif
 			switch(dataInt)
 			{
 			case 0:
@@ -369,6 +425,12 @@ void gwHandlePublication(const char* data, char fromProxy)
 			case 2:
 				leds_toggle(LEDS_RED);
 				break;
+			case 3:
+				leds_off(LEDS_ALL);
+				break;
+			case 4:
+				leds_on(LEDS_ALL);
+				break;
 			default:
 				leds_toggle(LEDS_ALL);
 			}
@@ -377,7 +439,9 @@ void gwHandlePublication(const char* data, char fromProxy)
 		case PUB_COMMAND:
 		{
 			// Commands can be seen as a type of publication
+//#ifdef EN_DEBUG
 			DEBUG("Call command %d", dataInt);
+//#endif
 			if(dataInt >= 0 && dataInt < NB_COMMANDS)
 				g_commands[dataInt]();
 			else
@@ -510,7 +574,9 @@ void send_broadcast_cmd(){
 	// note: this is only used as a test
 	packetbuf_copyfrom("Hello", 6);
 	broadcast_send(&broadcast);
+#ifdef EN_LOGS
 	LOG("broadcast message sent");
+#endif
 }
 
 /*
@@ -529,8 +595,120 @@ void set_as_gateway(){
 	LOG("Design as gateway %s", g_gateway == get_id() ? "on" : "off");
 }
 
+#define CHANNEL 135
 
-#include "example-multihop.c"
+struct example_neighbor {
+	struct example_neighbor *next;
+	rimeaddr_t addr;
+	struct ctimer ctimer;
+};
+
+#define NEIGHBOR_TIMEOUT 60 * CLOCK_SECOND
+#define MAX_NEIGHBORS 16
+LIST(neighbor_table);
+MEMB(neighbor_mem, struct example_neighbor, MAX_NEIGHBORS);
+/*---------------------------------------------------------------------------*/
+/*
+ * This function is called by the ctimer present in each neighbor
+ * table entry. The function removes the neighbor from the table
+ * because it has become too old.
+ */
+static void
+remove_neighbor(void *n)
+{
+	struct example_neighbor *e = n;
+
+	list_remove(neighbor_table, e);
+	memb_free(&neighbor_mem, e);
+}
+/*---------------------------------------------------------------------------*/
+/*
+ * This function is called when an incoming announcement arrives. The
+ * function checks the neighbor table to see if the neighbor is
+ * already present in the list. If the neighbor is not present in the
+ * list, a new neighbor table entry is allocated and is added to the
+ * neighbor table.
+ */
+static void
+received_announcement(struct announcement *a,
+		const rimeaddr_t *from,
+		uint16_t id, uint16_t value)
+{
+	struct example_neighbor *e;
+
+	/*  printf("Got announcement from %d.%d, id %d, value %d\n",
+      from->u8[0], from->u8[1], id, value);*/
+
+	/* We received an announcement from a neighbor so we need to update
+     the neighbor list, or add a new entry to the table. */
+	for(e = list_head(neighbor_table); e != NULL; e = e->next) {
+		if(rimeaddr_cmp(from, &e->addr)) {
+			/* Our neighbor was found, so we update the timeout. */
+			ctimer_set(&e->ctimer, NEIGHBOR_TIMEOUT, remove_neighbor, e);
+			return;
+		}
+	}
+
+	/* The neighbor was not found in the list, so we add a new entry by
+     allocating memory from the neighbor_mem pool, fill in the
+     necessary fields, and add it to the list. */
+	e = memb_alloc(&neighbor_mem);
+	if(e != NULL) {
+		rimeaddr_copy(&e->addr, from);
+		list_add(neighbor_table, e);
+		ctimer_set(&e->ctimer, NEIGHBOR_TIMEOUT, remove_neighbor, e);
+	}
+}
+static struct announcement example_announcement;
+/*---------------------------------------------------------------------------*/
+/*
+ * This function is called at the final recepient of the message.
+ */
+static void
+recv(struct multihop_conn *c, const rimeaddr_t *sender,
+		const rimeaddr_t *prevhop,
+		uint8_t hops)
+{
+	//printf("multihop message received '%s'\n", (char *)packetbuf_dataptr());// TODO activate to get log
+}
+/*
+ * This function is called to forward a packet. The function picks a
+ * random neighbor from the neighbor list and returns its address. The
+ * multihop layer sends the packet to this address. If no neighbor is
+ * found, the function returns NULL to signal to the multihop layer
+ * that the packet should be dropped.
+ */
+static rimeaddr_t *
+forward(struct multihop_conn *c,
+		const rimeaddr_t *originator, const rimeaddr_t *dest,
+		const rimeaddr_t *prevhop, uint8_t hops)
+{
+	/* Find a random neighbor to send to. */
+	int num, i;
+	struct example_neighbor *n;
+
+	if(list_length(neighbor_table) > 0) {
+		num = random_rand() % list_length(neighbor_table);
+		i = 0;
+		for(n = list_head(neighbor_table); n != NULL && i != num; n = n->next) {
+			++i;
+		}
+		if(n != NULL) {
+			printf("%d.%d: Forwarding packet to %d.%d (%d in list), hops %d\n",
+					rimeaddr_node_addr.u8[0], rimeaddr_node_addr.u8[1],
+					n->addr.u8[0], n->addr.u8[1], num,
+					packetbuf_attr(PACKETBUF_ATTR_HOPS));
+			return &n->addr;
+		}
+	}
+	printf("%d.%d: did not find a neighbor to foward to\n",
+			rimeaddr_node_addr.u8[0], rimeaddr_node_addr.u8[1]);
+	return NULL;
+}
+
+//#include "example-multihop.c"
+static const struct multihop_callbacks multihop_call = {recv, forward};
+static struct multihop_conn multihop;
 
 void sensorSendNotification(struct NotifyMessage* msg)
 {
@@ -539,9 +717,10 @@ void sensorSendNotification(struct NotifyMessage* msg)
 	to.u8[0] = GATEWAY_ID; // ID of our gateway
 	to.u8[1] = 0;
 
-	// In case we are on the gateway: send via serial to PC
-	gwSendNotificationSerial(msg);
+	// In case we are on the gateway/sensor: send via serial to PC
+	//gwSendNotificationSerial(msg); // TODO activate to get log
 
+	// if on sensor
 	if(g_gateway != get_id())
 	{
 		char buf[BUFFERSIZE];
@@ -560,7 +739,9 @@ void sensorSendNotification(struct NotifyMessage* msg)
 unsigned char sense_leds()
 {
 	unsigned char value = leds_get();
+#ifdef EN_DEBUG
 	DEBUG("sense leds status %u", value);
+#endif
 	return value;
 }
 
@@ -570,7 +751,8 @@ unsigned char sense_leds()
 
 PROCESS_THREAD(multihop_announce, ev, data)
 {
-	PROCESS_BEGIN();
+	PROCESS_EXITHANDLER(multihop_close(&multihop);)
+			PROCESS_BEGIN();
 
 	// Init for multihop -----
 	/* Initialize the memory for the neighbor table entries. */
@@ -583,13 +765,13 @@ PROCESS_THREAD(multihop_announce, ev, data)
 	multihop_open(&multihop, CHANNEL, &multihop_call);
 
 	static struct etimer et;
-	const unsigned int WAIT_ANNOUNCE = 15;
+	const unsigned int WAIT_ANNOUNCE = 10;
+
+	int count = 0;
 
 	while(1){
-		etimer_set(&et, WAIT_ANNOUNCE * CLOCK_SECOND);
-		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-		leds_on(LEDS_GREEN);
+		//leds_on(LEDS_RED);
 		/* Register an announcement with the same announcement ID as the
 		   Rime channel we use to open the multihop connection above. */
 		announcement_register(&example_announcement,
@@ -598,7 +780,18 @@ PROCESS_THREAD(multihop_announce, ev, data)
 
 		/* Set a dummy value to start sending out announcments. */
 		announcement_set_value(&example_announcement, 0);
-		leds_off(LEDS_GREEN);
+		//leds_off(LEDS_RED);
+		if(count >= 5)
+		{
+			etimer_set(&et, WAIT_ANNOUNCE * CLOCK_SECOND);
+			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+		}
+		else
+		{
+			etimer_set(&et, CLOCK_SECOND);
+			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+			count++;
+		}
 	}
 	PROCESS_END();
 }
@@ -608,12 +801,33 @@ PROCESS_THREAD(multihop_announce, ev, data)
 
 PROCESS_THREAD(multihop_sense, ev, data)
 {
+	//PROCESS_EXITHANDLER(multihop_close(&multihop);)
 	PROCESS_BEGIN();
+	//leds_on(LEDS_GREEN);
+	/* -------------------------------------------------- */
+	// Init for multihop -----
+	/* Initialize the memory for the neighbor table entries. */
+	//memb_init(&neighbor_mem);
 
+	/* Initialize the list used for the neighbor table. */
+	//list_init(neighbor_table);
 
+	/* Open a multihop connection on Rime channel CHANNEL. */
+	//multihop_open(&multihop, CHANNEL, &multihop_call);
+
+	/* Register an announcement with the same announcement ID as the
+				   Rime channel we use to open the multihop connection above. */
+	/*announcement_register(&example_announcement,
+			CHANNEL,
+			received_announcement);*/
+
+	/* Set a dummy value to start sending out announcments. */
+	//announcement_set_value(&example_announcement, 0);
+	/* -------------------------------------------------- */
+	//leds_off(LEDS_GREEN);
 	static struct etimer et;
 
-	static uint8_t push = 0;	// Keeps the number of times the user pushes the button sensor
+	//static uint8_t push = 0;	// Keeps the number of times the user pushes the button sensor
 
 	const unsigned int WAIT_SENSE = 10;
 
@@ -622,7 +836,7 @@ PROCESS_THREAD(multihop_sense, ev, data)
 		// PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et) || ((ev==sensors_event) && (data == &button_sensor)));
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-		leds_on(LEDS_BLUE);
+		//leds_on(LEDS_BLUE);
 
 		// Send a broadcast message
 		// send_broadcast_cmd();
@@ -633,65 +847,100 @@ PROCESS_THREAD(multihop_sense, ev, data)
 
 		// Alternate the type of measurement
 		float fl = 0;
-		switch(push%5)
-		{
-		case 0:
-			msg.measurementType = MSR_TEMPERATURE;
-			msg.dataType        = TYPE_DOUBLE;
-			msg.unit            = UNT_CELSIUS;
-			fl                  = sense_temperature_float();
-			sprintf(msg.data, "%d.%u", (int)fl, DEC(fl));
-			break;
-		case 1:
-			msg.measurementType = MSR_HUMIDITY;
-			msg.dataType        = TYPE_DOUBLE;
-			msg.unit            = UNT_PERCENT;
-			fl                  = sense_humidity_float();
-			sprintf(msg.data, "%d.%u", (int)fl, DEC(fl));
-			break;
-		case 2:
-			msg.measurementType = MSR_LIGHT;
-			msg.dataType        = TYPE_INT;
-			msg.unit            = UNT_LUX;
-			sprintf(msg.data, "%d", sense_light());
-			break;
-		case 3:
-			msg.measurementType = MSR_INFRARED;
-			msg.dataType        = TYPE_INT;
-			msg.unit            = UNT_LUX;
-			sprintf(msg.data, "%d", sense_infrared());
-			break;
-		case 4:
-			msg.measurementType = MSR_LED;
-			msg.dataType        = TYPE_INT;
-			msg.unit            = UNT_NONE;
-			sprintf(msg.data, "%d", sense_leds());
-			break;
-		}
+
+		//switch(push%5)
+		//{
+		//case 0:
+		msg.measurementType = MSR_TEMPERATURE;
+		msg.dataType        = TYPE_DOUBLE;
+		msg.unit            = UNT_CELSIUS;
+		fl                  = sense_temperature_float();
+		sprintf(msg.data, "%d.%u", (int)fl, DEC(fl));
 		msg.id              = get_id();
 		msg.dataSize        = strlen(msg.data);
-		push++;
+		sensorSendNotification(&msg);
+
+		memset(&msg, 0, sizeof(msg));
+		fl = 0;
+		//break;
+		//case 1:
+		msg.measurementType = MSR_HUMIDITY;
+		msg.dataType        = TYPE_DOUBLE;
+		msg.unit            = UNT_PERCENT;
+		fl                  = sense_humidity_float();
+		sprintf(msg.data, "%d.%u", (int)fl, DEC(fl));
+		msg.id              = get_id();
+		msg.dataSize        = strlen(msg.data);
+		sensorSendNotification(&msg);
+
+		memset(&msg, 0, sizeof(msg));
+		fl = 0;
+		//break;
+		//case 2:
+		msg.measurementType = MSR_LIGHT;
+		msg.dataType        = TYPE_INT;
+		msg.unit            = UNT_LUX;
+		sprintf(msg.data, "%d", sense_light());
+		msg.id              = get_id();
+		msg.dataSize        = strlen(msg.data);
+		sensorSendNotification(&msg);
+
+		memset(&msg, 0, sizeof(msg));
+		fl = 0;
+
+		memset(&msg, 0, sizeof(msg));
+		msg.id              = get_id();
+		msg.dataSize        = strlen(msg.data);
+		fl = 0;
+		//break;
+		//case 3:
+		msg.measurementType = MSR_INFRARED;
+		msg.dataType        = TYPE_INT;
+		msg.unit            = UNT_LUX;
+		sprintf(msg.data, "%d", sense_infrared());
+		msg.id              = get_id();
+		msg.dataSize        = strlen(msg.data);
+		sensorSendNotification(&msg);
+
+
+		memset(&msg, 0, sizeof(msg));
+		fl = 0;
+		//break;
+		//case 4:
+		msg.measurementType = MSR_LED;
+		msg.dataType        = TYPE_INT;
+		msg.unit            = UNT_NONE;
+		sprintf(msg.data, "%d", sense_leds());
+		msg.id              = get_id();
+		msg.dataSize        = strlen(msg.data);
+		sensorSendNotification(&msg);
+
+		//break;
+		//}
+		//msg.id              = get_id();
+		//msg.dataSize        = strlen(msg.data);
+		//push++;
 
 		// In case we are on the gateway: send via serial to PC
 		//gwSendNotificationSerial(&msg);
 
-		/*if(g_gateway != get_id())
-		{
-			char buf[BUFFERSIZE];
-			if(bufferizeNotifyMessage(&msg, buf, sizeof(buf)) <= 0)
-				ERROR("Cannot write message to buffer");
+		//if(g_gateway != get_id())
+		//{
+		//char buf[BUFFERSIZE];
+		//if(bufferizeNotifyMessage(&msg, buf, sizeof(buf)) <= 0)
+		//ERROR("Cannot write message to buffer");
 
-			// Use the multihop method to send a message
-			/* Copy the "Hello" to the packet buffer. */
+		// Use the multihop method to send a message
+		/* Copy the "Hello" to the packet buffer. */
 		//packetbuf_copyfrom(buf, strlen(buf) + 1);
 
 		/* Send the packet. */
 		//multihop_send(&multihop, &to);
 		//}
 
-		sensorSendNotification(&msg);
+		//sensorSendNotification(&msg);
 
-		leds_off(LEDS_BLUE);
+		//leds_off(LEDS_BLUE);
 	}
 	PROCESS_END();
 }
@@ -707,7 +956,7 @@ PROCESS_THREAD(button_pressed, ev, data)
 	/* Initialize stuff here. */ 
 
 	SENSORS_ACTIVATE(button_sensor);
-	leds_on(LEDS_ALL);
+	//leds_on(LEDS_ALL);
 
 	// Initialization of sensor
 	sht11_init();
@@ -741,7 +990,7 @@ PROCESS_THREAD(button_pressed, ev, data)
 		gwSendNotificationSerial(&msg);
 
 		if(g_gateway != get_id())
-		//if(0)
+			//if(0)
 		{
 			char buf[BUFFERSIZE];
 			if(bufferizeNotifyMessage(&msg, buf, sizeof(buf)) <= 0)
@@ -764,11 +1013,11 @@ PROCESS_THREAD(button_pressed, ev, data)
 
 		// Toggle the LEDS
 		if (push % 2 == 0) { 
-			leds_off(LEDS_ALL);
+			//leds_off(LEDS_ALL);
 			LOG("Button pressed [%d] TURNING OFF ALL LEDS ... [DONE]", push);
 			push++;
 		} else {
-			leds_on(LEDS_ALL);
+			//leds_on(LEDS_ALL);
 			LOG("Button pressed [%d] TURNING ON ALL LEDS ...   [DONE]", push);
 			push++;
 		}
@@ -785,7 +1034,8 @@ PROCESS_THREAD(button_pressed, ev, data)
 	}
 
 	exit:
-	leds_off(LEDS_ALL);
+	printf("exit button pressed\n");
+	//leds_off(LEDS_ALL);
 	PROCESS_END();
 }
 

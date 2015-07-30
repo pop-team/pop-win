@@ -320,6 +320,7 @@ const char* explainPublicationType(enum PublicationType x)
 		case PUB_LED        : return "led";
 		case PUB_SWITCH		: return "switch";
 		case PUB_GW_ALIVE 	: return "gw_alive";
+		case PUB_UNKNOWN	: return "unknown";
 	}
 	printf("ERROR: Unknown publication type %d\n", (int)x);
 	return "unknown";

@@ -18,8 +18,8 @@
 #define BUFFERDATASIZE 64
 
 // The id of the gateway
-#define GATEWAY_ID     0
-//#define GATEWAY_ID     158
+//#define GATEWAY_ID     0
+#define GATEWAY_ID     158
 
 /// Different types of messages
 enum MessageType

@@ -58,6 +58,15 @@ int main(int argc, char** argv)
 		cout << "Broadcast green LED ON" << popcendl;
 		popLed.Broadcast(PUB_LED, 1); // PUB_LED=publish for led, 1:green toggle
 
+		char c = '\n';
+		while(true)
+		{
+			cout << "\nPress key to continue\n" << popcendl;
+			//while(c == '\n')
+			c = getchar();
+			break;
+		}
+
 		ofstream of;
 		of.open("outputfile.csv");
 
