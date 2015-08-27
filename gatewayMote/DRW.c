@@ -455,7 +455,9 @@ static const struct unicast_callbacks unicast_callbacks = {recv_uc};
 uint16_t sense_light(){
 	SENSORS_ACTIVATE(light_sensor);
 	unsigned int value = light_sensor.value(LIGHT_SENSOR_PHOTOSYNTHETIC);
-	//DEBUG("Light value: %u", value);
+#ifdef EN_DEBUG
+	DEBUG("Light value: %u", value);
+#endif
 	SENSORS_DEACTIVATE(light_sensor);
 
 	return value;
@@ -464,7 +466,9 @@ uint16_t sense_light(){
 uint16_t sense_infrared(){
 	SENSORS_ACTIVATE(light_sensor);
 	unsigned int value = light_sensor.value(LIGHT_SENSOR_TOTAL_SOLAR);
-	//DEBUG("Infrared value: %u", value);
+#ifdef EN_DEBUG
+	DEBUG("Infrared value: %u", value);
+#endif
 	SENSORS_DEACTIVATE(light_sensor);
 
 	return value;
@@ -489,7 +493,9 @@ uint16_t sense_temperature(){
 	// SEND( "{\"status\":\"OK\", \"infos\":{\"temperature\":\"%c%d.%04d\"}}", minus, tempint, tempfrac);
 
 	unsigned int value = (unsigned int) (-39.60 + 0.01 * sht11_temp());
-	//DEBUG("sense temperature %u", value);
+#ifdef EN_DEBUG
+	DEBUG("sense temperature %u", value);
+#endif
 	return value;
 }
 
@@ -525,21 +531,27 @@ float sense_temperature_float(){
 	   value = -39.60 + 0.01 * sht11_temp();
 	 */
 	float value = -39.60 + 0.01 * sht11_temp();
-	//DEBUG("sense temperature %d.%u (%u)", (int)value, DEC(value), sht11_temp());
+#ifdef EN_DEBUG
+	DEBUG("sense temperature %d.%u (%u)", (int)value, DEC(value), sht11_temp());
+#endif
 	return value;
 }
 
 uint16_t sense_humidity(){
 	unsigned int rh = sht11_humidity();
 	unsigned int value = -4 + 0.0405*rh - 2.8e-6*(rh*rh);
-	//DEBUG("sense humidity %u percent (%u)", value, rh);
+#ifdef EN_DEBUG
+	DEBUG("sense humidity %u percent (%u)", value, rh);
+#endif
 	return value;
 }
 
 float sense_humidity_float(){
 	unsigned int rh = sht11_humidity();
 	float value = -4 + 0.0405*rh - 2.8e-6*(rh*rh);
-	//DEBUG("sense humidity %d.%u percent (%u)", (int)value, DEC(value), rh);
+#ifdef EN_DEBUG
+	DEBUG("sense humidity %d.%u percent (%u)", (int)value, DEC(value), rh);
+#endif
 	return value;
 }
 

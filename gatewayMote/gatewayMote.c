@@ -118,6 +118,7 @@ void gwSendNotificationSerial(const struct NotifyMessage* msg)
 void gwSendPublicationSerial(const struct PublishMessage* msg)
 {
 	char buf[BUFFERSIZE];
+	memset(&buf,0,BUFFERSIZE*sizeof(char));
 	if(bufferizePublishMessage(msg, buf, sizeof(buf)) <= 0)
 		ERROR("Cannot write message to buffer (3)");
 
@@ -176,21 +177,27 @@ AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &communicat
 // Processes to use the routing of messages given by the multihop example
 AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &multihop_announce, &multihop_sense);
 //AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &multihop_sense);
+//AUTOSTART_PROCESSES(&gateway_communication_process, &multihop_announce, &multihop_sense);
+//AUTOSTART_PROCESSES(&gateway_communication_process, &multihop_sense);
+//AUTOSTART_PROCESSES(&gateway_communication_process);
 #endif
+
+//int countRecBroadcast = 0;
+//int countSentBroadcast = 0;
 
 static void
 broadcast_recvGM(struct broadcast_conn *c, const rimeaddr_t *from)
 {
 	//printf("broadcast message received from %d.%d: '%s'\n",from->u8[0], from->u8[1], (char *)packetbuf_dataptr());
 	//	leds_toggle(LEDS_GREEN);
-	if(g_gateway == get_id())
+	/*if(g_gateway == get_id())
 	{
 		printf("received broadcast on GW\n");
 	}
 	else
 	{
-		printf("received broadcast on sensor\n");
-	}
+		printf("received broadcast on sensor: %d\n",++countRecBroadcast);
+	}*/
 	gwHandleMessage((char *)packetbuf_dataptr(), 1); // careful with parameter fromProxy ! (here 1)
 }
 
@@ -216,7 +223,7 @@ PROCESS_THREAD(gateway_communication_process, ev, data)
 	printf("++++++++++++++++++++++++++++++\n");  
 	//leds_off(LEDS_ALL);
 	// If we are the GW, broadcast we are available to communicate via serial line
-	if(g_gateway == get_id())
+	/*if(g_gateway == get_id())
 	{
 		struct PublishMessage msg;
 		memset(&msg, 0, sizeof(struct PublishMessage));
@@ -227,7 +234,7 @@ PROCESS_THREAD(gateway_communication_process, ev, data)
 #ifdef EN_LOGS
 		LOG("set broadcast callback");
 #endif
-	}
+	}*/
 
 	broadcast_open(&broadcast, 129, &broadcast_call);
 
@@ -350,49 +357,32 @@ void gwHandleSubscription(const char* data, char fromProxy)
  */
 void gwHandlePublication(const char* data, char fromProxy)
 {
+	//printf("handle publication with data: %s\n",data);
 	struct PublishMessage msg;
 	memset(&msg, 0, sizeof(msg));
 	if(unbufferizePublishMessage(&msg, data, sizeof(data)) <= 0)
+	{
 		ERROR("Cannot read message from buffer");
+		return;
+	}
 
 #ifdef EN_DEBUG
 	DEBUG("Handle publication dataType=%d", msg.dataType);
 #endif
 
-	if(!fromProxy)
+	/*if(!fromProxy) TODO check if really needed
 	{
 		gwSendPublicationSerial(&msg);
 		return;
-	}
+	}*/
 
-	int isGWCmd = 0;
-	if(msg.dataType == TYPE_INT && msg.publicationType == PUB_COMMAND)
-	{
-		int dataInt = atoi(msg.data);
-		if(dataInt == 8)
-			isGWCmd = 1;
-	}
-
-	// If on GW and the message comes from the Proxy --> forward it
-	// do not rebroadcast set_as_gateway command
-	if(g_gateway == get_id() && !isGWCmd)
-	{
-		packetbuf_copyfrom(data, strlen(data) + 1);
-		broadcast_send(&broadcast);
-		//#ifdef EN_LOGS
-		LOG("broadcast message sent from GW to sensors");
-		//#endif
-	}
-	else
-	{
-		printf("on sensor, don't broadcast\n");
-	}
+	int isGWCmd = 0; // used to not rebroadcast set_as_gateway command
 
 	switch(msg.dataType)
 	{
 	case TYPE_DOUBLE:
 	{
-		ERROR("notifications of type TYPE_DOUBLE are not handled yet");
+		ERROR("publication of type TYPE_DOUBLE are not handled yet");
 	}
 	break;
 	case TYPE_INT:
@@ -402,18 +392,18 @@ void gwHandlePublication(const char* data, char fromProxy)
 		{
 		case PUB_LED:
 		{
-			//#ifdef EN_DEBUG
+#ifdef EN_DEBUG
 			if(g_gateway == get_id())
 			{
-				DEBUG("On GW, blink led %d", dataInt);
+				DEBUG("On GW, blink led %d\n", dataInt);
 				//printf("On GW, blink led %d\n", dataInt);
 			}
 			else
 			{
-				DEBUG("On sensor, blink led %d", dataInt);
+				DEBUG("On sensor, blink led %d\n", dataInt);
 				//printf("On sensor, blink led %d\n", dataInt);
 			}
-			//#endif
+#endif
 			switch(dataInt)
 			{
 			case 0:
@@ -439,27 +429,57 @@ void gwHandlePublication(const char* data, char fromProxy)
 		case PUB_COMMAND:
 		{
 			// Commands can be seen as a type of publication
-//#ifdef EN_DEBUG
+#ifdef EN_DEBUG
 			DEBUG("Call command %d", dataInt);
-//#endif
+#endif
 			if(dataInt >= 0 && dataInt < NB_COMMANDS)
+			{
 				g_commands[dataInt]();
+				if(dataInt == 8)
+					isGWCmd = 1;
+			}
 			else
+			{
 				ERROR("Unknown command number");
+			}
+		}
+		break;
+		case PUB_SWITCH:
+		{
+			ERROR("publication of type PUB_SWITCH are not handled yet");
+		}
+		break;
+		case PUB_GW_ALIVE:
+		{
+			ERROR("publication of type PUB_GW_ALIVE are not handled yet");
 		}
 		break;
 		default:
 			ERROR("Unknown publication type");
+			printf("PUB msg code: %d\n",msg.publicationType);
 		}
 	}
 	break;
 	case TYPE_STRING:
 	{
-		ERROR("notifications of type TYPE_STRING are not handled yet");
+		ERROR("publication of type TYPE_STRING are not handled yet");
 	}
 	break;
 	default:
 		ERROR("Unknown data type");
+		printf("data type msg code: %d\n",msg.dataType);
+	}
+
+	// If on GW and the message comes from the Proxy --> forward it
+	// do not rebroadcast set_as_gateway command
+	if(g_gateway == get_id() && !isGWCmd)
+	{
+		packetbuf_copyfrom(data, strlen(data) + 1);
+		broadcast_send(&broadcast);
+		//printf("broadcast message sent from GW to sensors: %d\n",++countSentBroadcast);
+#ifdef EN_LOGS
+		LOG("broadcast message sent from GW to sensors\n");
+#endif
 	}
 }
 
@@ -669,7 +689,9 @@ recv(struct multihop_conn *c, const rimeaddr_t *sender,
 		const rimeaddr_t *prevhop,
 		uint8_t hops)
 {
-	//printf("multihop message received '%s'\n", (char *)packetbuf_dataptr());// TODO activate to get log
+#ifdef EN_DEBUG
+	printf("multihop message received '%s'\n", (char *)packetbuf_dataptr());
+#endif
 }
 /*
  * This function is called to forward a packet. The function picks a
@@ -694,10 +716,12 @@ forward(struct multihop_conn *c,
 			++i;
 		}
 		if(n != NULL) {
+#ifdef EN_DEBUG
 			printf("%d.%d: Forwarding packet to %d.%d (%d in list), hops %d\n",
 					rimeaddr_node_addr.u8[0], rimeaddr_node_addr.u8[1],
 					n->addr.u8[0], n->addr.u8[1], num,
 					packetbuf_attr(PACKETBUF_ATTR_HOPS));
+#endif
 			return &n->addr;
 		}
 	}
@@ -718,7 +742,7 @@ void sensorSendNotification(struct NotifyMessage* msg)
 	to.u8[1] = 0;
 
 	// In case we are on the gateway/sensor: send via serial to PC
-	//gwSendNotificationSerial(msg); // TODO activate to get log
+	//gwSendNotificationSerial(msg);
 
 	// if on sensor
 	if(g_gateway != get_id())
@@ -752,7 +776,7 @@ unsigned char sense_leds()
 PROCESS_THREAD(multihop_announce, ev, data)
 {
 	PROCESS_EXITHANDLER(multihop_close(&multihop);)
-			PROCESS_BEGIN();
+																			PROCESS_BEGIN();
 
 	// Init for multihop -----
 	/* Initialize the memory for the neighbor table entries. */
@@ -765,9 +789,8 @@ PROCESS_THREAD(multihop_announce, ev, data)
 	multihop_open(&multihop, CHANNEL, &multihop_call);
 
 	static struct etimer et;
-	const unsigned int WAIT_ANNOUNCE = 10;
-
-	int count = 0;
+	const unsigned int WAIT_SHORT = 2;
+	const unsigned int WAIT_LONG = 10;
 
 	while(1){
 
@@ -781,17 +804,9 @@ PROCESS_THREAD(multihop_announce, ev, data)
 		/* Set a dummy value to start sending out announcments. */
 		announcement_set_value(&example_announcement, 0);
 		//leds_off(LEDS_RED);
-		if(count >= 5)
-		{
-			etimer_set(&et, WAIT_ANNOUNCE * CLOCK_SECOND);
-			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-		}
-		else
-		{
-			etimer_set(&et, CLOCK_SECOND);
-			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-			count++;
-		}
+
+		etimer_set(&et, WAIT_LONG * CLOCK_SECOND);
+		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 	}
 	PROCESS_END();
 }

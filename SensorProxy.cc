@@ -221,20 +221,22 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 		{
 		case MSG_PUBLISH:
 		{
-			PublishMessage msg;
+			/*struct PublishMessage msg;
+			memset(&msg, 0, sizeof(msg));
 			if(unbufferizePublishMessage(&msg, x_rawMsg.c_str(),x_rawMsg.size()) <= 0)
-				throw POPException("Cannot unbufferize subscribe message");
-			if(msg.publicationType == static_cast<PublicationType>(PUB_GW_ALIVE))
-				cout << "Received alive signal from GW " << msg.id << popcendl;
+				throw POPException("Cannot unbufferize publish message");*/
+
+			throw POPException("Publication messages are not handled yet");
 		}
 		break;
 		case MSG_SUBSCRIBE:
 		{
-			SubscribeMessage msg;
+			/*struct SubscribeMessage msg;
+			memset(&msg, 0, sizeof(msg));
 			if(unbufferizeSubscribeMessage(&msg, x_rawMsg.c_str()) <= 0)
-				throw POPException("Cannot unbufferize subscribe message");
+				throw POPException("Cannot unbufferize subscribe message");*/
 
-			throw POPException("Subscribtion messages are not handled yet");
+			throw POPException("Subscription messages are not handled yet");
 		}
 
 		break;
@@ -320,7 +322,7 @@ void SensorProxy::Notify(int x_measurementType, int x_measurementUnit, const std
 
 	char buffer[BUFFERSIZE];
 	if(bufferizeNotifyMessage(&msg, buffer, BUFFERSIZE) <= 0)
-		throw POPException("Cannot bufferize publish message", buffer);
+		throw POPException("Cannot bufferize notify message", buffer);
 	// cout<< "Sending " << buf << popcendl;
 	SendRawData(buffer);
 }
@@ -349,8 +351,10 @@ void SensorProxy::Publish(int x_publicationType, int x_data)
 	msg.dataSize        = strlen(msg.data);
 
 	char buffer[BUFFERSIZE];
+	memset(&buffer, 0, BUFFERSIZE*sizeof(char));
 	if(bufferizePublishMessage(&msg, buffer, BUFFERSIZE) <= 0)
 		throw POPException("Cannot bufferize publish message", buffer);
+	//cout << "Bufferized publish to buffer size: " << strlen(buffer) << " | " << buffer << popcendl;
 	// cout<< "Sending " << buf << popcendl;
 	SendRawData(buffer);
 }
@@ -402,6 +406,7 @@ void SensorProxy::CanPublish(int x_publicationType)
 void SensorProxy::Subscribe(int x_measurementType, int x_dataType)
 {
 	char buf[BUFFERSIZE];
+	memset(buf,0,BUFFERSIZE*sizeof(char));
 	// cout << "subscribe to "<< x_measurementType << endl;
 	m_subscriptions[x_measurementType] = true;
 
@@ -413,7 +418,7 @@ void SensorProxy::Subscribe(int x_measurementType, int x_dataType)
 
 	// Bufferize message and send to gateway
 	if(bufferizeSubscribeMessage(&msg, buf, BUFFERSIZE) <= 0)
-		throw POPException("Cannot bufferize publish message");
+		throw POPException("Cannot bufferize subscribe message");
 	// cout<< "Sending " << buf << popcendl;
 	SendRawData(buf);
 }

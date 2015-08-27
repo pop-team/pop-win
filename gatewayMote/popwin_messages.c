@@ -139,6 +139,7 @@ int bufferizePublishMessage(const struct PublishMessage* x_msg, char* xp_buffer,
 // Read message from buffer
 int unbufferizePublishMessage(struct PublishMessage* xp_msg, const char* x_buffer, size_t x_maxDataSize)
 {
+	//printf("Unbuffering from buffer size: %d\n",strlen(x_buffer));
 	memset(xp_msg, 0, sizeof(xp_msg));
 	int mtype = -1;
 	int id    = -1;
@@ -177,7 +178,7 @@ int unbufferizePublishMessage(struct PublishMessage* xp_msg, const char* x_buffe
 		else
 		{
 			printf("WARNING: Data has the wrong size %d!=%d\n", s, dataSize);
-			return 1;
+			return 0;
 		}
 	}
 	else return 0;
@@ -305,6 +306,7 @@ enum PublicationType translatePublicationType(const char* x_str)
 	if(!strcmp(x_str, "command"))     return PUB_COMMAND;
 	if(!strcmp(x_str, "switch"))      return PUB_SWITCH;
 	if(!strcmp(x_str, "gw_alive"))    return PUB_GW_ALIVE;
+	if(!strcmp(x_str, "unknown"))	  return PUB_UNKNOWN;
 
 	printf("ERROR: Unknown publication type %s\n", x_str);
 
