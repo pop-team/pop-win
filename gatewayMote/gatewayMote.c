@@ -45,7 +45,7 @@
 #define ABS(x) ((x) < 0 ? (-x) : (x))
 
 //#define EN_LOGS 1 // enable log messages, comment to disable
-#define EN_DEBUG 1 // enable debug messages, comment to disable
+//#define EN_DEBUG 1 // enable debug messages, comment to disable
 
 /****************************/
 /*** COMMANDS TO BE CALLED  */
@@ -783,7 +783,7 @@ unsigned char sense_leds()
 PROCESS_THREAD(multihop_announce, ev, data)
 {
 	PROCESS_EXITHANDLER(multihop_close(&multihop);)
-																			PROCESS_BEGIN();
+	PROCESS_BEGIN();
 
 	// Init for multihop -----
 	/* Initialize the memory for the neighbor table entries. */

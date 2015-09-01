@@ -45,6 +45,7 @@ POPSensor::~POPSensor()
 		delete(it);
 	}
 	m_sensorsProxy.clear();
+	cout<<"Finished destroying POPSensor" << popcendl;
 }
 
 /// Initialization using parameters in resource.json

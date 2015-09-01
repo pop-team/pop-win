@@ -29,7 +29,7 @@
 // Note: check baudrate of USB port with : stty -F /dev/ttyUSB0
 #define BAUDRATE B115200
 
-#define EN_COUTS 1 // enable cout to std out, comment to disable
+//#define EN_COUTS 1 // enable cout to std out, comment to disable
 
 using namespace std;
 
