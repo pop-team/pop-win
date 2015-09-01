@@ -45,7 +45,7 @@
 #define ABS(x) ((x) < 0 ? (-x) : (x))
 
 //#define EN_LOGS 1 // enable log messages, comment to disable
-//#define EN_DEBUG 1 // enable debug messages, comment to disable
+#define EN_DEBUG 1 // enable debug messages, comment to disable
 
 /****************************/
 /*** COMMANDS TO BE CALLED  */
@@ -107,6 +107,7 @@ void gwSendSubscriptionSerial(const struct SubscribeMessage* msg)
 void gwSendNotificationSerial(const struct NotifyMessage* msg)
 {
 	char buf[BUFFERSIZE];
+	memset(&buf,0,BUFFERSIZE*sizeof(char));
 	if(bufferizeNotifyMessage(msg, buf, sizeof(buf)) <= 0)
 		ERROR("Cannot write message to buffer (2)");
 
@@ -370,11 +371,11 @@ void gwHandlePublication(const char* data, char fromProxy)
 	DEBUG("Handle publication dataType=%d", msg.dataType);
 #endif
 
-	/*if(!fromProxy) TODO check if really needed
+	if(!fromProxy) //TODO check if really needed
 	{
 		gwSendPublicationSerial(&msg);
 		return;
-	}*/
+	}
 
 	int isGWCmd = 0; // used to not rebroadcast set_as_gateway command
 
@@ -692,6 +693,7 @@ recv(struct multihop_conn *c, const rimeaddr_t *sender,
 #ifdef EN_DEBUG
 	printf("multihop message received '%s'\n", (char *)packetbuf_dataptr());
 #endif
+	gwHandleMessage((char *)packetbuf_dataptr(), 0);
 }
 /*
  * This function is called to forward a packet. The function picks a
@@ -748,6 +750,7 @@ void sensorSendNotification(struct NotifyMessage* msg)
 	if(g_gateway != get_id())
 	{
 		char buf[BUFFERSIZE];
+		memset(&buf,0,BUFFERSIZE*sizeof(char));
 		if(bufferizeNotifyMessage(msg, buf, sizeof(buf)) <= 0)
 			ERROR("Cannot write message to buffer");
 
@@ -757,6 +760,10 @@ void sensorSendNotification(struct NotifyMessage* msg)
 
 		/* Send the packet. */
 		multihop_send(&multihop, &to);
+	}
+	else // on GW
+	{
+		gwSendNotificationSerial(msg);
 	}
 }
 

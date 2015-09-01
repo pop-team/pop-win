@@ -52,7 +52,7 @@ run:
 	popcrun objects.map ./main resources.json
 	
 demo:
-	popcrun objects.map ./main_demo 160.98.61.138 temp.json 160.98.61.172 led.json
+	popcrun objects.map ./main_demo 160.98.61.129 temp.json 160.98.61.131 led.json
 	
 test_led:
 	popcrun objects.map ./main_test_led localhost led.json

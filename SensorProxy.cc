@@ -29,7 +29,7 @@
 // Note: check baudrate of USB port with : stty -F /dev/ttyUSB0
 #define BAUDRATE B115200
 
-//#define EN_COUTS 1 // enable cout to std out, comment to disable
+#define EN_COUTS 1 // enable cout to std out, comment to disable
 
 using namespace std;
 
@@ -242,7 +242,8 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 		break;
 		case MSG_NOTIFY:
 		{
-			NotifyMessage msg;
+			struct NotifyMessage msg;
+			memset(&msg,0,sizeof(msg));
 			if(unbufferizeNotifyMessage(&msg, x_rawMsg.c_str(), x_rawMsg.size()) <= 0)
 				throw POPException("Cannot unbufferize notify message");
 
@@ -250,21 +251,21 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 			bool subscribed = it != m_subscriptions.end() && it->second;
 			if(msg.measurementType == MSR_LOG)
 			{
-//#ifdef EN_COUTS
+				//#ifdef EN_COUTS
 				cout << "Proxy received log from " << msg.id << " : " << msg.data << popcendl;
-//#endif
+				//#endif
 				break;
 			}
 			else if(!subscribed)
 			{
 				// Not subscribed to this type of data
 #ifdef EN_COUTS
-				cout<< "Unstored notification (" << explainMeasurementType(msg.measurementType) << "): '" << msg.data << "'" << popcendl;
+				cout<< "Proxy "<< m_id << ", unstored notification (" << explainMeasurementType(msg.measurementType) << "): '" << msg.data << "'" << popcendl;
 #endif
 				break;
 			}
 #ifdef EN_COUTS
-			cout<< "Stored notification   (" << explainMeasurementType(msg.measurementType) << "): '" << msg.data << "'" << popcendl;
+			cout<< "Proxy "<< m_id << ", stored notification   (" << explainMeasurementType(msg.measurementType) << "): '" << msg.data << "'" << popcendl;
 #endif
 			switch(msg.dataType)
 			{

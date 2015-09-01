@@ -33,11 +33,11 @@ int main(int argc, char** argv)
 	try
 	{
 		cout << "Creating POPSensor for temperature" << popcendl;
-		POPSensor popTemp(argv[1], argv[2]);
+		POPSensor popTemp(argv[1], argv[2],0);
 		POPSensorData temps;
 
 		cout << "Creating POPSensor for leds" << popcendl;
-		POPSensor popLed(argv[3], argv[4]);
+		POPSensor popLed(argv[3], argv[4],1);
 
 		//POPSensorData in_leds;
 		//in_leds = popLed.Gather();

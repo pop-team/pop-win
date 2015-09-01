@@ -205,7 +205,7 @@ int main(int argc, char** argv)
 
 	try
 	{
-		POPSensor popSensor("localhost", argv[1]);
+		POPSensor popSensor("localhost", argv[1],0);
 
 		//cout<<"Ask to send the list of commands"<<popcendl;
 		//popSensor.Broadcast(PUB_COMMAND, 0);

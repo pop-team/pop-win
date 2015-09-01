@@ -34,8 +34,8 @@ parclass POPSensor {
 
 public:
 	// POPSensor(int newID, int wanted, int minp) @{ od.search(0, 3, 0); };
-	POPSensor(const std::string& x_url, const std::string& x_resourceFileName) @{ od.url(x_url); };
-	POPSensor(int x_pow, const std::string& x_resourceFileName) @{ od.power(x_pow); };
+	POPSensor(const std::string& x_url, const std::string& x_resourceFileName, const int id) @{ od.url(x_url); };
+	POPSensor(int x_pow, const std::string& x_resourceFileName, const int id) @{ od.power(x_pow); };
 	~POPSensor();
 
 	/// Retrieve data gathered 
@@ -89,6 +89,9 @@ private:
 
 	/// Descriptino of resources
 	std::string m_jsonResources;
+
+	/// ID of the POPSensor
+	int PopSID;
 };
 
 #endif

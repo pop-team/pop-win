@@ -19,15 +19,17 @@
 using namespace std;
 
 /// Constructor (URL of target platteform is specified)
-POPSensor::POPSensor(const std::string& x_url, const std::string& x_resourceFileName)
+POPSensor::POPSensor(const std::string& x_url, const std::string& x_resourceFileName, const int id)
 {
 	Initialize(x_resourceFileName);
+	PopSID = 10000*id;
 }
 
 /// Constructor (power requirement of target platteform is specified)
-POPSensor::POPSensor(int x_pow, const std::string& x_resourceFileName)
+POPSensor::POPSensor(int x_pow, const std::string& x_resourceFileName, const int id)
 {
 	Initialize(x_resourceFileName);
+	PopSID = 10000*id;
 }
 
 /// Destructor
@@ -81,8 +83,8 @@ void POPSensor::Initialize(const std::string& x_resourceFileName)
 				port << "/dev/ttyUSB" << j;
 				try
 				{
-					m_sensorsProxy.push_back(new SensorProxy(1000 + counter, url, port.str()));
-					cout<<"Creating sensor proxy with id="<<(1000 + counter)<<" on port "<<port.str()<<popcendl;
+					m_sensorsProxy.push_back(new SensorProxy(PopSID + 1000 + counter, url, port.str()));
+					cout<<"Creating sensor proxy with id="<<(PopSID + 1000 + counter)<<" on port "<<port.str()<<popcendl;
 					counter++;
 				}
 				catch(...)

@@ -32,7 +32,7 @@ int main(int argc, char** argv)
 
 	try
 	{
-		POPSensor popSensor("localhost", argv[1]);
+		POPSensor popSensor("localhost", argv[1],0);
 
 		sleep(3);
 
