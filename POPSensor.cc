@@ -21,15 +21,17 @@ using namespace std;
 /// Constructor (URL of target platteform is specified)
 POPSensor::POPSensor(const std::string& x_url, const std::string& x_resourceFileName, const int id)
 {
-	Initialize(x_resourceFileName);
 	PopSID = 10000*id;
+	cout<<"Creating POPSensor with id="<< PopSID << popcendl;
+	Initialize(x_resourceFileName);
 }
 
 /// Constructor (power requirement of target platteform is specified)
 POPSensor::POPSensor(int x_pow, const std::string& x_resourceFileName, const int id)
 {
-	Initialize(x_resourceFileName);
 	PopSID = 10000*id;
+	cout<<"Creating POPSensor with id="<< PopSID << popcendl;
+	Initialize(x_resourceFileName);
 }
 
 /// Destructor
@@ -255,7 +257,7 @@ void POPSensor::SubscribeToResources()
 
 		// note: dataType is not mandatory
 		// if(dtype == static_cast<int>(TYPE_UNKNOWN))
-			// throw POPException("dataType not found in JSON resources description");
+		// throw POPException("dataType not found in JSON resources description");
 
 		int cpt = 0;
 		for(auto it : m_sensorsProxy)
@@ -290,21 +292,21 @@ double POPSensor::Reduce(int x_mtype, int x_dataType, int x_fct)
 
 	switch(x_fct)
 	{
-		case POPSensorData::size:  return vect.size();
-		case POPSensorData::min:   return *std::min_element(vect.begin(), vect.end());
-		case POPSensorData::max:   return *std::max_element(vect.begin(), vect.end());
-		case POPSensorData::aver:  return std::accumulate(vect.begin(), vect.end(), 0.0) / vect.size();
-		case POPSensorData::sum:   return std::accumulate(vect.begin(), vect.end(), 0.0);
-		case POPSensorData::stdev:
-			    {
-				    double sum = std::accumulate(vect.begin(), vect.end(), 0.0);
-				    double mean = sum / vect.size();
-				    std::vector<double> diff(vect.size());
-				    std::transform(vect.begin(), vect.end(), diff.begin(),
-						    std::bind2nd(std::minus<double>(), mean));
-				    double sq_sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
-				    return std::sqrt(sq_sum / vect.size());
-			    }
+	case POPSensorData::size:  return vect.size();
+	case POPSensorData::min:   return *std::min_element(vect.begin(), vect.end());
+	case POPSensorData::max:   return *std::max_element(vect.begin(), vect.end());
+	case POPSensorData::aver:  return std::accumulate(vect.begin(), vect.end(), 0.0) / vect.size();
+	case POPSensorData::sum:   return std::accumulate(vect.begin(), vect.end(), 0.0);
+	case POPSensorData::stdev:
+	{
+		double sum = std::accumulate(vect.begin(), vect.end(), 0.0);
+		double mean = sum / vect.size();
+		std::vector<double> diff(vect.size());
+		std::transform(vect.begin(), vect.end(), diff.begin(),
+				std::bind2nd(std::minus<double>(), mean));
+		double sq_sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
+		return std::sqrt(sq_sum / vect.size());
+	}
 
 	}
 }
