@@ -264,12 +264,12 @@ void POPSensor::SubscribeToResources()
 		{
 			if(incoming)
 			{
-				cout << "Gateway " << 1000 + cpt << " subscribes to " << explainMeasurementType(mtype) << " type:" << explainDataType(dtype) << " direction:" << (incoming ? "IN" : "OUT") << popcendl;
+				cout << "Gateway " << PopSID + 1000 + cpt << " subscribes to " << explainMeasurementType(mtype) << " type:" << explainDataType(dtype) << " direction:" << (incoming ? "IN" : "OUT") << popcendl;
 				it->Subscribe(mtype, dtype);
 			}
 			if(outgoing)
 			{
-				cout << "Gateway " << 1000 + cpt << " can publish " << explainPublicationType(ptype) << " commands," << " direction:" << (incoming ? "IN" : "OUT") << popcendl;
+				cout << "Gateway " << PopSID + 1000 + cpt << " can publish " << explainPublicationType(ptype) << " commands," << " direction:" << (incoming ? "IN" : "OUT") << popcendl;
 				it->CanPublish(ptype);
 			}
 			cpt++;
