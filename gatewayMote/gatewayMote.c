@@ -422,8 +422,11 @@ void gwHandlePublication(const char* data, char fromProxy)
 			case 4:
 				leds_on(LEDS_ALL);
 				break;
-			default:
+			case 5:
 				leds_toggle(LEDS_ALL);
+				break;
+			default:
+				LOG("unknown PUB_LED command");
 			}
 		}
 		break;
