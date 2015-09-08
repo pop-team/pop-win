@@ -79,6 +79,15 @@ int main(int argc, char** argv)
 			temps.Print();
 			printf("\n-----------------------------------------------------------------------------------------------\n");
 			temps.PrintToFile(of);
+			/*const map<RecordHeader, double> awd = temps.GetData<double>();
+			double sum = 0.0;
+			for(auto elem : awd)
+			{
+				cout << elem.second << "," << popcendl;
+				sum += elem.second;
+			}*/
+			//cout << "" << popcendl;
+//			cout << "sum of field= " << explainMeasurementType(elem.first.measurementType) << sum << popcendl;
 			//cout << "sleeping..." << popcendl;
 			sleep(15);
 			popLed.Broadcast(PUB_LED, 1); // PUB_LED=publish for led, 1:green toggle

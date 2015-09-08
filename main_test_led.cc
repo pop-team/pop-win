@@ -64,7 +64,7 @@ int main(int argc, char** argv)
 				cout << "--------------- Led ON --------------- " << popcendl;
 			}
 			count++;
-			sleep(1);
+			sleep(5);
 		}
 		cout << "Finished blinking leds" << popcendl;
 

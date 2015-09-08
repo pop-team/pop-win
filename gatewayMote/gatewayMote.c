@@ -176,10 +176,10 @@ PROCESS(multihop_sense                , "Take measurements and transmit via mult
 AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &communication_process, &drw, &sensor_events); // Processes to run with algo of UNIGE
 #else
 // Processes to use the routing of messages given by the multihop example
-AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &multihop_announce, &multihop_sense);
+//AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &multihop_announce, &multihop_sense);
 //AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &multihop_sense);
-//AUTOSTART_PROCESSES(&gateway_communication_process, &multihop_announce, &multihop_sense);
-//AUTOSTART_PROCESSES(&gateway_communication_process, &multihop_sense);
+AUTOSTART_PROCESSES(&gateway_communication_process, &multihop_announce, &multihop_sense);
+//AUTOSTART_PROCESSES(&gateway_communication_process, &multihop_announce);
 //AUTOSTART_PROCESSES(&gateway_communication_process);
 #endif
 
