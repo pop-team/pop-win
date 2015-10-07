@@ -40,9 +40,11 @@ POPSensor::~POPSensor()
 	StopListening();
 	m_jsonResources = "";
 	cout<<"Destroying POPSensor and its "<<m_sensorsProxy.size() << " SensorProxy." <<popcendl;
+	SubscribeToResources(false); // unsubscribe
 	for(auto it : m_sensorsProxy)
 	{
-		delete(it);
+		it->UnPublish(MSR_SET_GW); // this one is not from JSON file, cf. Initialize()
+		//delete(it);
 	}
 	m_sensorsProxy.clear();
 	cout<<"Finished destroying POPSensor" << popcendl;
@@ -76,6 +78,8 @@ void POPSensor::Initialize(const std::string& x_resourceFileName)
 
 		string connectionType = root["gateways"][i].get("connection", "<not found>").asString();
 		string url            = root["gateways"][i].get("url", "localhost").asString();
+		// TODO: redesigne because in theory multiple GW per POPSensor possible, but not now
+		string gwID			  = root["gateways"][i].get("id", "0").asString();
 
 		if(connectionType == "usb")
 		{
@@ -98,20 +102,27 @@ void POPSensor::Initialize(const std::string& x_resourceFileName)
 		}
 		else throw POPException("Only \"usb\" connection is supported for gateway", "connection=" + connectionType);
 		cout<<"Created "<<m_sensorsProxy.size()<<" sensor proxy objects"<<popcendl;
+		for(auto it : m_sensorsProxy) // should be only one for now, else error
+		{
+			it->Publish(MSR_SET_GW);
+			it->SetAsGateway(stoi(gwID));
+		}
 	}
 
 	if(m_sensorsProxy.empty())
 		throw POPException("No sensor proxy could be create. Did you connect the gateway mote via USB ?");
 
 	StartListening();
-	SubscribeToResources();
+	SubscribeToResources(true); // subscribe
 
 	// Send a command to the gateway mote to set it as the gateway
 	// note: since some mote have trouble with the serial line you may need to set it manually later
-	for(auto it : m_sensorsProxy)
-	{
-		it->Publish(PUB_COMMAND, 8); // 8 is the command id for set_as
-	}
+	//for(auto it : m_sensorsProxy)
+	//{
+		//it->Publish(MSR_SET_GW);
+		//it->Publish(PUB_COMMAND, 8); // 8 is the command id for set_as
+		//it->Notify(MSR_SET_GW, UNT_NONE, 0);
+	//}
 }
 
 /// Return true if the POPSensor is connected to at least one sensor
@@ -159,29 +170,56 @@ void POPSensor::Clear()
 }
 
 /// Broadcast a message to all sensors
-void POPSensor::Broadcast(int x_publicationType, int x_data)
+/*void POPSensor::Broadcast(int x_publicationType, int x_data)
 {
 	for(auto it : m_sensorsProxy)
 	{
-		it->Publish(x_publicationType, x_data);
+		//it->Publish(x_publicationType, x_data);
+	}
+}*/
+
+/// Broadcast a message to all sensors
+void POPSensor::Broadcast(int x_measurementType, int x_measurementUnit, int x_data)
+{
+	for(auto it : m_sensorsProxy)
+	{
+		it->Notify(x_measurementType, x_measurementUnit, x_data);
 	}
 }
 
 /// Broadcast a message to all sensors
-void POPSensor::Broadcast(int x_publicationType, double x_data)
+/*void POPSensor::Broadcast(int x_publicationType, double x_data)
 {
 	for(auto it : m_sensorsProxy)
 	{
-		it->Publish(x_publicationType, x_data);
+		//it->Publish(x_publicationType, x_data);
+	}
+}*/
+
+/// Broadcast a message to all sensors
+void POPSensor::Broadcast(int x_measurementType, int x_measurementUnit, double x_data)
+{
+	for(auto it : m_sensorsProxy)
+	{
+		it->Notify(x_measurementType, x_measurementUnit, x_data);
 	}
 }
 
 /// Broadcast a message to all sensors
-void POPSensor::Broadcast(int x_publicationType, const std::string& x_data)
+/*void POPSensor::Broadcast(int x_publicationType, const std::string& x_data)
 {
 	for(auto it : m_sensorsProxy)
 	{
-		it->Publish(x_publicationType, x_data);
+		//it->Publish(x_publicationType, x_data);
+	}
+}*/
+
+/// Broadcast a message to all sensors
+void POPSensor::Broadcast(int x_measurementType, int x_measurementUnit, const std::string& x_data)
+{
+	for(auto it : m_sensorsProxy)
+	{
+		it->Notify(x_measurementType, x_measurementUnit, x_data);
 	}
 }
 
@@ -215,7 +253,7 @@ int POPSensor::GetDataSize()
 }
 
 /// Subscribe to all resources contained in resource.json
-void POPSensor::SubscribeToResources()
+void POPSensor::SubscribeToResources(bool sub)
 {
 	if(m_jsonResources.empty())
 		throw POPException("No resources specified. Did you connect ?");
@@ -230,7 +268,7 @@ void POPSensor::SubscribeToResources()
 	{
 		enum MeasurementType mtype;
 		enum DataType dtype;
-		enum PublicationType ptype;
+		//enum PublicationType ptype;
 		bool incoming              = false;
 		bool outgoing			   = false;
 		string str = root["wsns"]["nodes"][i].get("direction", "<not found>").asString();
@@ -243,17 +281,21 @@ void POPSensor::SubscribeToResources()
 		else if(str == "OUT")
 		{
 			outgoing = true;
-			ptype = translatePublicationType(root["wsns"]["nodes"][i].get("measurementType", "unknown").asString().c_str());
+			mtype = translateMeasurementType(root["wsns"]["nodes"][i].get("measurementType", "log").asString().c_str());
+		}
+		else if(str == "INOUT")
+		{
+			incoming = true;
+			outgoing = true;
+			mtype = translateMeasurementType(root["wsns"]["nodes"][i].get("measurementType", "log").asString().c_str());
+			dtype = translateDataType(root["wsns"]["nodes"][i].get("dataType", "unknown").asString().c_str());
 		}
 		else
 		{
-			throw POPException("Error in JSON: direction must be \"IN\" or \"OUT\"");
+			throw POPException("Error in JSON: direction must be \"IN\", \"INOUT\" or \"OUT\"");
 		}
 
-		if(str == "IN" && mtype == static_cast<int>(MSR_LOG))
-			throw POPException("measurementType not found in JSON resources description");
-
-		if(str == "OUT" && ptype == static_cast<int>(PUB_UNKNOWN))
+		if((str == "IN" || str == "OUT" || str == "INOUT") && mtype == static_cast<int>(MSR_LOG))
 			throw POPException("measurementType not found in JSON resources description");
 
 		// note: dataType is not mandatory
@@ -263,15 +305,31 @@ void POPSensor::SubscribeToResources()
 		int cpt = 0;
 		for(auto it : m_sensorsProxy)
 		{
-			if(incoming)
+			if(!sub)
 			{
-				cout << "Gateway " << PopSID + 1000 + cpt << " subscribes to " << explainMeasurementType(mtype) << " type:" << explainDataType(dtype) << " direction:" << (incoming ? "IN" : "OUT") << popcendl;
-				it->Subscribe(mtype, dtype);
+				if(incoming)
+				{
+					cout << "Gateway " << PopSID + 1000 + cpt << " unsubscribes to " << explainMeasurementType(mtype) << " type:" << explainDataType(dtype) << " direction: IN" << popcendl;
+					it->UnSubscribe(mtype, dtype);
+				}
+				if(outgoing)
+				{
+					cout << "Gateway " << PopSID + 1000 + cpt << " cannot publish " << explainMeasurementType(mtype) << " commands anymore," << " direction: OUT" << popcendl;
+					it->UnPublish(mtype);
+				}
 			}
-			if(outgoing)
+			else
 			{
-				cout << "Gateway " << PopSID + 1000 + cpt << " can publish " << explainPublicationType(ptype) << " commands," << " direction:" << (incoming ? "IN" : "OUT") << popcendl;
-				it->CanPublish(ptype);
+				if(incoming)
+				{
+					cout << "Gateway " << PopSID + 1000 + cpt << " subscribes to " << explainMeasurementType(mtype) << " type:" << explainDataType(dtype) << " direction: IN" << popcendl;
+					it->Subscribe(mtype, dtype);
+				}
+				if(outgoing)
+				{
+					cout << "Gateway " << PopSID + 1000 + cpt << " can publish " << explainMeasurementType(mtype) << " commands," << " direction: OUT" << popcendl;
+					it->Publish(mtype);
+				}
 			}
 			cpt++;
 		}

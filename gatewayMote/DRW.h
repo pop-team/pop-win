@@ -5,16 +5,14 @@
 /* This #define defines the maximum amount of neighbors we can remember. */
 #define MAX_NEIGHBORS 16
 /* This #define defines the node id corresponding to the database */
-#define DATABASE 2 // Note: Set your gateway id here !!
+#define DATABASE 158
 #define DATABASE_TAG UINT8_MAX
 /* This #define defines the node id corresponding to the sender */
-#define SENDER 1
+#define SENDER 5
 #define POWER 3
 
 // Helper to print the decimal of a value
 #define DEC(x) ((unsigned)(x*100 - ((int) x) * 100))
-
-
 
 static bool printConsole = true;
 
@@ -23,51 +21,50 @@ static uint8_t state;
 static uint8_t tag;     //should be a list
 static bool tag_asked = false;
 static int visited;
-static int event_sent = 0;
 static int sense_counter = 0;
 
+
+
 static struct Message message_to_forward;
+static struct Message message_to_send;
 static rimeaddr_t unicast_target;
 static rimeaddr_t weight_target;
 
 static Queue message_queue;
 
-uint16_t sense_light();
-uint16_t sense_infrared();
-uint16_t sense_humidity();
-uint16_t sense_temperature();
+uint8_t sense_light();
+uint8_t sense_infrared();
+uint8_t sense_humidity();
+uint8_t sense_temperature();
 float sense_humidity_float();
 float sense_temperature_float();
 
 /* These are the types of unicast messages that we can send. */
 enum {
-	UNICAST_TYPE_MESSAGE,       //message to forward to database
-	UNICAST_TYPE_WEIGHT,       //information about a mote weight
-	BROADCAST_APPLY_TAG,        //telling neihbors they are tagged 
-	BROADCAST_MAKE_CANDIDATE,   //telling neighbors to compute weight    
-	BROADCAST_ASK_TAG,          //asking neighbors if they are tagged
-	BROADCAST_REPLY_TAG         //message telling if tagged
-
+  UNICAST_TYPE_MESSAGE,       //message to forward to database
+  UNICAST_TYPE_WEIGHT,       //information about a mote weight
+  BROADCAST_APPLY_TAG,        //telling neihbors they are tagged 
+  BROADCAST_MAKE_CANDIDATE,   //telling neighbors to compute weight    
+  BROADCAST_ASK_TAG,          //asking neighbors if they are tagged
+  BROADCAST_REPLY_TAG         //message telling if tagged
+  
 };
 
 /* These are the states in which a mote can be during the DRW */
 enum {
-	IDLE,
-	NEW_MESSAGE,
-	CURRENT_DRW_NODE,
-	CANDIDATE_NODE,
-	SEND_EVENT,
-	GW_NOTIFICATION
-
+  IDLE,
+  NEW_MESSAGE,
+  CURRENT_DRW_NODE,
+  CANDIDATE_NODE  
 };
 
 /* This structure holds information about neighbors. */
 struct neighbor {
 
-	struct neighbor *next;
-	rimeaddr_t addr;
-	uint8_t tag;
-	uint8_t weight;             // #neighbors tagged / total neihbors
+  struct neighbor *next;
+  rimeaddr_t addr;
+  uint8_t tag;
+  uint8_t weight;             // #neighbors tagged / total neihbors
 
 };
 

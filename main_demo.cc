@@ -56,7 +56,8 @@ int main(int argc, char** argv)
 		 */
 
 		cout << "Broadcast green LED ON" << popcendl;
-		popLed.Broadcast(PUB_LED, 1); // PUB_LED=publish for led, 1:green toggle
+		//popLed.Broadcast(PUB_LED, 1); // PUB_LED=publish for led, 1:green toggle
+		popLed.Broadcast(MSR_LED, UNT_NONE, LED_GREEN_TOGGLE); // MSR_LED=notify for led, green toggle
 
 		char c = '\n';
 		while(true)
@@ -90,7 +91,7 @@ int main(int argc, char** argv)
 //			cout << "sum of field= " << explainMeasurementType(elem.first.measurementType) << sum << popcendl;
 			//cout << "sleeping..." << popcendl;
 			sleep(15);
-			popLed.Broadcast(PUB_LED, 1); // PUB_LED=publish for led, 1:green toggle
+			popLed.Broadcast(MSR_LED, UNT_NONE, LED_GREEN_TOGGLE); // PUB_LED=publish for led, green toggle
 		}
 		cout << "Finished gathering temperatures" << popcendl;
 		//POPSensorData temps = POPSensorData(popTemp.Gather());
@@ -102,7 +103,7 @@ int main(int argc, char** argv)
 		of.close();
 
 		cout << "Broadcast green LED OFF" << popcendl;
-		popLed.Broadcast(PUB_LED, 1); // PUB_LED=publish for led, 1:green toggle
+		popLed.Broadcast(MSR_LED, UNT_NONE, LED_GREEN_TOGGLE); // PUB_LED=publish for led, green toggle
 
 		printf("end of main\n");
 	}

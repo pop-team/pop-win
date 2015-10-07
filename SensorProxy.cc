@@ -307,11 +307,83 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 
 }
 
+/// Send a notification to the gateway
+void SensorProxy::Notify(int x_measurementType, int x_measurementUnit, int x_data)
+{
+	enum MeasurementType msgType = static_cast<MeasurementType>(x_measurementType);
+	// Check publication rights
+	auto it = m_publications.find(msgType);
+	bool canPublish = (it != m_publications.end() && it->second);
+
+	if(!canPublish)
+	{
+		// Not subscribed to this type of data
+		cout<< "Cannot notify " << explainMeasurementType(msgType) << " OUT" << popcendl;
+		return;
+	}
+	// note: only string messages are implemented. Other types can be trivially implemented
+	struct NotifyMessage msg;
+	memset(&msg, 0, sizeof(struct NotifyMessage));
+	snprintf(msg.data, sizeof(msg.data), "%d", x_data);
+	msg.measurementType = static_cast<MeasurementType>(x_measurementType);
+	msg.dataType        = TYPE_INT;
+	msg.unit            = static_cast<MeasurementUnit>(x_measurementUnit);
+	msg.id              = m_id;
+	msg.dataSize        = strlen(msg.data);
+
+	char buffer[BUFFERSIZE];
+	if(bufferizeNotifyMessage(&msg, buffer, BUFFERSIZE) <= 0)
+		throw POPException("Cannot bufferize notify message", buffer);
+	// cout<< "Sending " << buf << popcendl;
+	SendRawData(buffer);
+}
+
+/// Send a notification to the gateway
+void SensorProxy::Notify(int x_measurementType, int x_measurementUnit, double x_data)
+{
+	enum MeasurementType msgType = static_cast<MeasurementType>(x_measurementType);
+	// Check publication rights
+	auto it = m_publications.find(msgType);
+	bool canPublish = (it != m_publications.end() && it->second);
+
+	if(!canPublish)
+	{
+		// Not subscribed to this type of data
+		cout<< "Cannot notify " << explainMeasurementType(msgType) << " OUT" << popcendl;
+		return;
+	}
+	// note: only string messages are implemented. Other types can be trivially implemented
+	struct NotifyMessage msg;
+	memset(&msg, 0, sizeof(struct NotifyMessage));
+	snprintf(msg.data, sizeof(msg.data), "%lf", x_data);
+	msg.measurementType = static_cast<MeasurementType>(x_measurementType);
+	msg.dataType        = TYPE_DOUBLE;
+	msg.unit            = static_cast<MeasurementUnit>(x_measurementUnit);
+	msg.id              = m_id;
+	msg.dataSize        = strlen(msg.data);
+
+	char buffer[BUFFERSIZE];
+	if(bufferizeNotifyMessage(&msg, buffer, BUFFERSIZE) <= 0)
+		throw POPException("Cannot bufferize notify message", buffer);
+	// cout<< "Sending " << buf << popcendl;
+	SendRawData(buffer);
+}
 
 /// Send a notification to the gateway
 void SensorProxy::Notify(int x_measurementType, int x_measurementUnit, const std::string& x_message)
 {
-	// note: only string messages are implemented. Other types can be trivially implemented
+	enum MeasurementType msgType = static_cast<MeasurementType>(x_measurementType);
+	// Check publication rights
+	auto it = m_publications.find(msgType);
+	bool canPublish = (it != m_publications.end() && it->second);
+
+	if(!canPublish)
+	{
+		// Not subscribed to this type of data
+		cout<< "Cannot notify " << explainMeasurementType(msgType) << " OUT" << popcendl;
+		return;
+	}
+
 	struct NotifyMessage msg;
 	memset(&msg, 0, sizeof(struct NotifyMessage));
 	snprintf(msg.data, sizeof(msg.data), "%s\r\n", x_message.c_str());
@@ -329,27 +401,17 @@ void SensorProxy::Notify(int x_measurementType, int x_measurementUnit, const std
 }
 
 /// Send a publication to the gateway
-void SensorProxy::Publish(int x_publicationType, int x_data)
+void SensorProxy::Publish(int x_measurementType)
 {
-	enum PublicationType pubType = static_cast<PublicationType>(x_publicationType);
-	// Check publication rights
-	auto it = m_publications.find(pubType);
-	bool canPublish = it != m_publications.end() && it->second;
-
-	if(!canPublish)
-	{
-		// Not subscribed to this type of data
-		cout<< "Cannot publish " << explainPublicationType(pubType) << " commands" << popcendl;
-		return;
-	}
+	m_publications[x_measurementType] = true;
 
 	struct PublishMessage msg;
 	memset(&msg, 0, sizeof(struct PublishMessage));
-	sprintf(msg.data, "%d", x_data);
-	msg.publicationType = static_cast<PublicationType>(x_publicationType);
-	msg.dataType        = TYPE_INT;
+	//sprintf(msg.data, "%d", x_data);
+	msg.publicationType = static_cast<MeasurementType>(x_measurementType);
+	//msg.dataType        = TYPE_INT;
 	msg.id              = m_id;
-	msg.dataSize        = strlen(msg.data);
+	//msg.dataSize        = strlen(msg.data);
 
 	char buffer[BUFFERSIZE];
 	memset(&buffer, 0, BUFFERSIZE*sizeof(char));
@@ -361,46 +423,61 @@ void SensorProxy::Publish(int x_publicationType, int x_data)
 }
 
 /// Send a publication to the gateway
-void SensorProxy::Publish(int x_publicationType, double x_data)
+/*void SensorProxy::Publish(int x_publicationType, double x_data)
 {
 	struct PublishMessage msg;
 	memset(&msg, 0, sizeof(struct PublishMessage));
-	sprintf(msg.data, "%lf", x_data);
+	//sprintf(msg.data, "%lf", x_data);
 	msg.publicationType = static_cast<PublicationType>(x_publicationType);
-	msg.dataType        = TYPE_DOUBLE;
+	//msg.dataType        = TYPE_DOUBLE;
 	msg.id              = m_id;
-	msg.dataSize        = strlen(msg.data);
+	//msg.dataSize        = strlen(msg.data);
 
 	char buffer[BUFFERSIZE];
 	if(bufferizePublishMessage(&msg, buffer, BUFFERSIZE) <= 0)
 		throw POPException("Cannot bufferize publish message", buffer);
 	// cout<< "Sending " << buf << popcendl;
 	SendRawData(buffer);
-}
+}*/
 
 /// Send a publication to the gateway
-void SensorProxy::Publish(int x_publicationType, const string& x_data)
+/*void SensorProxy::Publish(int x_publicationType, const string& x_data)
 {
 	struct PublishMessage msg;
 	memset(&msg, 0, sizeof(struct PublishMessage));
-	sprintf(msg.data, "%s", x_data.c_str());
+	//sprintf(msg.data, "%s", x_data.c_str());
 	msg.publicationType = static_cast<PublicationType>(x_publicationType);
-	msg.dataType        = TYPE_STRING;
+	//msg.dataType        = TYPE_STRING;
 	// msg.unit            = UNT_UNKNOWN;
 	msg.id              = m_id;
-	msg.dataSize        = strlen(msg.data);
+	//msg.dataSize        = strlen(msg.data);
 
 	char buffer[BUFFERSIZE];
 	if(bufferizePublishMessage(&msg, buffer, BUFFERSIZE) <= 0)
 		throw POPException("Cannot bufferize publish message", buffer);
 	// cout<< "Sending " << buf << popcendl;
 	SendRawData(buffer);
-}
+}*/
 
-/// Gateway can send publications to actuators (== actuators subscribed to gateway)
-void SensorProxy::CanPublish(int x_publicationType)
+void SensorProxy::UnPublish(int x_measurementType)
 {
-	m_publications[x_publicationType] = true;
+	m_publications[x_measurementType] = false;
+
+	struct UnPublishMessage msg;
+	memset(&msg, 0, sizeof(struct UnPublishMessage));
+	//sprintf(msg.data, "%d", x_data);
+	msg.publicationType = static_cast<MeasurementType>(x_measurementType);
+	//msg.dataType        = TYPE_INT;
+	msg.id              = m_id;
+	//msg.dataSize        = strlen(msg.data);
+
+	char buffer[BUFFERSIZE];
+	memset(&buffer, 0, BUFFERSIZE*sizeof(char));
+	if(bufferizeUnPublishMessage(&msg, buffer, BUFFERSIZE) <= 0)
+		throw POPException("Cannot bufferize unpublish message", buffer);
+	//cout << "Bufferized publish to buffer size: " << strlen(buffer) << " | " << buffer << popcendl;
+	// cout<< "Sending " << buf << popcendl;
+	SendRawData(buffer);
 }
 
 /// Send a subscription to the gateway
@@ -424,6 +501,27 @@ void SensorProxy::Subscribe(int x_measurementType, int x_dataType)
 	SendRawData(buf);
 }
 
+/// Send a subscription to the gateway
+void SensorProxy::UnSubscribe(int x_measurementType, int x_dataType)
+{
+	char buf[BUFFERSIZE];
+	memset(buf,0,BUFFERSIZE*sizeof(char));
+	// cout << "subscribe to "<< x_measurementType << endl;
+	m_subscriptions[x_measurementType] = false;
+
+	struct UnSubscribeMessage msg;
+	memset(&msg, 0, sizeof(struct UnSubscribeMessage));
+	msg.measurementType = static_cast<MeasurementType>(x_measurementType);
+	msg.dataType        = static_cast<DataType>(x_dataType);
+	msg.id              = m_id;
+
+	// Bufferize message and send to gateway
+	if(bufferizeUnSubscribeMessage(&msg, buf, BUFFERSIZE) <= 0)
+		throw POPException("Cannot bufferize unsubscribe message");
+	// cout<< "Sending " << buf << popcendl;
+	SendRawData(buf);
+}
+
 /// Return the size of the stored data
 int SensorProxy::GetDataSize()
 {
@@ -442,6 +540,12 @@ double SensorProxy::Reduce(int x_mtype, int x_dataType, int x_fct)
 	default:
 		throw POPException("No reduce operation for type " + string(explainDataType(static_cast<enum DataType>(x_dataType))));
 	}
+}
+
+/// Send a notification to set the gwID GW as a GW
+void SensorProxy::SetAsGateway(int gwID)
+{
+	Notify(MSR_SET_GW, UNT_NONE, gwID);
 }
 
 @pack(SensorProxy);

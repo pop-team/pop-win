@@ -81,6 +81,11 @@ PROCESS_THREAD(example_broadcast_process, ev, data)
 	PROCESS_BEGIN();
 
 	broadcast_open(&broadcast, 129, &broadcast_call);
+
+	char                 data[50];
+
+	snprintf(data, sizeof(data), "%s", "test");
+	printf("size: %d",strlen(data));
 	/*
 	while(1) {
 
@@ -109,6 +114,7 @@ PROCESS_THREAD(example_broadcast_process, ev, data)
 		onOffBool++;
 	}
 	*/
+	broadcast_close(&broadcast);
 	PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/

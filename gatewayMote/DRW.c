@@ -12,9 +12,7 @@
 #include "dev/cc2420.h"
 #include "dev/button-sensor.h"
 #include "dev/light-sensor.h"
-#include "dev/light.h"
 #include "dev/sht11.h"
-// #include "dev/tmp102.h"
 
 #include "DRW.h"
 
@@ -39,29 +37,29 @@ static void print_info(uint8_t type) {
 	if (printConsole){
 		switch (type){
 
-			case UNICAST_TYPE_MESSAGE :
-				printf("Sending message to %d\n", unicast_target.u8[0]);
-				break;
+		case UNICAST_TYPE_MESSAGE :
+			printf("Sending message to %d\n", unicast_target.u8[0]);
+			break;
 
-			case UNICAST_TYPE_WEIGHT :
-				printf("Replying weight to %d\n", weight_target.u8[0]);
-				break;
+		case UNICAST_TYPE_WEIGHT :
+			printf("Replying weight to %d\n", weight_target.u8[0]);
+			break;
 
-			case BROADCAST_MAKE_CANDIDATE :
-				printf("Asking neighbors' weights\n");
-				break;
+		case BROADCAST_MAKE_CANDIDATE :
+			printf("Asking neighbors' weights\n");
+			break;
 
-			case BROADCAST_APPLY_TAG :
-				printf("Asking neighbors to apply tag\n");
-				break;
+		case BROADCAST_APPLY_TAG :
+			printf("Asking neighbors to apply tag\n");
+			break;
 
-			case BROADCAST_ASK_TAG :
-				printf("Asking neighbors' tags\n");
-				break;
+		case BROADCAST_ASK_TAG :
+			printf("Asking neighbors' tags\n");
+			break;
 
-			case BROADCAST_REPLY_TAG :
-				printf("Replying about the tag\n");
-				break;
+		case BROADCAST_REPLY_TAG :
+			printf("Replying about the tag\n");
+			break;
 		}
 	}
 }
@@ -74,108 +72,32 @@ static float getWaitTime(uint8_t type) {
 
 	switch (type){
 
-		case UNICAST_TYPE_MESSAGE :
-			return 1.0;
-			break;
+	case UNICAST_TYPE_MESSAGE :
+		return 1.0;
+		break;
 
-		case UNICAST_TYPE_WEIGHT :
-			return 1.0;
-			break;
+	case UNICAST_TYPE_WEIGHT :
+		return 1.0;
+		break;
 
-		case BROADCAST_MAKE_CANDIDATE :
-			return 3.0;
-			break;
+	case BROADCAST_MAKE_CANDIDATE :
+		return 3.0;
+		break;
 
-		case BROADCAST_APPLY_TAG :
-			return 1.0;
-			break;
+	case BROADCAST_APPLY_TAG :
+		return 1.0;
+		break;
 
-		case BROADCAST_ASK_TAG :
-			return 1.0;
-			break;
+	case BROADCAST_ASK_TAG :
+		return 1.0;
+		break;
 
-		case BROADCAST_REPLY_TAG :
-			return 4.0;
-			break;
+	case BROADCAST_REPLY_TAG :
+		return 4.0;
+		break;
 	}
 	return 1.0;
 }
-
-
-/*---------------------------------------------------------------------------*/
-
-// MESSAGE TO SEND USING THE RADIO
-
-char*
-create_messagetosend(struct Message msg){
-
-	char *message = (char*)malloc(strlen(msg.message_string) + 7);
-
-	message[0] = msg.type;
-	message[1] = msg.tag;
-	message[2] = msg.message;
-	message[3] = msg.nodeid;
-	message[4] = msg.value;
-	message[5] = msg.weight;
-
-	printf("Create Message msg.message_string is: %s\n", msg.message_string);
-
-	memcpy(message + 6, msg.message_string, strlen(msg.message_string));
-
-	message[strlen(msg.message_string)+7] = '\0';
-
-	return message;
-}
-
-struct Message
-extract_messagetosend(const char* message){
-
-	printf("Extract message string received msg [0] is: %u\n", (uint8_t)message[0]);
-	printf("Extract message string received msg [1] is: %u\n", (uint8_t)message[1]);
-	printf("Extract message string received msg [2] is: %u\n", (uint8_t)message[2]);
-	printf("Extract message string received msg [3] is: %u\n", (uint8_t)message[3]);
-	printf("Extract message string received msg [4] is: %u\n", (uint8_t)message[4]);
-	printf("Extract message string received msg [5] is: %u\n", (uint8_t)message[5]);
-	printf("Extract message string received msg [6] is: %u\n", (char)message[6]);
-	printf("Extract message string received msg [7] is: %u\n", (char)message[7]);
-	printf("Extract message string received msg [8] is: %u\n", (char)message[8]);
-	printf("Extract message string received msg [9] is: %u\n", (char)message[9]);
-	printf("Extract message string received msg [10] is: %u\n", (char)message[10]);
-	printf("Extract message string received msg [11] is: %u\n", (char)message[11]);
-	printf("Extract message string received msg [12] is: %u\n", (char)message[12]);
-	printf("Extract message string received msg [13] is: %u\n", (char)message[13]);
-
-	printf("Extract message character received msg [6] is: %u\n", (char)message[6]);
-	printf("Extract message character received msg [7] is: %u\n", (char)message[7]);
-	printf("Extract message character received msg [8] is: %u\n", (char)message[8]);
-	printf("Extract message character received msg [9] is: %u\n", (char)message[9]);
-	printf("Extract message character received msg [10] is: %u\n", (char)message[10]);
-	printf("Extract message character received msg [11] is: %u\n", (char)message[11]);
-	printf("Extract message character received msg [12] is: %u\n", (char)message[12]);
-	printf("Extract message character received msg [13] is: %u\n", (char)message[13]);
-
-	struct Message msgextract; 
-	memset(&msgextract, 0, sizeof(msgextract));
-
-	msgextract.type = (uint8_t)message[0];
-	msgextract.tag = (uint8_t)message[1];
-	msgextract.message = (uint8_t)message[2];
-	msgextract.nodeid = (uint8_t)message[3];
-	msgextract.value = (uint8_t)message[4];
-	msgextract.weight = (uint8_t)message[5];
-
-	int i=0;
-
-	for (i=6;i<6+64; ++i)
-	{
-		msgextract.message_string[i-6] = message[i];
-	}
-
-	// printf("EXTRACTED: %s\n", msgextract.message_string);
-
-	return msgextract;
-}
-
 
 /*---------------------------------------------------------------------------*/
 
@@ -183,11 +105,9 @@ extract_messagetosend(const char* message){
 /* broadcast different types of messages */
 static void send_broadcast(uint8_t type){
 
-	printf("Send broadcast message\n");
 	struct Message m = createMessage();
 	m.type = type;
 	m.tag = tag;
-	printf("push broadcast %d %d\n", m.message, __LINE__);
 	message_queue.push(&message_queue, m);
 }
 
@@ -222,12 +142,9 @@ static void send_weight(){
 	unicast_target = weight_target;
 
 	struct Message m;
-	memset(&m, 0, sizeof(m));
 	m.weight = (uint8_t)(10*w);
 	m.type = UNICAST_TYPE_WEIGHT;
 	m.tag = tag;
-	snprintf(m.message_string, sizeof(m.message_string), "Empty");
-	printf("push weights %d %d\n", m.message, __LINE__);
 	message_queue.push(&message_queue, m);
 
 }
@@ -244,8 +161,8 @@ static void add_neighbor(uint8_t ntag, uint8_t nweight, const rimeaddr_t *from){
 	for(n = list_head(neighbors_list); n != NULL; n = list_item_next(n)) {
 
 		/* We break out of the loop if the address of the neighbor matches
-		   the address of the neighbor from which we received this
-		   broadcast message. */
+             the address of the neighbor from which we received this
+             broadcast message. */
 		if(rimeaddr_cmp(&n->addr, from)) {
 			n->weight = nweight;
 			n->tag = ntag;
@@ -255,16 +172,15 @@ static void add_neighbor(uint8_t ntag, uint8_t nweight, const rimeaddr_t *from){
 	}
 
 	/* If n is NULL, this neighbor was not found in our list, and we
-	   allocate a new struct neighbor from the neighbors_memb memory
-	   pool. */
+           allocate a new struct neighbor from the neighbors_memb memory
+           pool. */
 	if(n == NULL) {
 		n = memb_alloc(&neighbors_memb);
 
 		/* If we could not allocate a new neighbor entry, we give up. We
-		   could have reused an old neighbor entry, but we do not do this
-		   for now. */
+             could have reused an old neighbor entry, but we do not do this
+             for now. */
 		if(n == NULL) {
-			printf("ERROR: cannot allocate a new neighbor\n");
 			return;
 		}
 
@@ -287,7 +203,7 @@ static void add_neighbor(uint8_t ntag, uint8_t nweight, const rimeaddr_t *from){
 
 //Forward message
 /* This is the function that does the routing to the next mote in the DRW when the DRW is in construction*/
-static void forward_message(const struct Message *msg){
+static void forward_message(){
 
 	//pick neighbor with minimum weight and send a unicast message to it.
 	if(list_length(neighbors_list) > 0) {
@@ -306,18 +222,13 @@ static void forward_message(const struct Message *msg){
 		unicast_target = t->addr;
 
 		struct Message m;
-		memset(&m, 0, sizeof(m));
-		m.message = msg->message; printf("Message %u\n", m.message);
-		m.value = msg->value; printf("Value %u\n", m.value);
-		m.nodeid = msg->nodeid; printf("Nodeid %u\n", m.nodeid);
-		m.type = UNICAST_TYPE_MESSAGE; printf("Type %u\n", m.type);
-		m.tag = tag; printf("Message %u\n", m.tag);
-		strcpy(m.message_string, msg->message_string); 
-
-		printf("push forward msg %d %d\n", m.message, __LINE__);
+		m.message = message_to_forward.message;
+		m.value = message_to_forward.value;
+		m.nodeid = message_to_forward.nodeid;
+		m.type = UNICAST_TYPE_MESSAGE;
+		m.tag = tag;
 		message_queue.push(&message_queue, m);
 	}
-	else printf("ERROR: cannot forward message, no neighbor found\n");
 }
 /*---------------------------------------------------------------------------*/
 
@@ -329,256 +240,156 @@ static void forward_message(const struct Message *msg){
 
 //BROADCAST RECEIVE
 /* This function is called whenever a broadcast message is received. */
-	static void // TODO : check why broadcast_recv would be duplicated in gatewayMote.c, 
-		    // why DRW.c included in gatewayMote.c
+static void
 broadcast_recv(struct broadcast_conn *c, const rimeaddr_t *from)
 {
 	struct Message *msg;
 
 	/* The packetbuf_dataptr() returns a pointer to the first data byte
-	   in the received packet. */
+     in the received packet. */
 	msg = packetbuf_dataptr();
-	printf("Received broadcast message\n");
 
 	switch (msg->type) {
 
-		case BROADCAST_APPLY_TAG :
+	case BROADCAST_APPLY_TAG :
 
-			printf("Asked to apply tag %d\n",msg->tag);
-			if ((int)node_id != DATABASE)tag = msg->tag;
-			//leds_on(LEDS_RED);
+		printf("Asked to apply tag %d\n",msg->tag);
+		if ((int)node_id != DATABASE)tag = msg->tag;
+		leds_on(LEDS_RED);
 
-			break;
+		break;
 
-		case BROADCAST_MAKE_CANDIDATE :
+	case BROADCAST_MAKE_CANDIDATE :
 
-			printf("Empty the list of neighbors\n");
-			list_init(neighbors_list);
-			weight_target = *from;
-			add_neighbor(msg->tag, 0, from);	//add the current note of DRW
-			state = CANDIDATE_NODE;
+		list_init(neighbors_list);
+		weight_target = *from;
+		add_neighbor(msg->tag, 0, from);	//add the current note of DRW
+		state = CANDIDATE_NODE;
 
-			break;
+		break;
 
-		case BROADCAST_ASK_TAG :
+	case BROADCAST_ASK_TAG :
 
-			if (state != CURRENT_DRW_NODE && state != NEW_MESSAGE)
-				send_broadcast(BROADCAST_REPLY_TAG);
-			tag_asked = true;
+		if (state != CURRENT_DRW_NODE && state != NEW_MESSAGE)
+			send_broadcast(BROADCAST_REPLY_TAG);
+		tag_asked = true;
 
-			break;
+		break;
 
-		case BROADCAST_REPLY_TAG :
+	case BROADCAST_REPLY_TAG :
 
-			if (state == CANDIDATE_NODE)
-				add_neighbor(msg->tag, 0, from);
+		if (state == CANDIDATE_NODE)
+			add_neighbor(msg->tag, 0, from);
 
-			break;
+		break;
 
 	}
 }
 /* This is where we define what function to be called when a broadcast
    is received. We pass a pointer to this structure in the
    broadcast_open() call below. */
-//static const struct broadcast_callbacks broadcast_call = {broadcast_recv};
+static const struct broadcast_callbacks broadcast_call = {broadcast_recv};
 /*---------------------------------------------------------------------------*/
 
 
 
 // UNICAST RECEIVE
 /* This function is called for every incoming unicast packet. */
-	static void
+static void
 recv_uc(struct unicast_conn *c, const rimeaddr_t *from)
 {
+	struct Message *msg;
 
 	/* Grab the pointer to the incoming data. */
-	char* msgrec;
-	msgrec = packetbuf_dataptr();
+	msg = packetbuf_dataptr();
 
-	printf("Message string received msg [0] is: %u\n", (uint8_t)msgrec[0]);
-	printf("Message string received msg [1] is: %u\n", (uint8_t)msgrec[1]);
-	printf("Message string received msg [2] is: %u\n", (uint8_t)msgrec[2]);
-	printf("Message string received msg [3] is: %u\n", (uint8_t)msgrec[3]);
-	printf("Message string received msg [4] is: %u\n", (uint8_t)msgrec[4]);
-	printf("Message string received msg [5] is: %u\n", (uint8_t)msgrec[5]);
-	printf("Message string received msg [6] is: %u\n", (char)msgrec[6]);
-	printf("Message string received msg [7] is: %u\n", (char)msgrec[7]);
-	printf("Message string received msg [8] is: %u\n", (char)msgrec[8]);
-	printf("Message string received msg [9] is: %u\n", (char)msgrec[9]);
-	printf("Message string received msg [10] is: %u\n", (char)msgrec[10]);
-	printf("Message string received msg [11] is: %u\n", (char)msgrec[11]);
-	printf("Message string received msg [12] is: %u\n", (char)msgrec[12]);
-	printf("Message string received msg [13] is: %u\n", (char)msgrec[13]);
+	switch(msg->type){
 
-	printf("Message character received msg [6] is: %u\n", (char)msgrec[6]);
-	printf("Message character received msg [7] is: %u\n", (char)msgrec[7]);
-	printf("Message character received msg [8] is: %u\n", (char)msgrec[8]);
-	printf("Message character received msg [9] is: %u\n", (char)msgrec[9]);
-	printf("Message character received msg [10] is: %u\n", (char)msgrec[10]);
-	printf("Message character received msg [11] is: %u\n", (char)msgrec[11]);
-	printf("Message character received msg [12] is: %u\n", (char)msgrec[12]);
-	printf("Message character received msg [13] is: %u\n", (char)msgrec[13]);
+	case UNICAST_TYPE_MESSAGE :
 
-	message_to_forward = extract_messagetosend(msgrec);
+		printf("Unicast ping received from %d.%d\n",
+				from->u8[0], from->u8[1]);
+		tag = msg->tag;
+		message_to_forward.message = msg->message;
+		message_to_forward.value = msg->value;
+		message_to_forward.nodeid = msg->nodeid;
+		state = CURRENT_DRW_NODE;
 
+		break;
 
-	printf("RECEIVED Type is: %u\n", message_to_forward.type);
-	printf("RECEIVED Nodeid is: %u\n", message_to_forward.nodeid);
-	printf("RECEIVED Message is: %u\n", message_to_forward.message);
-	printf("RECEIVED Value is: %u\n", message_to_forward.value);
-	printf("RECEIVED Nodeid of publisher is: %u\n", message_to_forward.nodeid);
+	case UNICAST_TYPE_WEIGHT :
 
-	switch(message_to_forward.type){
+		add_neighbor(msg->tag, msg->weight, from);
 
-		case UNICAST_TYPE_MESSAGE :
-
-			printf("Unicast ping received from %d.%d\n",
-					from->u8[0], from->u8[1]);
-
-			state = CURRENT_DRW_NODE;
-
-			break;
-
-		case UNICAST_TYPE_WEIGHT :
-
-			printf("Received unicast message: adding neighbor\n");
-
-			add_neighbor(message_to_forward.tag, message_to_forward.weight, from);
-
-			break;
+		break;
 
 	}
 }
 static const struct unicast_callbacks unicast_callbacks = {recv_uc};
 /*---------------------------------------------------------------------------*/
 
-uint16_t sense_light(){
+uint8_t sense_light(){
 	SENSORS_ACTIVATE(light_sensor);
-	unsigned int value = light_sensor.value(LIGHT_SENSOR_PHOTOSYNTHETIC);
-#ifdef EN_DEBUG
-	DEBUG("Light value: %u", value);
-#endif
+	unsigned int value = (unsigned int)light_sensor.value(0);
+	printf("Light value1: %u\n", value);
+	//printf("Light value2: %d\n", light_sensor.value(0));
 	SENSORS_DEACTIVATE(light_sensor);
 
-	return value;
+	return (uint8_t)value;
 }
 
-uint16_t sense_infrared(){
+uint8_t sense_infrared(){
 	SENSORS_ACTIVATE(light_sensor);
-	unsigned int value = light_sensor.value(LIGHT_SENSOR_TOTAL_SOLAR);
-#ifdef EN_DEBUG
-	DEBUG("Infrared value: %u", value);
-#endif
+	unsigned int value = (unsigned int)light_sensor.value(1);
+	printf("Light value1: %u\n", value);
+	//printf("Light value2: %d\n", light_sensor.value(0));
 	SENSORS_DEACTIVATE(light_sensor);
 
-	return value;
+	return (uint8_t)value;
 }
 
-uint16_t sense_temperature(){
+uint8_t sense_temperature(){
 	/*
-	   int16_t sign    = 1;
-	   int16_t  raw    = tmp102_read_temp_raw();
-	   uint16_t absraw = raw;
-	   if(raw < 0) {
-	   absraw = (raw ^ 0xFFFF) + 1;
-	   sign = -1;
-	   }
-	   int16_t  tempint  = ((absraw >> 8) * sign)-3;
-	   uint16_t tempfrac = ((absraw >> 4) % 16) * 625;	
-	   char     minus    = ((tempint == 0) & (sign == -1)) ? '-' : ' ';
-	// note: in the present situation, all messages are sent as 8 bits integers for simplicity
+	int16_t sign    = 1;
+	int16_t  raw    = tmp102_read_temp_raw();
+	uint16_t absraw = raw;
+	if(raw < 0) {
+		absraw = (raw ^ 0xFFFF) + 1;
+		sign = -1;
+	}
+	int16_t  tempint  = ((absraw >> 8) * sign)-3;
+	uint16_t tempfrac = ((absraw >> 4) % 16) * 625;
+	char     minus    = ((tempint == 0) & (sign == -1)) ? '-' : ' ';
+
 	DEBUG("Temp %d %d %d  --> %d %d %d", sign, raw, absraw, tempint, tempfrac, (int)minus);
 	 */
 	// Create a temperature notification and send
 	// SEND( "{\"status\":\"OK\", \"infos\":{\"temperature\":\"%c%d.%04d\"}}", minus, tempint, tempfrac);
 
+	// note: in the present situation, all messages are sent as 8 bits integers for simplicity
 	unsigned int value = (unsigned int) (-39.60 + 0.01 * sht11_temp());
-#ifdef EN_DEBUG
-	DEBUG("sense temperature %u", value);
-#endif
-	return value;
+	printf("sense temperature %u\n", value);
+	return (uint8_t)value;
+}
+
+uint8_t sense_humidity(){
+	unsigned int rh = sht11_humidity();
+	unsigned int value = (unsigned int) (-4 + 0.0405*rh - 2.8e-6*(rh*rh));
+	printf("sense humidity %u percent (%u)\n", value, rh);
+	return (uint8_t)value;
 }
 
 float sense_temperature_float(){
-	/* note: this code is unstable on z1 (which uses tmp102 sensor) and unstable on xm1000
-	   unsigned u = sht11_temp();
-	   float value = 0;
-	   if(u == 65535)
-	   {
-	   int16_t tempint;
-	   uint16_t tempfrac;
-	   int16_t raw;
-	   uint16_t absraw;
-	   int16_t sign;
-	   char minus = ' ';
-
-	   sign = 1;
-	   raw = tmp102_read_temp_raw();
-	   absraw = raw;
-	   if(raw < 0) {               // Perform 2C's if sensor returned negative data
-	   absraw = (raw ^ 0xFFFF) + 1;
-	   sign = -1;
-	   }
-	   tempint = (absraw >> 8) * sign;
-	   tempfrac = ((absraw >> 4) % 16) * 625;      // Info in 1/10000 of degree
-	   minus = ((tempint == 0) & (sign == -1)) ? '-' : ' ';
-	   DEBUG("Temp = %c%d.%04d", minus, tempint, tempfrac);
-	   value = tempint + tempfrac * 0.01;
-	   if(sign == -1)
-	   value *= -1;
-	   }
-	   else
-	   value = -39.60 + 0.01 * sht11_temp();
-	 */
 	float value = -39.60 + 0.01 * sht11_temp();
-#ifdef EN_DEBUG
 	DEBUG("sense temperature %d.%u (%u)", (int)value, DEC(value), sht11_temp());
-#endif
-	return value;
-}
-
-uint16_t sense_humidity(){
-	unsigned int rh = sht11_humidity();
-	unsigned int value = -4 + 0.0405*rh - 2.8e-6*(rh*rh);
-#ifdef EN_DEBUG
-	DEBUG("sense humidity %u percent (%u)", value, rh);
-#endif
 	return value;
 }
 
 float sense_humidity_float(){
 	unsigned int rh = sht11_humidity();
 	float value = -4 + 0.0405*rh - 2.8e-6*(rh*rh);
-#ifdef EN_DEBUG
 	DEBUG("sense humidity %d.%u percent (%u)", (int)value, DEC(value), rh);
-#endif
 	return value;
-}
-
-void send_event(char *message, uint8_t event){
-
-	if ((int)node_id == SENDER){
-		LOG("Sending message event: %s", (const char *)message);
-		char buf[16];
-		sprintf(buf, "%s", message);
-		printf("Message string event is: %s\n", buf);
-		uint8_t typemessage = event;
-		message_to_forward.message = typemessage;
-		message_to_forward.nodeid = node_id;
-		message_to_forward.value = 0;
-
-
-		snprintf(message_to_forward.message_string, sizeof(message_to_forward.message_string), message);
-
-		printf("SEND EVENT Message string 0 event is: %c, %c\n", message_to_forward.message_string[0], message[0]);
-		printf("SEND EVENT Message string 1 event is: %c, %c\n", message_to_forward.message_string[1], message[1]);
-		printf("SEND EVENT Message string 2 event is: %c, %c\n", message_to_forward.message_string[2], message[2]);
-		printf("SEND EVENT Message string 3 event is: %c, %c\n", message_to_forward.message_string[3], message[3]);
-		printf("SEND EVENT Message string 4 event is: %c, %c\n", message_to_forward.message_string[4], message[4]);
-		printf("SEND EVENT Message string 5 event is: %c, %c\n", message_to_forward.message_string[5], message[5]);
-
-		state = SEND_EVENT;
-	}
 }
 
 
@@ -588,9 +399,9 @@ PROCESS_THREAD(communication_process, ev, data)
 	static struct etimer et;
 
 	PROCESS_EXITHANDLER(broadcast_close(&broadcast);)
-		PROCESS_EXITHANDLER(unicast_close(&unicast);)
+	PROCESS_EXITHANDLER(unicast_close(&unicast);)
 
-		PROCESS_BEGIN();
+	PROCESS_BEGIN();
 
 	broadcast_open(&broadcast, 129, &broadcast_call);
 	unicast_open(&unicast, 146, &unicast_callbacks);
@@ -602,10 +413,7 @@ PROCESS_THREAD(communication_process, ev, data)
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
 		if (message_queue.size > 0){
-			struct Message message_to_send;
-			memset(&message_to_send, 0, sizeof(message_to_send));
-			message_to_send = message_queue.pop(&message_queue); // TODO: Use memcpy
-			printf("pop %d %d\n", message_to_send.message, __LINE__);
+			message_to_send = message_queue.pop(&message_queue);
 
 			waitTime = getWaitTime(message_to_send.type);
 
@@ -615,48 +423,16 @@ PROCESS_THREAD(communication_process, ev, data)
 			//Unicast message
 			if ((message_to_send.type == UNICAST_TYPE_MESSAGE) ||
 					(message_to_send.type == UNICAST_TYPE_WEIGHT)){
-				printf("Sending unicast message\n");
 
 				print_info(message_to_send.type);
 
-				char sending[64]; //  = (char*)malloc(strlen(message_to_send.message_string) + 7);
-
-				printf("Sending unicast message before package with data %s\n", message_to_send.message_string);
-
-				printf("Message to send nodeid %u\n", message_to_send.nodeid);
-
-				printf("Sending unicast message %u %u\n", message_to_send.message, message_to_send.type);
-				printf("Sending unicast message %s\n", message_to_send.message_string);
-
-				char* tmp = create_messagetosend(message_to_send);
-				memcpy(sending, tmp, strlen(message_to_send.message_string) + 6 + 1);
-
-				printf("Sending unicast message with data sending [0] %u %u\n", sending[0], tmp[0]);
-				printf("Sending unicast message with data sending [1] %u %u\n", sending[1], tmp[1]);
-				printf("Sending unicast message with data sending [2] %u %u\n", sending[2], tmp[2]);
-				printf("Sending unicast message with data sending [3] %u %u\n", sending[3], tmp[3]);
-				printf("Sending unicast message with data sending [4] %u %u\n", sending[4], tmp[4]);
-				printf("Sending unicast message with data sending [5] %u %u\n", sending[5], tmp[5]);
-				printf("Sending unicast message with data sending [6] %u\n", sending[6]);
-				printf("Sending unicast message with data sending [7] %u\n", sending[7]);
-				printf("Sending unicast message with data sending [8] %u\n", sending[8]);
-				printf("Sending unicast message with data sending [9] %u\n", sending[9]);
-				printf("Sending unicast message with data sending [6] %c\n", sending[6]);
-				printf("Sending unicast message with data sending [7] %c\n", sending[7]);
-				printf("Sending unicast message with data sending [8] %c\n", sending[8]);
-				printf("Sending unicast message with data sending [9] %c\n", sending[9]);
-				printf("Sending unicast message with data sending [10] %c\n", sending[10]);
-				printf("Sending unicast message with data sending [11] %c\n", sending[11]);	
-
-				packetbuf_copyfrom(sending, strlen((const char*)message_to_send.message_string) + 6 + 1);
+				packetbuf_copyfrom(&message_to_send, sizeof(struct Message));
 				unicast_send(&unicast, &unicast_target);
 
-				free(tmp);
 			}
 
 			//Broadcast message
 			else {
-				printf("Sending broadcast message\n");
 				print_info(message_to_send.type);
 
 				packetbuf_copyfrom(&message_to_send, sizeof(struct Message));
@@ -670,70 +446,13 @@ PROCESS_THREAD(communication_process, ev, data)
 }
 
 /*---------------------------------------------------------------------------*/
-//PROCESS DEFINITION: Poll the sensors and check if events happened
-PROCESS_THREAD(sensor_events, ev, data)
+//PROCESS DEFINITION: DRW
+PROCESS_THREAD(drw, ev, data)
 {
-
 	PROCESS_BEGIN();
 
 	// Initialization of sensor
 	sht11_init();
-	// tmp102_init();
-
-	static struct etimer et;
-
-	while(1){
-		etimer_set(&et, 3 * CLOCK_SECOND);
-		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-
-		static char event_hot = 0;
-		uint8_t temp = sense_temperature();
-
-		if(temp >= 40u){
-			if(event_hot == 0){
-				send_event("It is hot !", MSR_EVENT);
-				event_hot = 1;
-				event_sent = 1;
-			}
-		}
-		else event_hot = 0;
-
-		static char event_humid = 0;
-		uint8_t humid = sense_humidity();
-
-		if(humid > 60u){
-			if(event_humid == 0){
-				send_event("It is wet !", MSR_EVENT);
-				event_humid = 1;
-				event_sent = 1;
-			}
-		}
-		else event_humid = 0;
-
-		static char event_dark = 0;
-		uint8_t light = sense_light();
-
-		if(light < 20u){
-			if(event_dark == 0){
-				send_event("It is dark !", MSR_EVENT);
-				event_dark = 1;
-				event_sent = 1;
-			}
-		}
-		else event_dark = 0;
-
-	}
-	PROCESS_END();
-
-}
-
-/*---------------------------------------------------------------------------*/
-//PROCESS DEFINITION: DRW
-PROCESS_THREAD(drw, ev, data)
-{
-
-
-	PROCESS_BEGIN();
 
 	state = IDLE;
 	list_init(neighbors_list);
@@ -742,7 +461,7 @@ PROCESS_THREAD(drw, ev, data)
 	visited = 0;
 	tag = 0;	//not part of DRW
 	if ((int)node_id == DATABASE) tag = DATABASE_TAG;
-	//leds_off(LEDS_ALL);
+	leds_off(LEDS_ALL);
 
 	static struct etimer et;
 
@@ -753,19 +472,14 @@ PROCESS_THREAD(drw, ev, data)
 		etimer_set(&et, CLOCK_SECOND);
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-		//TO READ FROM THE SERIAL IF WE RECEIVE A GW_NOTIFICATION TO GO TO THE APPROPIATE STATE
-
-
 		if (state == NEW_MESSAGE){
-			struct Message message;
-			memset(&message, 0, sizeof(message));
 
 			etimer_set(&et, CLOCK_SECOND * 2);
 			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
 			printf("Starting the DRW\n");
-			//leds__on(LEDS_RED);
-			//leds_on(LEDS_BLUE);
+			leds_on(LEDS_RED);
+			leds_on(LEDS_BLUE);
 
 			tag = 1;
 			send_broadcast(BROADCAST_APPLY_TAG);
@@ -778,97 +492,75 @@ PROCESS_THREAD(drw, ev, data)
 			etimer_set(&et, CLOCK_SECOND * 30);
 			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-			// Sense one measure and send
+			// Sense temperature and send
 			if(sense_counter % 3 == 0){
-				uint8_t typemessage = MSR_LIGHT;
-				message.message = typemessage;
-				message.value = sense_light();
+				uint8_t typemessage = 6;
+				message_to_forward.message = typemessage;
+				SENSORS_ACTIVATE(light_sensor);
+				uint8_t value = (uint8_t)light_sensor.value(0);
+				printf("Light value1: %u\n", value);
+				printf("Light value2: %d\n", light_sensor.value(0));
+				message_to_forward.value = value;
+				SENSORS_DEACTIVATE(light_sensor);
+				message_to_forward.nodeid = node_id;
+
+				/*		uint8_t typemessage = MSR_LIGHT;
+		message_to_forward.message = typemessage;
+		message_to_forward.value = sense_light();
+		message_to_forward.nodeid = node_id;*/
 			}
 			else if(sense_counter % 3 == 1){
 				uint8_t typemessage = MSR_TEMPERATURE;
-				message.message = typemessage;
-				message.value = sense_temperature();
+				message_to_forward.message = typemessage;
+				message_to_forward.value = sense_temperature();
+				message_to_forward.nodeid = node_id;
 			}
 			else{
 				uint8_t typemessage = MSR_HUMIDITY;
-				message.message = typemessage;
-				message.value = sense_humidity();
+				message_to_forward.message = typemessage;
+				message_to_forward.value = sense_humidity();
+				message_to_forward.nodeid = node_id;
 			}
 			sense_counter++;
 
-			message.nodeid = node_id;	
-			snprintf(message.message_string, sizeof(message.message_string), "Empty");
-			printf("Message string  when sensing is: %s\n", message.message_string);
 
-			forward_message(&message);
-			//leds_off(LEDS_BLUE);
-			//leds_toggle(LEDS_ALL);
+			forward_message();
+			leds_off(LEDS_BLUE);
+			leds_toggle(LEDS_ALL);
 
 			state = IDLE;
 
 
 		} else if (state == CURRENT_DRW_NODE){
 
-			// Id DATABASE is the id of the gateway
 			if ((int)node_id == DATABASE) {
-				//leds_on(LEDS_RED);
+
 				printf("Message has reached the gateway!\n");
 				printf("Message is: %u\n", message_to_forward.message);
 				printf("Value is: %u\n", message_to_forward.value);
-				char buff[16];
-				sprintf(buff, "%s", message_to_forward.message_string);
-				printf("Message string is: %s\n", buff);
 				printf("Nodeid of publisher is: %u\n", message_to_forward.nodeid);
 
 				// Send a notification to POP-C++
 				struct NotifyMessage msg;
 				memset(&msg, 0, sizeof(msg));
+				snprintf(msg.data, sizeof(msg.data), "%d", message_to_forward.value);
 				msg.measurementType = message_to_forward.message;
-
-				if(message_to_forward.message == MSR_EVENT)
-				{
-					snprintf(msg.data, sizeof(msg.data), "%s", message_to_forward.message_string);
-					msg.dataType        = TYPE_STRING;
-				}else
-				{
-					snprintf(msg.data, sizeof(msg.data), "%d", message_to_forward.value);
-					msg.dataType        = TYPE_INT;
-				}
+				msg.dataType        = TYPE_INT;
 				msg.id              = message_to_forward.nodeid;
 				msg.dataSize        = strlen(msg.data);
+				//sendNotificationSerial(&msg, buf);
 				gwSendNotificationSerial(&msg);
-				// printf("message sent to gw %d\n",message_to_forward.message);
+				printf("message sent to proxy %d\n",message_to_forward.message);
+				LOG("message sent to proxy [%d]\n",message_to_forward.message);
 
 				state=IDLE;
-				//leds_off(LEDS_RED);
+				leds_on(LEDS_ALL);
 
-			} else if (event_sent == 1 && message_to_forward.message == 100) {
-				// if an event is present and message == 100 (an event is produced)
-
-				printf("Message has reached the node that sent a string event!\n");
-				printf("Message is: %u\n", message_to_forward.message);
-				printf("Value is: %u\n", message_to_forward.value);
-				char buff[16];
-				sprintf(buff, "%s", (char *)message_to_forward.message_string);
-				printf("Message string is: %s\n", buff);
-				printf("Nodeid of publisher is: %u\n", message_to_forward.nodeid);
-
-				//Toggle the LEDs
-				//leds_toggle(LEDS_ALL);
-				//leds_toggle(LEDS_ALL);
-
-				event_sent  = 0;
-
-				state=IDLE;
-				//leds_on(LEDS_ALL);
-
-			}else {
+			} else {
 
 				visited++;
-				struct Message sendevent;
-				memcpy(&sendevent, &message_to_forward, sizeof(message_to_forward)); // copy as a safety
 
-				//leds_on(LEDS_BLUE);
+				leds_on(LEDS_BLUE);
 				list_init(neighbors_list);
 
 				send_broadcast(BROADCAST_MAKE_CANDIDATE);
@@ -877,16 +569,16 @@ PROCESS_THREAD(drw, ev, data)
 				PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
 
-				forward_message(&sendevent);
+				forward_message();
 				send_broadcast(BROADCAST_APPLY_TAG);
 
 				state = IDLE;
-				//leds_off(LEDS_BLUE);
+				leds_off(LEDS_BLUE);
 			}
 
 		} else if(state == CANDIDATE_NODE){
 
-			//leds_on(LEDS_GREEN);
+			leds_on(LEDS_GREEN);
 
 			send_broadcast(BROADCAST_ASK_TAG);
 
@@ -896,67 +588,7 @@ PROCESS_THREAD(drw, ev, data)
 			send_weight();
 
 			state = IDLE;
-			//leds_off(LEDS_GREEN);
-
-		} else if(state == SEND_EVENT){
-
-			static struct etimer et;
-			struct Message sendevent;
-			memcpy(&sendevent, &message_to_forward, sizeof(message_to_forward));
-
-			etimer_set(&et, CLOCK_SECOND * 2);
-			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-
-			printf("Starting the DRW for event\n");
-			//leds_on(LEDS_RED);
-			//leds_on(LEDS_BLUE);
-			tag = 1;
-			send_broadcast(BROADCAST_APPLY_TAG);
-
-			etimer_set(&et, CLOCK_SECOND * 1);
-			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-
-			send_broadcast(BROADCAST_MAKE_CANDIDATE);
-
-			etimer_set(&et, CLOCK_SECOND * 30);
-			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-
-			forward_message(&sendevent);
-			//leds_off(LEDS_BLUE);
-			//leds_toggle(LEDS_ALL);
-
-			state = IDLE;
-		} else if(state == GW_NOTIFICATION){
-
-			static struct etimer et;
-
-			etimer_set(&et, CLOCK_SECOND * 2);
-			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-
-			printf("Starting the DRW for toggle LEDs due to event\n");
-			//leds_on(LEDS_RED);
-			//leds_on(LEDS_BLUE);
-			tag = 1;
-			send_broadcast(BROADCAST_APPLY_TAG);
-
-			etimer_set(&et, CLOCK_SECOND * 1);
-			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-
-			send_broadcast(BROADCAST_MAKE_CANDIDATE);
-
-			etimer_set(&et, CLOCK_SECOND * 30);
-			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-
-
-			message_to_forward.message = 100;
-			message_to_forward.value = 100;			
-			message_to_forward.nodeid = node_id;	
-			snprintf(message_to_forward.message_string, sizeof(message_to_forward.message_string), "Toggle");
-			forward_message(&message_to_forward);
-			//leds_off(LEDS_BLUE);
-			//leds_toggle(LEDS_ALL);
-
-			state = IDLE;
+			leds_off(LEDS_GREEN);
 		}
 	}
 

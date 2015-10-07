@@ -23,8 +23,8 @@
 #include <stdio.h>
 
 #include "dev/serial-line.h"
-#include "dev/temperature-sensor.h"
-// #include "dev/tmp102.h"
+//#include "dev/sht25.h" // for Zolteria Z1
+#include "dev/sht11.h" // for XM1000
 #include "dev/button-sensor.h"
 #include "popwin_messages.h"
 #include "queue.h"
@@ -58,7 +58,7 @@ void generate_test_data_string();
 void print_id();
 void send_broadcast_cmd();
 void toggle_debug();
-void set_as_gateway();
+void set_as_gateway(int id);
 
 // All functions are stored in a table
 typedef void (*FunctionCall)(void);
@@ -90,7 +90,7 @@ void logging(const char *format,...);
 /*** GLOBAL VARIABLES       */
 /****************************/
 char g_debug   = 1; // Toggle debug mode
-int g_gateway = GATEWAY_ID; // ID of the gateway
+int g_gateway = DEFAULT_GATEWAY_ID; // ID of the gateway
 
 // send a subscription message
 void gwSendSubscriptionSerial(const struct SubscribeMessage* msg)
@@ -162,7 +162,7 @@ PROCESS(gateway_communication_process , "Communication to/from the gateway");
 PROCESS(button_pressed                , "Button pressed");
 PROCESS(communication_process         , "Communication process");
 PROCESS(drw                           , "Directional Random Walk");
-PROCESS(sensor_events                 , "Send events based on sensor values");
+//PROCESS(sensor_events                 , "Send events based on sensor values");
 PROCESS(multihop_announce             , "Multihop communication: init and announce periodically");
 PROCESS(multihop_sense                , "Take measurements and transmit via multihop");
 
@@ -173,12 +173,13 @@ PROCESS(multihop_sense                , "Take measurements and transmit via mult
 // note: we can choose here which version of the code we want to run:
 #if 0
 // Processes to run with routing algo of UNIGE
-AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &communication_process, &drw, &sensor_events); // Processes to run with algo of UNIGE
+AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &communication_process, &drw/*, &sensor_events*/); // Processes to run with algo of UNIGE
+#define DRW_CODE 1
 #else
 // Processes to use the routing of messages given by the multihop example
-//AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &multihop_announce, &multihop_sense);
+AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &multihop_announce, &multihop_sense);
 //AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &multihop_sense);
-AUTOSTART_PROCESSES(&gateway_communication_process, &multihop_announce, &multihop_sense);
+//AUTOSTART_PROCESSES(&gateway_communication_process, &multihop_announce, &multihop_sense);
 //AUTOSTART_PROCESSES(&gateway_communication_process, &multihop_announce);
 //AUTOSTART_PROCESSES(&gateway_communication_process);
 #endif
@@ -187,7 +188,7 @@ AUTOSTART_PROCESSES(&gateway_communication_process, &multihop_announce, &multiho
 //int countSentBroadcast = 0;
 
 static void
-broadcast_recvGM(struct broadcast_conn *c, const rimeaddr_t *from)
+broadcast_recvGWM(struct broadcast_conn *c, const rimeaddr_t *from)
 {
 	//printf("broadcast message received from %d.%d: '%s'\n",from->u8[0], from->u8[1], (char *)packetbuf_dataptr());
 	//	leds_toggle(LEDS_GREEN);
@@ -202,8 +203,8 @@ broadcast_recvGM(struct broadcast_conn *c, const rimeaddr_t *from)
 	gwHandleMessage((char *)packetbuf_dataptr(), 1); // careful with parameter fromProxy ! (here 1)
 }
 
-static const struct broadcast_callbacks broadcast_call = {broadcast_recvGM};
-static struct broadcast_conn broadcast;
+static const struct broadcast_callbacks broadcast_callGWM = {broadcast_recvGWM};
+//static struct broadcast_conn broadcast;
 
 /*---------------------------------------------------------------------------*/
 
@@ -223,21 +224,8 @@ PROCESS_THREAD(gateway_communication_process, ev, data)
 	printf("+   INIT/START SERIAL COM    +\n");
 	printf("++++++++++++++++++++++++++++++\n");  
 	//leds_off(LEDS_ALL);
-	// If we are the GW, broadcast we are available to communicate via serial line
-	/*if(g_gateway == get_id())
-	{
-		struct PublishMessage msg;
-		memset(&msg, 0, sizeof(struct PublishMessage));
-		msg.publicationType = PUB_GW_ALIVE;
-		msg.id = g_gateway;
-		gwSendPublicationSerial(&msg);
 
-#ifdef EN_LOGS
-		LOG("set broadcast callback");
-#endif
-	}*/
-
-	broadcast_open(&broadcast, 129, &broadcast_call);
+	broadcast_open(&broadcast, 129, &broadcast_callGWM);
 
 	static char g_busy  = 0;
 	print_id();
@@ -271,7 +259,7 @@ PROCESS_THREAD(gateway_communication_process, ev, data)
 #ifdef EN_LOGS
 	LOG("Exiting process gateway_communication_process");
 #endif
-	//leds_off(LEDS_ALL);
+	leds_off(LEDS_ALL);
 	broadcast_close(&broadcast);
 	PROCESS_END();
 }
@@ -311,14 +299,99 @@ void gwHandleNotification(const char* data, char fromProxy)
 	if(unbufferizeNotifyMessage(&msg, data, sizeof(msg.data)) <= 0)
 		ERROR("Cannot read message from buffer");
 
+	int is_SETGW_MSG = 0;
+
 	// Proxy: the SensorProxy of POPWin
 	if(fromProxy)
 	{
-		// If the message comes from the GW --> forward it // TODO for broadcast
+#ifdef EN_DEBUG
+		DEBUG("Handle notification dataType=%d", msg.dataType);
+#endif
 
-		// 
-		// note: the forwarding of messages to the network of sensors is not implemented yet
-		//
+		switch(msg.dataType)
+		{
+		case TYPE_DOUBLE:
+		{
+			ERROR("publication of type TYPE_DOUBLE are not handled yet");
+		}
+		break;
+		case TYPE_INT:
+		{
+			int dataInt = atoi(msg.data);
+			switch(msg.measurementType)
+			{
+			case MSR_LED:
+			{
+#ifdef EN_DEBUG
+				if(g_gateway == get_id())
+				{
+					DEBUG("On GW, blink led %d\n", dataInt);
+					//printf("On GW, blink led %d\n", dataInt);
+				}
+				else
+				{
+					DEBUG("On sensor, blink led %d\n", dataInt);
+					//printf("On sensor, blink led %d\n", dataInt);
+				}
+#endif
+				switch(dataInt)
+				{
+				case LED_BLUE_TOGGLE:
+					leds_toggle(LEDS_BLUE);
+					break;
+				case LED_GREEN_TOGGLE:
+					leds_toggle(LEDS_GREEN);
+					break;
+				case LED_RED_TOGGLE:
+					leds_toggle(LEDS_RED);
+					break;
+				case LED_ALL_OFF:
+					leds_off(LEDS_ALL);
+					break;
+				case LED_ALL_ON:
+					leds_on(LEDS_ALL);
+					break;
+				case LED_ALL_TOGGLE:
+					leds_toggle(LEDS_ALL);
+					break;
+				default:
+					LOG("unknown PUB_LED command");
+				}
+			}
+			break;
+			case MSR_SET_GW:
+			{
+				set_as_gateway(dataInt);
+				is_SETGW_MSG = 1; // TODO: check again if needed
+			}
+			break;
+			default:
+				ERROR("Unknown notification type");
+				printf("MSR msg code: %d\n",msg.measurementType);
+			}
+		}
+		break;
+		case TYPE_STRING:
+		{
+			ERROR("publication of type TYPE_STRING are not handled yet");
+		}
+		break;
+		default:
+			ERROR("Unknown data type");
+			printf("data type msg code: %d\n",msg.dataType);
+		}
+
+		// If on GW and the message comes from the Proxy --> forward it
+		// do not rebroadcast set_as_gateway command
+		if(g_gateway == get_id() /*&& !is_SETGW_MSG*/)
+		{
+			packetbuf_copyfrom(data, strlen(data) + 1);
+			broadcast_send(&broadcast);
+			//printf("broadcast message sent from GW to sensors: %d\n",++countSentBroadcast);
+#ifdef EN_LOGS
+			LOG("broadcast notify message sent from GW to sensors\n");
+#endif
+		}
 #ifdef EN_LOGS
 		LOG("Proxy has sent notification: %s", data);
 #endif
@@ -368,7 +441,7 @@ void gwHandlePublication(const char* data, char fromProxy)
 	}
 
 #ifdef EN_DEBUG
-	DEBUG("Handle publication dataType=%d", msg.dataType);
+	DEBUG("Handle publication publicationType=%d", msg.publicationType);
 #endif
 
 	if(!fromProxy) //TODO check if really needed
@@ -379,7 +452,7 @@ void gwHandlePublication(const char* data, char fromProxy)
 
 	int isGWCmd = 0; // used to not rebroadcast set_as_gateway command
 
-	switch(msg.dataType)
+	/*switch(msg.dataType)
 	{
 	case TYPE_DOUBLE:
 	{
@@ -472,7 +545,7 @@ void gwHandlePublication(const char* data, char fromProxy)
 	default:
 		ERROR("Unknown data type");
 		printf("data type msg code: %d\n",msg.dataType);
-	}
+	}*/ // end switch msg.dataType
 
 	// If on GW and the message comes from the Proxy --> forward it
 	// do not rebroadcast set_as_gateway command
@@ -482,7 +555,7 @@ void gwHandlePublication(const char* data, char fromProxy)
 		broadcast_send(&broadcast);
 		//printf("broadcast message sent from GW to sensors: %d\n",++countSentBroadcast);
 #ifdef EN_LOGS
-		LOG("broadcast message sent from GW to sensors\n");
+		LOG("broadcast publication sent from GW to sensors\n");
 #endif
 	}
 }
@@ -614,9 +687,9 @@ void toggle_debug(){
 /*
  * Design the mote as a gateway
  */
-void set_as_gateway(){
-	g_gateway = get_id(); // !g_gateway;
-	LOG("Design as gateway %s", g_gateway == get_id() ? "on" : "off");
+void set_as_gateway(int id){
+	g_gateway = id; // !g_gateway;
+	LOG("Design %d as gateway %s", id, g_gateway == get_id() ? "on" : "off");
 }
 
 #define CHANNEL 135
@@ -743,7 +816,7 @@ void sensorSendNotification(struct NotifyMessage* msg)
 {
 	// declare destination
 	rimeaddr_t to;
-	to.u8[0] = GATEWAY_ID; // ID of our gateway
+	to.u8[0] = g_gateway; // ID of our gateway
 	to.u8[1] = 0;
 
 	// In case we are on the gateway/sensor: send via serial to PC
@@ -787,6 +860,7 @@ PROCESS_THREAD(multihop_announce, ev, data)
 {
 	PROCESS_EXITHANDLER(multihop_close(&multihop);)
 	PROCESS_BEGIN();
+	printf("Launching process multihop_announce\n");
 
 	// Init for multihop -----
 	/* Initialize the memory for the neighbor table entries. */
@@ -828,6 +902,7 @@ PROCESS_THREAD(multihop_sense, ev, data)
 {
 	//PROCESS_EXITHANDLER(multihop_close(&multihop);)
 	PROCESS_BEGIN();
+	printf("Launching process multihop_sense\n");
 	//leds_on(LEDS_GREEN);
 	/* -------------------------------------------------- */
 	// Init for multihop -----
@@ -866,12 +941,16 @@ PROCESS_THREAD(multihop_sense, ev, data)
 		// Send a broadcast message
 		// send_broadcast_cmd();
 
+		sht11_init(); // XM1000
+
 		/*---- start of multihop call ----*/
 		struct NotifyMessage msg;
 		memset(&msg, 0, sizeof(msg));
 
 		// Alternate the type of measurement
 		float fl = 0;
+		//int16_t senseTemp = 0;
+		//int16_t senseHumi = 0;
 
 		//switch(push%5)
 		//{
@@ -879,8 +958,10 @@ PROCESS_THREAD(multihop_sense, ev, data)
 		msg.measurementType = MSR_TEMPERATURE;
 		msg.dataType        = TYPE_DOUBLE;
 		msg.unit            = UNT_CELSIUS;
-		fl                  = sense_temperature_float();
-		sprintf(msg.data, "%d.%u", (int)fl, DEC(fl));
+		fl					= sense_temperature_float(); // XM1000
+		sprintf(msg.data, "%d.%u", (int)fl, DEC(fl)); // for XM1000
+		//senseTemp           = sense_temperature_float(); // Z1
+		//sprintf(msg.data, "%d.%d", senseTemp / 100, senseTemp % 100); // for Zolteria Z1
 		msg.id              = get_id();
 		msg.dataSize        = strlen(msg.data);
 		sensorSendNotification(&msg);
@@ -892,8 +973,10 @@ PROCESS_THREAD(multihop_sense, ev, data)
 		msg.measurementType = MSR_HUMIDITY;
 		msg.dataType        = TYPE_DOUBLE;
 		msg.unit            = UNT_PERCENT;
-		fl                  = sense_humidity_float();
-		sprintf(msg.data, "%d.%u", (int)fl, DEC(fl));
+		fl                  = sense_humidity_float();// XM1000
+		sprintf(msg.data, "%d.%u", (int)fl, DEC(fl));// XM1000
+		//senseHumi			= sense_humidity_float(); // Z1
+		//sprintf(msg.data, "%d.%d", senseHumi / 100, senseHumi % 100); // for Zolteria Z1
 		msg.id              = get_id();
 		msg.dataSize        = strlen(msg.data);
 		sensorSendNotification(&msg);
@@ -978,10 +1061,12 @@ PROCESS_THREAD(button_pressed, ev, data)
 	PROCESS_EXITHANDLER(goto exit);
 	PROCESS_BEGIN();
 
+	printf("Launching process button_pressed\n");
+
 	/* Initialize stuff here. */ 
 
 	SENSORS_ACTIVATE(button_sensor);
-	//leds_on(LEDS_ALL);
+	leds_on(LEDS_ALL);
 
 	// Initialization of sensor
 	sht11_init();
@@ -993,13 +1078,14 @@ PROCESS_THREAD(button_pressed, ev, data)
 
 		static uint8_t push = 0;	// Keeps the number of times the user pushes the button sensor
 		PROCESS_WAIT_EVENT_UNTIL((ev==sensors_event) && (data == &button_sensor));
+		printf("Button event !\n");
 
 		// Send a broadcast message
 		// send_broadcast_cmd();
 
 		/*---- start of multihop call ----*/
 		rimeaddr_t to;
-		to.u8[0] = GATEWAY_ID; // ID of our gateway
+		to.u8[0] = g_gateway; // ID of our gateway
 		to.u8[1] = 0;
 
 		struct NotifyMessage msg;
@@ -1013,7 +1099,7 @@ PROCESS_THREAD(button_pressed, ev, data)
 
 		// In case we are on the gateway: send via serial to PC
 		gwSendNotificationSerial(&msg);
-
+#ifndef DRW_CODE
 		if(g_gateway != get_id())
 			//if(0)
 		{
@@ -1028,6 +1114,7 @@ PROCESS_THREAD(button_pressed, ev, data)
 			/* Send the packet. */
 			multihop_send(&multihop, &to);
 		}
+#endif
 		/*---- end of multihop call ----*/
 
 		//if ((int)node_id == SENDER) // TODO: CM Maybe remove this
@@ -1060,7 +1147,7 @@ PROCESS_THREAD(button_pressed, ev, data)
 
 	exit:
 	printf("exit button pressed\n");
-	//leds_off(LEDS_ALL);
+	leds_off(LEDS_ALL);
 	PROCESS_END();
 }
 

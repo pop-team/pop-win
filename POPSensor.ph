@@ -42,9 +42,12 @@ public:
 	POPSensorData Gather();
 
 	/// Broacast data through the network
-	void Broadcast(int x_publicationType, int x_data);
-	void Broadcast(int x_publicationType, double x_data);
-	void Broadcast(int x_publicationType, const std::string& x_data);
+	//void Broadcast(int x_publicationType, int x_data);
+	//void Broadcast(int x_publicationType, double x_data);
+	//void Broadcast(int x_publicationType, const std::string& x_data);
+	void Broadcast(int x_measurementType, int x_measurementUnit, int x_data);
+	void Broadcast(int x_measurementType, int x_measurementUnit, double x_data);
+	void Broadcast(int x_measurementType, int x_measurementUnit, const std::string& x_data);
 
 	// Apply a reduce function to the data {size, min, max, aver, sum, stdev}
 	double Reduce(int x_mtype, int x_dataType, int x_fct);
@@ -61,9 +64,6 @@ public:
 	/// Send notification to the connected sensor
 	void Notify(int x_measurementType, int x_measurementUnit, const std::string& x_message);
 
-	/// Send a subscription to sensors
-	void Subscribe(int x_measurementType, int x_dataType);
-
 	/// Check if connected to any sensor
 	bool IsConnected();
 
@@ -75,6 +75,9 @@ private:
 	/// Initialize from config
 	void Initialize(const std::string& x_resourceFileName);
 
+	/// Send a subscription to sensors
+	void Subscribe(int x_measurementType, int x_dataType);
+
 	/// Start listening on serial line
 	void StartListening();
 
@@ -82,7 +85,7 @@ private:
 	void StopListening();
 
 	/// Subscribe to resources specified at connection
-	void SubscribeToResources();
+	void SubscribeToResources(bool unsub);
 
 	/// List of sensor proxy. Each proxy can be connected to one sensor via serial line
 	std::vector<SensorProxy*> m_sensorsProxy;

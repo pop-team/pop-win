@@ -1,20 +1,29 @@
 {
 	"gateways":[
 		{
-			"url": "160.98.61.131",
-			"connection": "usb"
+			"url": "localhost",
+			"connection": "usb",
+			"id": "158"
 		}
 	],
 	"wsns":{
 		"nodes":[
 			{
 				"measurementType": "led",
-				"direction":   "OUT"
+				"direction":   "INOUT"
 			},
 			{
-				"measurementType": "command",
-				"direction":   "OUT"
-			}
+				"measurementType": "temperature",
+				"direction":   "IN"
+			},
+			{
+				"measurementType": "humidity",
+				"direction":   "IN"
+			},
+			{
+				"measurementType": "light",
+				"direction":   "IN"
+			}	
 		]
 	}
 }

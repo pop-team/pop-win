@@ -18,16 +18,18 @@
 #define BUFFERDATASIZE 64
 
 // The id of the gateway
-//#define GATEWAY_ID     0
-#define GATEWAY_ID     158
+//#define GATEWAY_ID     158
+#define DEFAULT_GATEWAY_ID -1 // this means : is not a gateway (default sor sensors)
 
 /// Different types of messages
 enum MessageType
 {
-	MSG_UNKNOWN   = 0, // only used for error handling
-	MSG_SUBSCRIBE = 1, // subscription message
-	MSG_NOTIFY    = 2, // notification message
-	MSG_PUBLISH   = 3  // publication message
+	MSG_UNKNOWN     = 0, // only used for error handling
+	MSG_SUBSCRIBE   = 1, // subscription message
+	MSG_NOTIFY      = 2, // notification message
+	MSG_PUBLISH     = 3, // publication message
+	MSG_UNSUBSCRIBE = 4, // unsubscription message
+	MSG_UNPUBLISH	= 5  // unpublication message
 };
 
 /// Different types of measurement
@@ -43,7 +45,9 @@ enum MeasurementType
 	MSR_HUMIDITY    = 7,  // humidity measurement
 	MSR_INFRARED    = 8,  // infrared measurement
 	MSR_EVENT       = 9,  // a specific event is sent
-	MSR_LED         = 10  // led status measurement
+	MSR_LED         = 10, // led status
+	MSR_SET_GW		= 11, // set sensor as GW notification
+	MSR_ERROR       = 12  // error
 	// ... //
 };
 
@@ -77,9 +81,26 @@ enum PublicationType
 {
 	PUB_UNKNOWN     = 0,    // Unknown publication
 	PUB_COMMAND     = 1,    // commands can be seen as publications
-	PUB_LED         = 2,    // blink/on/off a led
-	PUB_SWITCH      = 3,     // on/off a switch
-	PUB_GW_ALIVE	= 4
+	PUB_LED         = 2,    // create channel for LEDS
+	PUB_SWITCH      = 3   	// on/off a switch
+	// ... //
+};
+
+/// Different types of actions related to LEDs
+enum LedActions
+{
+	LED_GREEN_TOGGLE = 0,   // toggle (invert) the green led
+	LED_GREEN_OFF    = 1,   // turn off the green led
+	LED_GREEN_ON	 = 2,	// turn on the green led
+	LED_BLUE_TOGGLE	 = 3,
+	LED_BLUE_OFF	 = 4,
+	LED_BLUE_ON	 	 = 5,
+	LED_RED_TOGGLE	 = 6,
+	LED_RED_OFF		 = 7,
+	LED_RED_ON	 	 = 8,
+	LED_ALL_TOGGLE	 = 9,
+	LED_ALL_OFF		 = 10,
+	LED_ALL_ON	 	 = 11
 	// ... //
 };
 
@@ -108,6 +129,7 @@ const char* explainDataType(enum DataType x);
 // TYPES OF MESSAGES 
 //
 
+// -------------------------------------------------------------------------------- //
 /// Subscription message
 struct SubscribeMessage
 {
@@ -119,8 +141,6 @@ struct SubscribeMessage
 	enum DataType        dataType;
 };
 
-// note: UnSubscribe message has the same structure as publish messages
-
 /// Print message to buffer
 ///
 /// @param x_msg     Incoming message
@@ -129,10 +149,35 @@ struct SubscribeMessage
 int bufferizeSubscribeMessage(const struct SubscribeMessage* x_msg, char* xp_buffer, size_t x_bufferSize);
 
 /// Read message from buffer
-/// 
+///
 /// @param xp_msg         Output: message structure
 /// @param x_buffer       Input:  message is read from here
 int unbufferizeSubscribeMessage(struct SubscribeMessage* xp_msg, const char* x_buffer);
+
+// -------------------------------------------------------------------------------- //
+/// UnSubscription message
+struct UnSubscribeMessage
+{
+	/// Id of emitter: Id is not mandatory. Only for convenience
+	unsigned short       id;
+	/// Type of measurement
+	enum MeasurementType measurementType;
+	/// Type of the data
+	enum DataType        dataType;
+};
+
+/// Print message to buffer
+///
+/// @param x_msg     Incoming message
+/// @param xp_buffer Output buffer
+/// @param x_bufferSize Size of the buffer for safety
+int bufferizeUnSubscribeMessage(const struct UnSubscribeMessage* x_msg, char* xp_buffer, size_t x_bufferSize);
+
+/// Read message from buffer
+/// 
+/// @param xp_msg         Output: message structure
+/// @param x_buffer       Input:  message is read from here
+int unbufferizeUnSubscribeMessage(struct UnSubscribeMessage* xp_msg, const char* x_buffer);
 
 // -------------------------------------------------------------------------------- //
 /// A structure representing a notification message
@@ -169,19 +214,18 @@ int unbufferizeNotifyMessage(struct NotifyMessage* x_msg, const char* x_buffer, 
 
 // -------------------------------------------------------------------------------- //
 /// Publication message
-
 struct PublishMessage
 {
 	/// Type of the publication
-	enum PublicationType publicationType;
+	enum MeasurementType publicationType;
 	/// Type of the data
-	enum DataType        dataType;
+	//enum DataType        dataType;
 	/// Id of emitter
 	unsigned short       id;               // not mandatory, for convenience
 	/// Size of the data for buffering
-	size_t               dataSize;
+	//size_t               dataSize;
 	/// Buffer containing the serialized data
-	char                 data[BUFFERDATASIZE];
+	//char                 data[BUFFERDATASIZE];
 };
 
 // Note: no unpublish message for the first version. The structure will be similar to publish messages
@@ -199,6 +243,36 @@ int bufferizePublishMessage(const struct PublishMessage* x_msg, char* xp_buffer,
 /// @param x_buffer       Input:  message is read from here
 /// @param x_maxDataSize: Size of the data buffer for safety
 int unbufferizePublishMessage(struct PublishMessage* xp_msg, const char* x_buffer, size_t x_dataSize);
+
+// -------------------------------------------------------------------------------- //
+/// UnPublication message
+struct UnPublishMessage
+{
+	/// Type of the publication
+	enum MeasurementType publicationType;
+	/// Type of the data
+	//enum DataType        dataType;
+	/// Id of emitter
+	unsigned short       id;               // not mandatory, for convenience
+	/// Size of the data for buffering
+	//size_t               dataSize;
+	/// Buffer containing the serialized data
+	//char                 data[BUFFERDATASIZE];
+};
+
+/// Print message to buffer
+///
+/// @param x_msg     Incoming message
+/// @param xp_buffer Output buffer
+/// @param x_bufferSize Size of the buffer for safety
+int bufferizeUnPublishMessage(const struct UnPublishMessage* x_msg, char* xp_buffer, size_t x_bufferSize);
+
+/// Read message from buffer
+///
+/// @param xp_msg         Output: message structure
+/// @param x_buffer       Input:  message is read from here
+/// @param x_maxDataSize: Size of the data buffer for safety
+int unbufferizeUnPublishMessage(struct UnPublishMessage* xp_msg, const char* x_buffer, size_t x_dataSize);
 
 // -------------------------------------------------------------------------------- //
 

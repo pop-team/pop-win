@@ -27,20 +27,30 @@ public:
 
 	/// Send notification to the connected sensor
 	async seq void Notify(int x_measurementType, int x_measurementUnit, const std::string& x_message);
+	async seq void Notify(int x_measurementType, int x_measurementUnit, double x_data);
+	async seq void Notify(int x_measurementType, int x_measurementUnit, int x_data);
 
 	/// Send a publication to the connected sensor
-	async seq void Publish(int x_publicationType, int x_data);
-	async seq void Publish(int x_publicationType, double x_data);
-	async seq void Publish(int x_publicationType, const std::string& x_data);
+	async seq void Publish(int x_measurementType);
+	/// Gateway cannot send notifications to actuators anymore
+	async seq void UnPublish(int x_measurementType);
+	//async seq void Publish(int x_publicationType, int x_data);
+	//async seq void Publish(int x_publicationType, double x_data);
+	//async seq void Publish(int x_publicationType, const std::string& x_data);
 
-	// Apply a reduce function to the data {size, min, max, aver, sum, stdev}
+	/// Apply a reduce function to the data {size, min, max, aver, sum, stdev}
 	sync seq double Reduce(int x_mtype, int x_dataType, int x_fct);
 
-	// Gateway can send publications to actuators
-	async seq void CanPublish(int x_publicationType);
+	/// Gateway can send notifications to actuators
+	//async seq void CanPublish(int x_publicationType);
 
 	/// Send a subscription to the connected sensor
 	async seq void Subscribe(int x_measurementType, int x_dataType);
+	/// Send an unsubscription to the connected sensor
+	async seq void UnSubscribe(int x_measurementType, int x_dataType);
+
+	/// Send a notification to set the gwID GW as a GW
+	async seq void SetAsGateway(int gwID);
 
 	/// Send data to the remote sensors
 	async conc void StartListening();

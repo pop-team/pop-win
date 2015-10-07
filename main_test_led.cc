@@ -12,6 +12,7 @@
 // #include <termios.h>
 // #include <map>
 #include <fstream>
+#include <iostream>
 
 #include "POPSensor.ph"
 
@@ -34,11 +35,14 @@ int main(int argc, char** argv)
 	{
 		cout << "Creating POPSensor for leds" << popcendl;
 		POPSensor popLed(argv[1], argv[2],0);
+		POPSensorData temps;
 
-		popLed.Broadcast(PUB_LED, 3); // PUB_LED=publish for led, 3:all off
+		//popLed.Broadcast(PUB_LED, 3); // PUB_LED=publish for led, 3:all off
+		popLed.Broadcast(MSR_LED, UNT_NONE, LED_ALL_OFF); // MSR_LED=notify for led, 1:green toggle
 
 		cout << "Broadcast green LED ON" << popcendl;
-		popLed.Broadcast(PUB_LED, 1); // PUB_LED=publish for led, 1:green toggle
+		//popLed.Broadcast(PUB_LED, 1); // PUB_LED=publish for led, 1:green toggle
+		popLed.Broadcast(MSR_LED, UNT_NONE, LED_GREEN_TOGGLE); // MSR_LED=notify for led, 1:green toggle
 
 		char c = '\n';
 		while(true)
@@ -51,10 +55,11 @@ int main(int argc, char** argv)
 
 		cout << "Blink leds..." << popcendl;
 		int count = 0;
-		const int MAX_BLINKS = 300;
+		const int MAX_BLINKS = 400;
 		for(int i = 0 ; i < MAX_BLINKS ; i++)
 		{
-			popLed.Broadcast(PUB_LED, 1); // PUB_LED=publish for led, 1:green toggle
+			//popLed.Broadcast(PUB_LED, 1); // PUB_LED=publish for led, 1:green toggle
+			/*popLed.Broadcast(MSR_LED, UNT_NONE, LED_GREEN_TOGGLE); // MSR_LED=notify for led, 1:green toggle
 			if(count % 2 == 0)
 			{
 				cout << "--------------- Led OFF --------------- " << popcendl;
@@ -63,8 +68,15 @@ int main(int argc, char** argv)
 			{
 				cout << "--------------- Led ON --------------- " << popcendl;
 			}
-			count++;
-			sleep(5);
+			count++;*/
+			//double sum = popLed.Reduce(MSR_TEMPERATURE, TYPE_DOUBLE, POPSensorData::size);
+			temps = popLed.Gather();
+			popLed.Clear();
+			//printf("\n------------------------------------------------------\n");
+			//printf("sum: %lf\n",sum);
+			temps.Print();
+			//printf("\n------------------------------------------------------\n");
+			sleep(1);
 		}
 		cout << "Finished blinking leds" << popcendl;
 

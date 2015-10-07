@@ -2,7 +2,7 @@ POPCC=popcc -cpp11 -g -no-async-allocation
 INC=-IlineComm -I/usr/include/jsoncpp
 LIBS=-ljsoncpp
 
-all: POPSensor.obj SensorProxy.obj main main_example main_plot main_demo main_test_led objects.map
+all: POPSensor.obj SensorProxy.obj main_plot main_demo main_test_led objects.map
 
 clean:
 	rm -f *.o *.obj main main_demo main_test_led objects.map

@@ -148,6 +148,12 @@ class POPSensorData : public POPBase
 	/// Return the map containing the data (constant)
 	template<typename T>const std::map<RecordHeader, T>& GetData() const;
 
+	/// Return the value contained at the specified place in the map
+	template<typename T>const T GetValue(int id) const;
+
+	/// Return the header contained at the specified place in the map
+	template<typename T>const RecordHeader& GetHeader(int id) const;
+
 private:
 
 	std::map<RecordHeader, std::string> dataString;
