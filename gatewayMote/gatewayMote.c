@@ -177,9 +177,9 @@ AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &communicat
 #define DRW_CODE 1
 #else
 // Processes to use the routing of messages given by the multihop example
-AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &multihop_announce, &multihop_sense);
+//AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &multihop_announce, &multihop_sense);
 //AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &multihop_sense);
-//AUTOSTART_PROCESSES(&gateway_communication_process, &multihop_announce, &multihop_sense);
+AUTOSTART_PROCESSES(&gateway_communication_process, &multihop_announce, &multihop_sense);
 //AUTOSTART_PROCESSES(&gateway_communication_process, &multihop_announce);
 //AUTOSTART_PROCESSES(&gateway_communication_process);
 #endif

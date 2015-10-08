@@ -149,7 +149,7 @@ int unbufferizeNotifyMessage(struct NotifyMessage* xp_msg, const char* x_buffer,
 		}
 		else
 		{
-			printf("WARNING: Data has the wrong size %d!=%d\n", s, dataSize);
+			//printf("WARNING: Data has the wrong size %d!=%d\n", s, dataSize);
 			return 1;
 		}
 	}

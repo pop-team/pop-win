@@ -3,7 +3,7 @@
 		{
 			"url": "localhost",
 			"connection": "usb",
-			"id": "158"
+			"id": "0"
 		}
 	],
 	"wsns":{
@@ -13,7 +13,7 @@
 				"direction":   "INOUT"
 			},
 			{
-				"measurementType": "light",
+				"measurementType": "temperature",
 				"direction":   "IN"
 			}	
 		]

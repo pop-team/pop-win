@@ -1,8 +1,9 @@
 {
 	"gateways":[
 		{
-			"url": "160.98.61.129",
-			"connection": "usb"
+			"url": "160.98.61.101",
+			"connection": "usb",
+			"id": "158"
 		}
 	],
 	"wsns":{
@@ -10,10 +11,6 @@
 			{
 				"measurementType": "temperature",
 				"direction":   "IN"
-			},
-			{
-				"measurementType": "command",
-				"direction":   "OUT"
 			}
 		]
 	}

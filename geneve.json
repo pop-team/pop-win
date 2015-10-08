@@ -9,11 +9,7 @@
 	"wsns":{
 		"nodes":[
 			{
-				"measurementType": "led",
-				"direction":   "INOUT"
-			},
-			{
-				"measurementType": "light",
+				"measurementType": "temperature",
 				"direction":   "IN"
 			}	
 		]

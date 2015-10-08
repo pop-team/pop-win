@@ -33,11 +33,12 @@ int main(int argc, char** argv)
 	try
 	{
 		cout << "Creating POPSensor for temperature" << popcendl;
-		POPSensor popTemp(argv[1], argv[2],0);
-		POPSensorData temps;
+		//POPSensor popTemp(argv[1], argv[2],0);
+		//POPSensorData temps;
 
 		cout << "Creating POPSensor for leds" << popcendl;
 		POPSensor popLed(argv[3], argv[4],1);
+		POPSensorData led;
 
 		//POPSensorData in_leds;
 		//in_leds = popLed.Gather();
@@ -54,6 +55,7 @@ int main(int argc, char** argv)
 		}
 		popLed.Scatter(out_leds);
 		 */
+		popLed.Broadcast(MSR_LED, UNT_NONE, LED_ALL_OFF); // MSR_LED=notify for led, all off
 
 		cout << "Broadcast green LED ON" << popcendl;
 		//popLed.Broadcast(PUB_LED, 1); // PUB_LED=publish for led, 1:green toggle
@@ -72,14 +74,24 @@ int main(int argc, char** argv)
 		of.open("outputfile.csv");
 
 		cout << "Gather temperatures..." << popcendl;
-		for(int i = 0 ; i < 30 ; i++)
+		for(int i = 0 ; i < 3000 ; i++)
 		{
-			temps = popTemp.Gather();
-			popTemp.Clear();
+			popLed.Broadcast(MSR_LED, UNT_NONE, LED_GREEN_TOGGLE); // PUB_LED=publish for led, green toggle
+			sleep(1);
+			popLed.Broadcast(MSR_LED, UNT_NONE, LED_GREEN_TOGGLE); // PUB_LED=publish for led, green toggle
+			sleep(1);
+			//temps = popTemp.Gather();
+			led = popLed.Gather();
+			popLed.Broadcast(MSR_LED, UNT_NONE, LED_GREEN_TOGGLE); // PUB_LED=publish for led, green toggle
+			sleep(1);
+			//popTemp.Clear();
+			popLed.Clear();
 			printf("\n-----------------------------------------------------------------------------------------------\n");
-			temps.Print();
+			//temps.Print();
 			printf("\n-----------------------------------------------------------------------------------------------\n");
-			temps.PrintToFile(of);
+			led.Print();
+			printf("\n-----------------------------------------------------------------------------------------------\n");
+			//temps.PrintToFile(of);
 			/*const map<RecordHeader, double> awd = temps.GetData<double>();
 			double sum = 0.0;
 			for(auto elem : awd)
@@ -88,10 +100,9 @@ int main(int argc, char** argv)
 				sum += elem.second;
 			}*/
 			//cout << "" << popcendl;
-//			cout << "sum of field= " << explainMeasurementType(elem.first.measurementType) << sum << popcendl;
+			//			cout << "sum of field= " << explainMeasurementType(elem.first.measurementType) << sum << popcendl;
 			//cout << "sleeping..." << popcendl;
-			sleep(15);
-			popLed.Broadcast(MSR_LED, UNT_NONE, LED_GREEN_TOGGLE); // PUB_LED=publish for led, green toggle
+			sleep(3);
 		}
 		cout << "Finished gathering temperatures" << popcendl;
 		//POPSensorData temps = POPSensorData(popTemp.Gather());

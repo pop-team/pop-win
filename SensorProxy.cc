@@ -251,9 +251,9 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 			bool subscribed = it != m_subscriptions.end() && it->second;
 			if(msg.measurementType == MSR_LOG)
 			{
-				//#ifdef EN_COUTS
+				#ifdef EN_COUTS
 				cout << "Proxy received log from " << msg.id << " : " << msg.data << popcendl;
-				//#endif
+				#endif
 				break;
 			}
 			else if(!subscribed)
