@@ -10,6 +10,7 @@
 /* This #define defines the node id corresponding to the sender */
 #define SENDER 5
 #define POWER 3
+#define MAX_POWER 5
 
 // Helper to print the decimal of a value
 #define DEC(x) ((unsigned)(x*100 - ((int) x) * 100))

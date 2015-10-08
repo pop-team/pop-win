@@ -171,7 +171,7 @@ PROCESS(multihop_sense                , "Take measurements and transmit via mult
    start when this module is loaded. We put our processes there. */
 
 // note: we can choose here which version of the code we want to run:
-#if 0
+#if 1
 // Processes to run with routing algo of UNIGE
 AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &communication_process, &drw/*, &sensor_events*/); // Processes to run with algo of UNIGE
 #define DRW_CODE 1
@@ -218,6 +218,8 @@ PROCESS_THREAD(gateway_communication_process, ev, data)
 {   
 	PROCESS_EXITHANDLER(goto exit);
 	PROCESS_BEGIN();
+
+	cc2420_set_txpower(MAX_POWER);
 
 	/* Initialize stuff here. */
 	printf("++++++++++++++++++++++++++++++\n");
