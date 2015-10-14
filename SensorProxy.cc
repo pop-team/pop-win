@@ -175,6 +175,7 @@ void SensorProxy::StartListening()
 			std::string msg;
 
 			while(std::getline(received,msg,'\n')){
+				//cout << "handling incoming message: " << msg << popcendl;
 				HandleIncomingMessage(msg);
 			}
 		}

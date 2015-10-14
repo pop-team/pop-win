@@ -50,16 +50,26 @@ int main(int argc, char** argv)
 			break;
 		}
 
-		cout << "Gather temperatures..." << popcendl;
+		cout << "Gathering sensor data..." << popcendl;
+		printf("Doing DRW...");
 		for(int i = 0 ; i < 3000 ; i++)
 		{
 			geneveData = popGeneve.Gather();
-			popGeneve.Clear();
-			printf("\n-------------------------------------------------------------------------\n");
-			geneveData.Print();
-			printf("\n-------------------------------------------------------------------------\n");
-			popGeneve.Broadcast(MSR_LED, UNT_NONE, LED_GREEN_TOGGLE); // PUB_LED=publish for led, green toggle
-			sleep(6);
+			//printf("%d",geneveData.GetSize());
+			if(geneveData.GetSize() == 0)
+			{
+				printf(".");
+			}
+			else
+			{
+				popGeneve.Clear();
+				//printf("\n-------------------------------------------------------------------------\n");
+				printf("\n");
+				geneveData.Print();
+				printf("\n");
+				//printf("\n-------------------------------------------------------------------------\n");
+			}
+			sleep(5);
 		}
 		cout << "Finished gathering temperatures" << popcendl;
 

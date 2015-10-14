@@ -11,6 +11,13 @@
  *
  */
 
+#define XM1000_FLASH // uncomment to flash code for XM1000 mote
+#define DRW_FLASH 1
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
 
 #include "contiki.h"
 #include "lib/list.h"
@@ -18,13 +25,15 @@
 #include "lib/random.h"
 #include "net/rime.h"
 #include "node-id.h"
-#include <stdbool.h>
 #include "dev/leds.h"
-#include <stdio.h>
 
 #include "dev/serial-line.h"
-//#include "dev/sht25.h" // for Zolteria Z1
+#ifndef XM1000_FLASH
+#include "dev/i2cmaster.h" // for Zolteria Z1
+#include "dev/tmp102.h" // for Zolteria Z1
+#endif
 #include "dev/sht11.h" // for XM1000
+#include "dev/cc2420.h" // for tx_power
 #include "dev/button-sensor.h"
 #include "popwin_messages.h"
 #include "queue.h"
@@ -81,7 +90,7 @@ int snprintf ( char * s, size_t n, const char * format, ... );
 int atoi (const char * str);
 double atof (const char* str);
 void * memset ( void * ptr, int value, size_t num );
-void sht11_init();
+//void sht11_init();
 
 int get_id();
 void logging(const char *format,...);
@@ -171,7 +180,7 @@ PROCESS(multihop_sense                , "Take measurements and transmit via mult
    start when this module is loaded. We put our processes there. */
 
 // note: we can choose here which version of the code we want to run:
-#if 1
+#if DRW_FLASH
 // Processes to run with routing algo of UNIGE
 AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &communication_process, &drw/*, &sensor_events*/); // Processes to run with algo of UNIGE
 #define DRW_CODE 1
@@ -411,6 +420,7 @@ void gwHandleSubscription(const char* data, char fromProxy)
 	if(unbufferizeSubscribeMessage(&msg, data) <= 0)
 	{
 		ERROR("Cannot read message from buffer");
+		ERROR(data);
 		return;
 	}
 
@@ -805,8 +815,10 @@ forward(struct multihop_conn *c,
 			return &n->addr;
 		}
 	}
+#ifdef EN_DEBUG
 	printf("%d.%d: did not find a neighbor to foward to\n",
 			rimeaddr_node_addr.u8[0], rimeaddr_node_addr.u8[1]);
+#endif
 	return NULL;
 }
 
@@ -861,7 +873,7 @@ unsigned char sense_leds()
 PROCESS_THREAD(multihop_announce, ev, data)
 {
 	PROCESS_EXITHANDLER(multihop_close(&multihop);)
-	PROCESS_BEGIN();
+					PROCESS_BEGIN();
 	printf("Launching process multihop_announce\n");
 
 	// Init for multihop -----
@@ -875,7 +887,7 @@ PROCESS_THREAD(multihop_announce, ev, data)
 	multihop_open(&multihop, CHANNEL, &multihop_call);
 
 	static struct etimer et;
-	const unsigned int WAIT_SHORT = 2;
+	const unsigned int WAIT_SHORT = 5;
 	const unsigned int WAIT_LONG = 10;
 
 	while(1){
@@ -891,7 +903,7 @@ PROCESS_THREAD(multihop_announce, ev, data)
 		announcement_set_value(&example_announcement, 0);
 		//leds_off(LEDS_RED);
 
-		etimer_set(&et, WAIT_LONG * CLOCK_SECOND);
+		etimer_set(&et, WAIT_SHORT * CLOCK_SECOND);
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 	}
 	PROCESS_END();
@@ -905,33 +917,18 @@ PROCESS_THREAD(multihop_sense, ev, data)
 	//PROCESS_EXITHANDLER(multihop_close(&multihop);)
 	PROCESS_BEGIN();
 	printf("Launching process multihop_sense\n");
-	//leds_on(LEDS_GREEN);
-	/* -------------------------------------------------- */
-	// Init for multihop -----
-	/* Initialize the memory for the neighbor table entries. */
-	//memb_init(&neighbor_mem);
 
-	/* Initialize the list used for the neighbor table. */
-	//list_init(neighbor_table);
+#ifndef XM1000_FLASH
+	tmp102_init(); // Z1
+#else
+	sht11_init(); // XM1000
+#endif
 
-	/* Open a multihop connection on Rime channel CHANNEL. */
-	//multihop_open(&multihop, CHANNEL, &multihop_call);
-
-	/* Register an announcement with the same announcement ID as the
-				   Rime channel we use to open the multihop connection above. */
-	/*announcement_register(&example_announcement,
-			CHANNEL,
-			received_announcement);*/
-
-	/* Set a dummy value to start sending out announcments. */
-	//announcement_set_value(&example_announcement, 0);
-	/* -------------------------------------------------- */
-	//leds_off(LEDS_GREEN);
 	static struct etimer et;
 
 	//static uint8_t push = 0;	// Keeps the number of times the user pushes the button sensor
 
-	const unsigned int WAIT_SENSE = 10;
+	const unsigned int WAIT_SENSE = 5;
 
 	while(1){
 		etimer_set(&et, WAIT_SENSE * CLOCK_SECOND);
@@ -942,8 +939,6 @@ PROCESS_THREAD(multihop_sense, ev, data)
 
 		// Send a broadcast message
 		// send_broadcast_cmd();
-
-		sht11_init(); // XM1000
 
 		/*---- start of multihop call ----*/
 		struct NotifyMessage msg;
@@ -960,7 +955,11 @@ PROCESS_THREAD(multihop_sense, ev, data)
 		msg.measurementType = MSR_TEMPERATURE;
 		msg.dataType        = TYPE_DOUBLE;
 		msg.unit            = UNT_CELSIUS;
+#ifndef XM1000_FLASH
+		fl					= sense_temperature_float_Z1(); // Z1
+#else
 		fl					= sense_temperature_float(); // XM1000
+#endif
 		sprintf(msg.data, "%d.%u", (int)fl, DEC(fl)); // for XM1000
 		//senseTemp           = sense_temperature_float(); // Z1
 		//sprintf(msg.data, "%d.%d", senseTemp / 100, senseTemp % 100); // for Zolteria Z1
@@ -968,6 +967,7 @@ PROCESS_THREAD(multihop_sense, ev, data)
 		msg.dataSize        = strlen(msg.data);
 		sensorSendNotification(&msg);
 
+#ifdef XM1000_FLASH
 		memset(&msg, 0, sizeof(msg));
 		fl = 0;
 		//break;
@@ -977,7 +977,6 @@ PROCESS_THREAD(multihop_sense, ev, data)
 		msg.unit            = UNT_PERCENT;
 		fl                  = sense_humidity_float();// XM1000
 		sprintf(msg.data, "%d.%u", (int)fl, DEC(fl));// XM1000
-		//senseHumi			= sense_humidity_float(); // Z1
 		//sprintf(msg.data, "%d.%d", senseHumi / 100, senseHumi % 100); // for Zolteria Z1
 		msg.id              = get_id();
 		msg.dataSize        = strlen(msg.data);
@@ -990,28 +989,23 @@ PROCESS_THREAD(multihop_sense, ev, data)
 		msg.measurementType = MSR_LIGHT;
 		msg.dataType        = TYPE_INT;
 		msg.unit            = UNT_LUX;
-		sprintf(msg.data, "%d", sense_light());
+		sprintf(msg.data, "%d", sense_light());// XM1000
 		msg.id              = get_id();
 		msg.dataSize        = strlen(msg.data);
 		sensorSendNotification(&msg);
 
 		memset(&msg, 0, sizeof(msg));
-		fl = 0;
-
-		memset(&msg, 0, sizeof(msg));
-		msg.id              = get_id();
-		msg.dataSize        = strlen(msg.data);
 		fl = 0;
 		//break;
 		//case 3:
 		msg.measurementType = MSR_INFRARED;
 		msg.dataType        = TYPE_INT;
 		msg.unit            = UNT_LUX;
-		sprintf(msg.data, "%d", sense_infrared());
+		sprintf(msg.data, "%d", sense_infrared());// XM1000
 		msg.id              = get_id();
 		msg.dataSize        = strlen(msg.data);
 		sensorSendNotification(&msg);
-
+#endif XM1000
 
 		memset(&msg, 0, sizeof(msg));
 		fl = 0;
@@ -1020,7 +1014,7 @@ PROCESS_THREAD(multihop_sense, ev, data)
 		msg.measurementType = MSR_LED;
 		msg.dataType        = TYPE_INT;
 		msg.unit            = UNT_NONE;
-		sprintf(msg.data, "%d", sense_leds());
+		sprintf(msg.data, "%d", sense_leds());// XM1000 || Z1
 		msg.id              = get_id();
 		msg.dataSize        = strlen(msg.data);
 		sensorSendNotification(&msg);
@@ -1069,11 +1063,6 @@ PROCESS_THREAD(button_pressed, ev, data)
 
 	SENSORS_ACTIVATE(button_sensor);
 	leds_on(LEDS_ALL);
-
-	// Initialization of sensor
-	sht11_init();
-	// tmp102_init();
-
 
 	while(1) {
 		/* Do the rest of the stuff here. */

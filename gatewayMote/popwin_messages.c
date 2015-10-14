@@ -107,6 +107,17 @@ int bufferizeNotifyMessage(const struct NotifyMessage* x_msg, char* xp_buffer, s
 			(int)x_msg->dataSize,
 			x_msg->data
 	);
+
+	//printf("'%s' buffer\n",xp_buffer);
+	/*printf("buffered xp_buffer: %02x %02x %02x %04x %02x %04x %s\n",
+			MSG_NOTIFY,
+			x_msg->dataType,
+			x_msg->measurementType,
+			x_msg->id,
+			x_msg->unit,
+			(int)x_msg->dataSize,
+			x_msg->data);*/
+
 	return ret > 0 && ret < x_bufferSize;
 }
 
@@ -129,6 +140,7 @@ int unbufferizeNotifyMessage(struct NotifyMessage* xp_msg, const char* x_buffer,
 			&un,
 			&dataSize
 	);
+
 	// printf("data %s --> %02x %02x %02x %04x %02x %04d (data) (%d)\n", x_buffer, mtype, dt,mt,id,un,dataSize,/*data,*/ ret);
 	if(ret == 6 && mtype == MSG_NOTIFY)
 	{
@@ -143,13 +155,23 @@ int unbufferizeNotifyMessage(struct NotifyMessage* xp_msg, const char* x_buffer,
 			return 0;
 		}
 		int s = snprintf(xp_msg->data, sizeof(xp_msg->data), "%s", x_buffer + 21 + 1);
+		//printf("'%s' unbuffer\n",x_buffer);
+		/*printf("unbuffered x_buffer: %02x %02x %02x %04x %02x %04x %s\n",
+				MSG_NOTIFY,
+				xp_msg->dataType,
+				xp_msg->measurementType,
+				xp_msg->id,
+				xp_msg->unit,
+				(int)xp_msg->dataSize,
+				xp_msg->data);*/
 		if(s == dataSize)
 		{
+			//printf("OK: Data has the correct size %d=%d\n", s, dataSize);
 			return 1;
 		}
 		else
 		{
-			//printf("WARNING: Data has the wrong size %d!=%d\n", s, dataSize);
+			printf("WARNING: Data has the wrong size %d!=%d\n", s, dataSize);
 			return 1;
 		}
 	}

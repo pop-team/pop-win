@@ -1,3 +1,8 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
 #include "contiki.h"
 #include "lib/list.h"
 #include "queue.h"
@@ -5,14 +10,17 @@
 #include "lib/random.h"
 #include "net/rime.h"
 #include "node-id.h"
-#include <stdbool.h>
 #include "dev/leds.h"
-#include <stdio.h>
-#include <string.h>
-#include "dev/cc2420.h"
+
+#ifndef XM1000_FLASH
+#include "dev/i2cmaster.h" // for Zolteria Z1
+#include "dev/tmp102.h" // for Zolteria Z1
+#endif
+#include "dev/sht11.h" // for XM1000
+#include "dev/light-sensor.h" // for XM1000
+#include "dev/cc2420.h" // for tx_power
 #include "dev/button-sensor.h"
-#include "dev/light-sensor.h"
-#include "dev/sht11.h"
+
 
 #include "DRW.h"
 
@@ -29,6 +37,26 @@
 // AUTOSTART_PROCESSES(&communication_process, &drw);
 /*---------------------------------------------------------------------------*/
 
+float custom_atof(const char* s){
+  float rez = 0, fact = 1;
+  if (*s == '-'){
+    s++;
+    fact = -1;
+  };
+  int point_seen;
+  for (point_seen = 0; *s; s++){
+    if (*s == '.'){
+      point_seen = 1;
+      continue;
+    };
+    int d = *s - '0';
+    if (d >= 0 && d <= 9){
+      if (point_seen) fact /= 10.0f;
+      rez = rez * 10.0f + (float)d;
+    };
+  };
+  return rez * fact;
+};
 
 // PRINT INFO
 /* print information when a message is sent */
@@ -331,7 +359,7 @@ static const struct unicast_callbacks unicast_callbacks = {recv_uc};
 uint8_t sense_light(){
 	SENSORS_ACTIVATE(light_sensor);
 	unsigned int value = (unsigned int)light_sensor.value(0);
-	printf("Light value1: %u\n", value);
+	//printf("Light value1: %u\n", value);
 	//printf("Light value2: %d\n", light_sensor.value(0));
 	SENSORS_DEACTIVATE(light_sensor);
 
@@ -341,7 +369,7 @@ uint8_t sense_light(){
 uint8_t sense_infrared(){
 	SENSORS_ACTIVATE(light_sensor);
 	unsigned int value = (unsigned int)light_sensor.value(1);
-	printf("Light value1: %u\n", value);
+	//printf("Light value1: %u\n", value);
 	//printf("Light value2: %d\n", light_sensor.value(0));
 	SENSORS_DEACTIVATE(light_sensor);
 
@@ -368,27 +396,57 @@ uint8_t sense_temperature(){
 
 	// note: in the present situation, all messages are sent as 8 bits integers for simplicity
 	unsigned int value = (unsigned int) (-39.60 + 0.01 * sht11_temp());
-	printf("sense temperature %u\n", value);
+	//printf("sense temperature %u\n", value);
 	return (uint8_t)value;
 }
 
 uint8_t sense_humidity(){
 	unsigned int rh = sht11_humidity();
 	unsigned int value = (unsigned int) (-4 + 0.0405*rh - 2.8e-6*(rh*rh));
-	printf("sense humidity %u percent (%u)\n", value, rh);
+	//printf("sense humidity %u percent (%u)\n", value, rh);
 	return (uint8_t)value;
 }
 
 float sense_temperature_float(){
 	float value = -39.60 + 0.01 * sht11_temp();
-	DEBUG("sense temperature %d.%u (%u)", (int)value, DEC(value), sht11_temp());
+	//DEBUG("sense temperature %d.%u (%u)", (int)value, DEC(value), sht11_temp());
 	return value;
 }
+
+#ifndef XM1000_FLASH
+float sense_temperature_float_Z1(){
+	int16_t  tempint;
+	uint16_t tempfrac;
+	int16_t  raw;
+	uint16_t absraw;
+	int16_t  sign;
+	char     minus = ' ';
+	char buffer[20];
+	float value = 20.0f;
+
+	sign = 1;
+
+	raw = tmp102_read_temp_raw();  // Reading from the sensor
+
+	absraw = raw;
+	if (raw < 0) { // Perform 2C's if sensor returned negative data
+		absraw = (raw ^ 0xFFFF) + 1;
+		sign = -1;
+	}
+	tempint  = (absraw >> 8) * sign;
+	tempfrac = ((absraw>>4) % 16) * 625; // Info in 1/10000 of degree
+	minus = ((tempint == 0) & (sign == -1)) ? '-'  : ' ' ;
+	//printf ("sense temp %c%d.%04d\n", minus, tempint, tempfrac);
+	int ret = snprintf(buffer, 20, "%c%d.%04d", minus, tempint, tempfrac);
+	value = custom_atof(buffer);
+	return value;
+}
+#endif
 
 float sense_humidity_float(){
 	unsigned int rh = sht11_humidity();
 	float value = -4 + 0.0405*rh - 2.8e-6*(rh*rh);
-	DEBUG("sense humidity %d.%u percent (%u)", (int)value, DEC(value), rh);
+	//DEBUG("sense humidity %d.%u percent (%u)", (int)value, DEC(value), rh);
 	return value;
 }
 
@@ -550,8 +608,8 @@ PROCESS_THREAD(drw, ev, data)
 				msg.dataSize        = strlen(msg.data);
 				//sendNotificationSerial(&msg, buf);
 				gwSendNotificationSerial(&msg);
-				printf("message sent to proxy %d\n",message_to_forward.message);
-				LOG("message sent to proxy [%d]\n",message_to_forward.message);
+				//printf("message sent to proxy %d\n",message_to_forward.value);
+				//LOG("message sent to proxy [%d]\n",message_to_forward.value);
 
 				state=IDLE;
 				leds_on(LEDS_ALL);

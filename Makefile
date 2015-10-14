@@ -61,7 +61,7 @@ run:
 	popcrun objects.map ./main resources.json
 	
 demo:
-	popcrun objects.map ./main_demo 160.98.61.101 temp.json localhost led.json
+	popcrun objects.map ./main_demo localhost INOUT.json 160.98.61.190 IN.json
 	
 fribourg:
 	popcrun objects.map ./main_fribourg localhost fribourg.json

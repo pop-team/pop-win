@@ -5,12 +5,23 @@
 /* This #define defines the maximum amount of neighbors we can remember. */
 #define MAX_NEIGHBORS 16
 /* This #define defines the node id corresponding to the database */
-#define DATABASE 158
+#define DATABASE 2
 #define DATABASE_TAG UINT8_MAX
 /* This #define defines the node id corresponding to the sender */
 #define SENDER 5
+/*
+ * { db, val} for setting DB power of radio
+ * {  0, 31 },  0xff
+ * { -1, 27 },  0xfb
+ * { -3, 23 },  0xf7
+ * { -5, 19 },  0xf3
+ * { -7, 15 },  0xef
+ * {-10, 11 },  0xeb
+ * {-15,  7 },  0xe7
+ * {-25,  3 },  0xe3
+ */
 #define POWER 3
-#define MAX_POWER 5
+#define MAX_POWER 7
 
 // Helper to print the decimal of a value
 #define DEC(x) ((unsigned)(x*100 - ((int) x) * 100))
@@ -39,6 +50,9 @@ uint8_t sense_humidity();
 uint8_t sense_temperature();
 float sense_humidity_float();
 float sense_temperature_float();
+float sense_temperature_float_Z1();
+
+float custom_atof(const char* s);
 
 /* These are the types of unicast messages that we can send. */
 enum {
