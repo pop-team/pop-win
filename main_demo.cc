@@ -17,6 +17,18 @@
 
 using namespace std;
 
+void waitPressKey()
+{
+	char c = '\n';
+	while(true)
+	{
+		cout << "\nPress key to continue\n" << popcendl;
+		//while(c == '\n')
+		c = getchar();
+		break;
+	}
+}
+
 int main(int argc, char** argv)
 {
 	if(argc != 5)
@@ -42,17 +54,12 @@ int main(int argc, char** argv)
 
 		popLocal.Broadcast(MSR_LED, UNT_NONE, LED_ALL_OFF); // MSR_LED=notify for led, all off
 
+		waitPressKey();
+
 		cout << "Broadcast green LED ON" << popcendl;
 		popLocal.Broadcast(MSR_LED, UNT_NONE, LED_GREEN_TOGGLE); // MSR_LED=notify for led, green toggle
 
-		char c = '\n';
-		while(true)
-		{
-			cout << "\nPress key to continue\n" << popcendl;
-			//while(c == '\n')
-			c = getchar();
-			break;
-		}
+		waitPressKey();
 
 		cout << "Gather temperatures..." << popcendl;
 		for(int i = 0 ; i < 3000 ; i++)
@@ -72,6 +79,7 @@ int main(int argc, char** argv)
 			remoteData.Print();
 			printf("\n");
 			//printf("\n-----------------------------------------------------------------------------------------------\n");
+			waitPressKey();
 			sleep(3);
 		}
 		cout << "Finished gathering temperatures" << popcendl;
