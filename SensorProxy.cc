@@ -26,6 +26,19 @@
 #include <time.h>
 #include <regex.h>
 
+#include "mysql_connection.h"
+
+#include <cppconn/driver.h>
+#include <cppconn/exception.h>
+#include <cppconn/resultset.h>
+#include <cppconn/statement.h>
+#include <cppconn/prepared_statement.h>
+
+#include "MySQLConn.h"
+
+#include <pop_object.h>
+#include <pop_exception.h>
+
 // Note: check baudrate of USB port with : stty -F /dev/ttyUSB0
 #define BAUDRATE B115200
 
@@ -98,6 +111,146 @@ SensorProxy::~SensorProxy()
 	cout<<"Destroy sensor proxy" << popcendl;
 	close(m_fd);
 	// m_debugOf.close();
+}
+
+void SensorProxy::InsertSQL(struct NotifyMessage* msg)
+{
+
+	//MySQLConn* conn = new MySQLConn();
+	//conn->testMySQL();
+	try {
+		sql::Driver *driver;
+		sql::Connection *con;
+		sql::Statement *stmt;
+
+		/* Create a connection */
+		cout<<"Instantiating driver" << popcendl;
+		driver = get_driver_instance();
+		cout<<"Connecting to db" << popcendl;
+		con = driver->connect("tcp://127.0.0.1:3306", "root", "toor");
+		/* Connect to the MySQL test database */
+		//cout<<"Setting schema" << popcendl;
+		//con->setSchema("popwin_schema");
+
+		cout<<"Creating statement" << popcendl;
+		stmt = con->createStatement();
+		cout<<"Executing query" << popcendl;
+		std::stringstream ss;
+		ss << "INSERT INTO popwin_schema.POPSensorData(type,genre,location,sensorID,value,unit) VALUES('"
+				<< explainDataType(msg->dataType) << "','"
+				<< explainMeasurementType(msg->measurementType) << "','NULL',"
+				<<	msg->id << ","
+				<< (int)atof(msg->data) << ",'"
+				<< explainMeasurementUnit(msg->unit) << "')";
+		std::string s = ss.str();
+		stmt->executeUpdate(s);
+
+		/* Access column data by alias or column name */
+		cout << "Inserted: " << "FLOAT" << " \t" << explainMeasurementType(msg->measurementType) << " \t" << "NULL" << " \t"
+				<< msg->id << " \t" << (int)atof(msg->data) << " \t" << explainMeasurementUnit(msg->unit) << popcendl;
+
+		cout<<"Cleaning objects" << popcendl;
+		delete stmt;
+		delete con;
+
+	}
+	catch (sql::SQLException &e) {
+		cout << "# ERR: SQLException in " << __FILE__;
+		cout << "(" << __FUNCTION__ << ") on line "	<< __LINE__ << popcendl;
+		cout << "# ERR: " << e.what();
+		cout << " (MySQL error code: " << e.getErrorCode();
+		cout << ", SQLState: " << e.getSQLState() << " )" << popcendl;
+	}
+	cout << popcendl;
+}
+
+void SensorProxy::TestInsertSQL()
+{
+
+	//MySQLConn* conn = new MySQLConn();
+	//conn->testInsertMySQL();
+	try {
+		sql::Driver *driver;
+		sql::Connection *con;
+		sql::Statement *stmt;
+
+		/* Create a connection */
+		cout<<"Instantiating driver" << popcendl;
+		driver = get_driver_instance();
+		cout<<"Connecting to db" << popcendl;
+		con = driver->connect("tcp://127.0.0.1:3306", "root", "toor");
+		/* Connect to the MySQL test database */
+		//cout<<"Setting schema" << popcendl;
+		//con->setSchema("popwin_schema");
+
+		cout<<"Creating statement" << popcendl;
+		stmt = con->createStatement();
+		cout<<"Executing query" << popcendl;
+		std::stringstream ss;
+		ss << "INSERT INTO popwin_schema.POPSensorData(type,genre,location,sensorID,value,unit) VALUES('FLOAT','led','NULL',2,1,'NULL')";
+		std::string s = ss.str();
+		stmt->executeUpdate(s);
+
+		cout<<"Cleaning objects" << popcendl;
+		delete stmt;
+		delete con;
+
+	}
+	catch (sql::SQLException &e) {
+		cout << "# ERR: SQLException in " << __FILE__;
+		cout << "(" << __FUNCTION__ << ") on line "	<< __LINE__ << popcendl;
+		cout << "# ERR: " << e.what();
+		cout << " (MySQL error code: " << e.getErrorCode();
+		cout << ", SQLState: " << e.getSQLState() << " )" << popcendl;
+	}
+	cout << popcendl;
+}
+
+void SensorProxy::TestSQL()
+{
+
+	//MySQLConn* conn = new MySQLConn();
+	//conn->testMySQL();
+	try {
+		sql::Driver *driver;
+		sql::Connection *con;
+		sql::Statement *stmt;
+		sql::ResultSet *res;
+
+		/* Create a connection */
+		cout<<"Instantiating driver" << popcendl;
+		driver = get_driver_instance();
+		cout<<"Connecting to db" << popcendl;
+		con = driver->connect("tcp://127.0.0.1:3306", "root", "toor");
+		/* Connect to the MySQL test database */
+		//cout<<"Setting schema" << popcendl;
+		//con->setSchema("popwin_schema");
+
+		cout<<"Creating statement" << popcendl;
+		stmt = con->createStatement();
+		cout<<"Executing query" << popcendl;
+		res = stmt->executeQuery("SELECT * FROM popwin_schema.POPSensorData");
+		cout << "type \tgenre \t\tlocation \tsensorID \tvalue \tunit" << popcendl;
+		while (res->next()) {
+			/* Access column data by alias or column name */
+			cout << res->getString("type") << " \t" << res->getString("genre") << " \t" << res->getString("location") << " \t"
+					<< res->getString("sensorID") << " \t\t" << res->getString("value") << " \t" << res->getString("unit") << popcendl;
+
+		}
+		cout<<"Cleaning objects" << popcendl;
+		delete res;
+		delete stmt;
+		delete con;
+
+	}
+	catch (sql::SQLException &e) {
+		cout << "# ERR: SQLException in " << __FILE__;
+		cout << "(" << __FUNCTION__ << ") on line "	<< __LINE__ << popcendl;
+		cout << "# ERR: " << e.what();
+		cout << " (MySQL error code: " << e.getErrorCode();
+		cout << ", SQLState: " << e.getSQLState() << " )" << popcendl;
+	}
+	cout << popcendl;
 }
 
 /// Send raw data to the gateway
@@ -248,13 +401,15 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 			if(unbufferizeNotifyMessage(&msg, x_rawMsg.c_str(), x_rawMsg.size()) <= 0)
 				throw POPException("Cannot unbufferize notify message");
 
+			InsertSQL(&msg);
+
 			auto it = m_subscriptions.find(msg.measurementType);
 			bool subscribed = it != m_subscriptions.end() && it->second;
 			if(msg.measurementType == MSR_LOG)
 			{
-				#ifdef EN_COUTS
+#ifdef EN_COUTS
 				cout << "Proxy received log from " << msg.id << " : " << msg.data << popcendl;
-				#endif
+#endif
 				break;
 			}
 			else if(!subscribed)

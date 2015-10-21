@@ -8,13 +8,20 @@
  *
  */
 
-
-#include "POPSensor.ph"
-#include "SensorProxy.ph"
 #include <unistd.h>
 #include <fstream>
 #include <json/json.h>
 #include <json/reader.h>
+
+#include "POPSensor.ph"
+#include "SensorProxy.ph"
+
+#include "mysql_connection.h"
+
+#include <cppconn/driver.h>
+#include <cppconn/exception.h>
+#include <cppconn/resultset.h>
+#include <cppconn/statement.h>
 
 using namespace std;
 
@@ -48,6 +55,22 @@ POPSensor::~POPSensor()
 	}
 	m_sensorsProxy.clear();
 	cout<<"Finished destroying POPSensor" << popcendl;
+}
+
+void POPSensor::TestSQL()
+{
+	for(auto it : m_sensorsProxy) // should be only one for now, else error
+	{
+		it->TestSQL();
+	}
+}
+
+void POPSensor::TestInsertSQL()
+{
+	for(auto it : m_sensorsProxy) // should be only one for now, else error
+	{
+		it->TestInsertSQL();
+	}
 }
 
 /// Initialization using parameters in resource.json
@@ -104,6 +127,7 @@ void POPSensor::Initialize(const std::string& x_resourceFileName)
 		cout<<"Created "<<m_sensorsProxy.size()<<" sensor proxy objects"<<popcendl;
 		for(auto it : m_sensorsProxy) // should be only one for now, else error
 		{
+			it->TestSQL();
 			it->Publish(MSR_SET_GW);
 			it->SetAsGateway(stoi(gwID));
 		}
@@ -119,9 +143,9 @@ void POPSensor::Initialize(const std::string& x_resourceFileName)
 	// note: since some mote have trouble with the serial line you may need to set it manually later
 	//for(auto it : m_sensorsProxy)
 	//{
-		//it->Publish(MSR_SET_GW);
-		//it->Publish(PUB_COMMAND, 8); // 8 is the command id for set_as
-		//it->Notify(MSR_SET_GW, UNT_NONE, 0);
+	//it->Publish(MSR_SET_GW);
+	//it->Publish(PUB_COMMAND, 8); // 8 is the command id for set_as
+	//it->Notify(MSR_SET_GW, UNT_NONE, 0);
 	//}
 }
 

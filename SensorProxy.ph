@@ -25,6 +25,9 @@ public:
 	SensorProxy(int x_id, const std::string& x_url, const std::string& x_device) @{ od.url(x_url); };
 	~SensorProxy();
 
+	sync seq void TestSQL();
+	sync seq void TestInsertSQL();
+
 	/// Send notification to the connected sensor
 	async seq void Notify(int x_measurementType, int x_measurementUnit, const std::string& x_message);
 	async seq void Notify(int x_measurementType, int x_measurementUnit, double x_data);
@@ -68,6 +71,8 @@ private:
 	void SendRawData(const std::string& x_data);
 	void ReadData(std::ostream& xr_ostream);
 	void HandleIncomingMessage(const std::string& x_msg);
+
+	void InsertSQL(struct NotifyMessage* msg);
 
 	int m_fd;
 	int m_id;

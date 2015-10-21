@@ -1,8 +1,8 @@
 POPCC=popcc -cpp11 -g -no-async-allocation
 INC=-IlineComm -I/usr/include/jsoncpp
-LIBS=-ljsoncpp
+LIBS=-ljsoncpp -lmysqlcppconn 
 
-all: POPSensor.obj SensorProxy.obj main_plot main_demo main_fribourg main_fribourg_remote main_geneve main_test_led objects.map
+all: POPSensor.obj SensorProxy.obj main_plot main_demo main_sql main_fribourg main_fribourg_remote main_geneve main_test_led objects.map
 
 clean:
 	rm -f *.o *.obj main main_demo main_test_led objects.map
@@ -26,8 +26,8 @@ popwin_messages.o: lineComm/popwin_messages.c
 POPSensor.obj: POPSensor.obj.o POPSensor.phstub.o SensorProxy.stub.o popwin_messages.o POPSensorData.o
 	${POPCC} ${INC} -object -o POPSensor.obj POPSensor.obj.o POPSensor.phstub.o SensorProxy.stub.o popwin_messages.o POPSensorData.o ${LIBS}
 
-SensorProxy.obj: SensorProxy.obj.o SensorProxy.phstub.o POPSensor.stub.o popwin_messages.o POPSensorData.o
-	${POPCC} ${INC} -object -o SensorProxy.obj SensorProxy.obj.o SensorProxy.phstub.o POPSensor.stub.o popwin_messages.o POPSensorData.o ${LIBS}
+SensorProxy.obj: SensorProxy.obj.o SensorProxy.phstub.o POPSensor.stub.o popwin_messages.o POPSensorData.o MySQLConn.o
+	${POPCC} ${INC} -object -o SensorProxy.obj SensorProxy.obj.o SensorProxy.phstub.o POPSensor.stub.o popwin_messages.o POPSensorData.o MySQLConn.o ${LIBS}
 
 main: main.o POPSensor.stub.o SensorProxy.stub.o popwin_messages.o POPSensorData.o
 	${POPCC} ${INC} -o main main.o POPSensor.stub.o SensorProxy.stub.o popwin_messages.o POPSensorData.o ${LIBS}
@@ -40,6 +40,9 @@ main_plot: main_plot.o POPSensorData.o popwin_messages.o
 	
 main_demo: main_demo.o POPSensor.stub.o SensorProxy.stub.o popwin_messages.o POPSensorData.o
 	${POPCC} ${INC} -o main_demo main_demo.o POPSensor.stub.o SensorProxy.stub.o popwin_messages.o POPSensorData.o ${LIBS}
+	
+main_sql: main_sql.o POPSensor.stub.o SensorProxy.stub.o popwin_messages.o POPSensorData.o MySQLConn.o
+	${POPCC} ${INC} -o main_sql main_sql.o POPSensor.stub.o SensorProxy.stub.o popwin_messages.o POPSensorData.o MySQLConn.o ${LIBS}
 	
 main_fribourg: main_fribourg.o POPSensor.stub.o SensorProxy.stub.o popwin_messages.o POPSensorData.o
 	${POPCC} ${INC} -o main_fribourg main_fribourg.o POPSensor.stub.o SensorProxy.stub.o popwin_messages.o POPSensorData.o ${LIBS}
@@ -62,6 +65,9 @@ run:
 	
 demo:
 	popcrun objects.map ./main_demo localhost INOUT.json 160.98.61.190 IN.json
+	
+sql:
+	popcrun objects.map ./main_sql localhost INOUT.json
 	
 fribourg:
 	popcrun objects.map ./main_fribourg localhost fribourg.json

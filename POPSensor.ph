@@ -38,6 +38,9 @@ public:
 	POPSensor(int x_pow, const std::string& x_resourceFileName, const int id) @{ od.power(x_pow); };
 	~POPSensor();
 
+	void TestSQL();
+	void TestInsertSQL();
+
 	/// Retrieve data gathered 
 	POPSensorData Gather();
 
