@@ -14,6 +14,17 @@
 #include <atomic>
 #include <fstream>
 
+
+#include "mysql_connection.h"
+
+#include <cppconn/driver.h>
+#include <cppconn/exception.h>
+#include <cppconn/resultset.h>
+#include <cppconn/statement.h>
+#include <cppconn/prepared_statement.h>
+
+#include "MySQLConn.h"
+
 #include "POPSensor.ph"
 #include "lineComm/popwin_messages.h"
 
@@ -25,8 +36,9 @@ public:
 	SensorProxy(int x_id, const std::string& x_url, const std::string& x_device) @{ od.url(x_url); };
 	~SensorProxy();
 
+	sync seq POPSensorData executeQuery(string sqlRequest);
 	sync seq void TestSQL();
-	sync seq void TestInsertSQL();
+	//sync seq void TestInsertSQL();
 
 	/// Send notification to the connected sensor
 	async seq void Notify(int x_measurementType, int x_measurementUnit, const std::string& x_message);
@@ -42,7 +54,7 @@ public:
 	//async seq void Publish(int x_publicationType, const std::string& x_data);
 
 	/// Apply a reduce function to the data {size, min, max, aver, sum, stdev}
-	sync seq double Reduce(int x_mtype, int x_dataType, int x_fct);
+	//sync seq double Reduce(int x_mtype, int x_dataType, int x_fct);
 
 	/// Gateway can send notifications to actuators
 	//async seq void CanPublish(int x_publicationType);
@@ -60,12 +72,13 @@ public:
 	async conc void StopListening();
 
 	/// Retrieve data gathered 
-	sync conc POPSensorData Gather();
+	//sync conc POPSensorData Gather();
 
 	/// Clear data gathered 
-	async conc void Clear();
+	//async conc void Clear();
+	async conc void clearDB();
 
-	sync conc int GetDataSize();
+	//sync conc int GetDataSize();
 
 private:
 	void SendRawData(const std::string& x_data);
@@ -73,6 +86,8 @@ private:
 	void HandleIncomingMessage(const std::string& x_msg);
 
 	void InsertSQL(struct NotifyMessage* msg);
+
+	void copyFromResultSetToPOPSensorData(sql::ResultSet* set, POPSensorData* data);
 
 	int m_fd;
 	int m_id;
@@ -82,6 +97,9 @@ private:
 
 	// Different containers of data
 	POPSensorData m_sensorData;
+
+	sql::Driver *driver;
+	sql::Connection *con;
 };
 
 #endif

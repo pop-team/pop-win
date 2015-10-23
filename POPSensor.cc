@@ -12,6 +12,7 @@
 #include <fstream>
 #include <json/json.h>
 #include <json/reader.h>
+#include <string>
 
 #include "POPSensor.ph"
 #include "SensorProxy.ph"
@@ -55,22 +56,6 @@ POPSensor::~POPSensor()
 	}
 	m_sensorsProxy.clear();
 	cout<<"Finished destroying POPSensor" << popcendl;
-}
-
-void POPSensor::TestSQL()
-{
-	for(auto it : m_sensorsProxy) // should be only one for now, else error
-	{
-		it->TestSQL();
-	}
-}
-
-void POPSensor::TestInsertSQL()
-{
-	for(auto it : m_sensorsProxy) // should be only one for now, else error
-	{
-		it->TestInsertSQL();
-	}
 }
 
 /// Initialization using parameters in resource.json
@@ -127,7 +112,7 @@ void POPSensor::Initialize(const std::string& x_resourceFileName)
 		cout<<"Created "<<m_sensorsProxy.size()<<" sensor proxy objects"<<popcendl;
 		for(auto it : m_sensorsProxy) // should be only one for now, else error
 		{
-			it->TestSQL();
+			//it->TestSQL();
 			it->Publish(MSR_SET_GW);
 			it->SetAsGateway(stoi(gwID));
 		}
@@ -173,8 +158,18 @@ void POPSensor::StopListening()
 	}
 }
 
+/// Return a POPSensorData structure containing the messages received from sensors according to SQL request
+POPSensorData POPSensor::executeQuery(string sqlRequest)
+{
+	for(auto it : m_sensorsProxy)
+	{
+		return it->executeQuery(sqlRequest);
+	}
+}
+
+
 /// Return a POPSensorData structure containing the messages received from sensors
-POPSensorData POPSensor::Gather()
+/*POPSensorData POPSensor::Gather()
 {
 	POPSensorData fullData;
 	for(auto it : m_sensorsProxy)
@@ -182,14 +177,14 @@ POPSensorData POPSensor::Gather()
 		fullData.Insert(it->Gather());
 	}
 	return fullData;
-}
+}*/
 
 /// Clear the stored messages
 void POPSensor::Clear()
 {
 	for(auto it : m_sensorsProxy)
 	{
-		it->Clear();
+		it->clearDB();
 	}
 }
 
@@ -266,7 +261,7 @@ void POPSensor::Subscribe(int x_measurementType, int x_dataType)
 }
 
 /// Return the size of the stored data
-int POPSensor::GetDataSize()
+/*int POPSensor::GetDataSize()
 {
 	int cpt = 0;
 	for(auto it : m_sensorsProxy)
@@ -274,7 +269,7 @@ int POPSensor::GetDataSize()
 		cpt += it->GetDataSize();
 	}
 	return cpt;
-}
+}*/
 
 /// Subscribe to all resources contained in resource.json
 void POPSensor::SubscribeToResources(bool sub)
@@ -361,7 +356,7 @@ void POPSensor::SubscribeToResources(bool sub)
 }
 
 /// Apply a reduce operation to the stored data {size, min, max, aver, sum, stdev}
-double POPSensor::Reduce(int x_mtype, int x_dataType, int x_fct)
+/*double POPSensor::Reduce(int x_mtype, int x_dataType, int x_fct)
 {
 	std::vector<double> vect;
 
@@ -392,6 +387,6 @@ double POPSensor::Reduce(int x_mtype, int x_dataType, int x_fct)
 	}
 
 	}
-}
+}*/
 
 @pack(POPSensor);

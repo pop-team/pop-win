@@ -48,6 +48,8 @@ int main(int argc, char** argv)
 		POPSensor popLocal(argv[1], argv[2],0);
 		POPSensorData localData;
 
+		popLocal.TestSQL();
+
 		cout << "Creating POPSensor for leds" << popcendl;
 		POPSensor popRemote(argv[3], argv[4],1);
 		POPSensorData remoteData;
@@ -80,7 +82,7 @@ int main(int argc, char** argv)
 			printf("\n");
 			//printf("\n-----------------------------------------------------------------------------------------------\n");
 			waitPressKey();
-			sleep(3);
+			//sleep(3);
 		}
 		cout << "Finished gathering temperatures" << popcendl;
 

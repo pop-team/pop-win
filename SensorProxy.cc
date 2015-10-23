@@ -26,16 +26,6 @@
 #include <time.h>
 #include <regex.h>
 
-#include "mysql_connection.h"
-
-#include <cppconn/driver.h>
-#include <cppconn/exception.h>
-#include <cppconn/resultset.h>
-#include <cppconn/statement.h>
-#include <cppconn/prepared_statement.h>
-
-#include "MySQLConn.h"
-
 #include <pop_object.h>
 #include <pop_exception.h>
 
@@ -102,6 +92,15 @@ SensorProxy::SensorProxy(int x_id, const std::string& x_url, const string& x_dev
 	}
 
 	// m_debugOf.open("debug.txt");
+	// init DB connection
+	/* Create a connection */
+	cout<<"Instantiating driver" << popcendl;
+	driver = get_driver_instance();
+	cout<<"Connecting to db" << popcendl;
+	con = driver->connect("tcp://127.0.0.1:3306", "root", "toor");
+	/* Connect to the MySQL test database */
+	//cout<<"Setting schema" << popcendl;
+	//con->setSchema("popwin_schema");
 }
 
 /// Destructur
@@ -111,6 +110,7 @@ SensorProxy::~SensorProxy()
 	cout<<"Destroy sensor proxy" << popcendl;
 	close(m_fd);
 	// m_debugOf.close();
+	delete con;
 }
 
 void SensorProxy::InsertSQL(struct NotifyMessage* msg)
@@ -119,18 +119,7 @@ void SensorProxy::InsertSQL(struct NotifyMessage* msg)
 	//MySQLConn* conn = new MySQLConn();
 	//conn->testMySQL();
 	try {
-		sql::Driver *driver;
-		sql::Connection *con;
 		sql::Statement *stmt;
-
-		/* Create a connection */
-		cout<<"Instantiating driver" << popcendl;
-		driver = get_driver_instance();
-		cout<<"Connecting to db" << popcendl;
-		con = driver->connect("tcp://127.0.0.1:3306", "root", "toor");
-		/* Connect to the MySQL test database */
-		//cout<<"Setting schema" << popcendl;
-		//con->setSchema("popwin_schema");
 
 		cout<<"Creating statement" << popcendl;
 		stmt = con->createStatement();
@@ -151,49 +140,7 @@ void SensorProxy::InsertSQL(struct NotifyMessage* msg)
 
 		cout<<"Cleaning objects" << popcendl;
 		delete stmt;
-		delete con;
-
-	}
-	catch (sql::SQLException &e) {
-		cout << "# ERR: SQLException in " << __FILE__;
-		cout << "(" << __FUNCTION__ << ") on line "	<< __LINE__ << popcendl;
-		cout << "# ERR: " << e.what();
-		cout << " (MySQL error code: " << e.getErrorCode();
-		cout << ", SQLState: " << e.getSQLState() << " )" << popcendl;
-	}
-	cout << popcendl;
-}
-
-void SensorProxy::TestInsertSQL()
-{
-
-	//MySQLConn* conn = new MySQLConn();
-	//conn->testInsertMySQL();
-	try {
-		sql::Driver *driver;
-		sql::Connection *con;
-		sql::Statement *stmt;
-
-		/* Create a connection */
-		cout<<"Instantiating driver" << popcendl;
-		driver = get_driver_instance();
-		cout<<"Connecting to db" << popcendl;
-		con = driver->connect("tcp://127.0.0.1:3306", "root", "toor");
-		/* Connect to the MySQL test database */
-		//cout<<"Setting schema" << popcendl;
-		//con->setSchema("popwin_schema");
-
-		cout<<"Creating statement" << popcendl;
-		stmt = con->createStatement();
-		cout<<"Executing query" << popcendl;
-		std::stringstream ss;
-		ss << "INSERT INTO popwin_schema.POPSensorData(type,genre,location,sensorID,value,unit) VALUES('FLOAT','led','NULL',2,1,'NULL')";
-		std::string s = ss.str();
-		stmt->executeUpdate(s);
-
-		cout<<"Cleaning objects" << popcendl;
-		delete stmt;
-		delete con;
+		//delete con;
 
 	}
 	catch (sql::SQLException &e) {
@@ -212,19 +159,63 @@ void SensorProxy::TestSQL()
 	//MySQLConn* conn = new MySQLConn();
 	//conn->testMySQL();
 	try {
-		sql::Driver *driver;
-		sql::Connection *con;
 		sql::Statement *stmt;
 		sql::ResultSet *res;
 
-		/* Create a connection */
-		cout<<"Instantiating driver" << popcendl;
-		driver = get_driver_instance();
-		cout<<"Connecting to db" << popcendl;
-		con = driver->connect("tcp://127.0.0.1:3306", "root", "toor");
-		/* Connect to the MySQL test database */
-		//cout<<"Setting schema" << popcendl;
-		//con->setSchema("popwin_schema");
+		cout<<"Creating statement" << popcendl;
+		stmt = con->createStatement();
+		cout<<"Executing query" << popcendl;
+		res = stmt->executeQuery("SELECT * FROM popwin_schema.POPSensorData");
+		cout << "type \tgenre \t\tlocation \tsensorID \tvalue \tunit" << popcendl;
+		while (res->next()) {
+			/* Access column data by alias or column name */
+			cout << res->getDouble("type") << " \t" << res->getString("genre") << " \t" << res->getString("location") << " \t"
+					<< res->getString("sensorID") << " \t\t" << res->getString("value") << " \t" << res->getString("unit") << popcendl;
+
+		}
+		cout<<"Cleaning objects" << popcendl;
+		delete res;
+		delete stmt;
+		//delete con;
+
+	}
+	catch (sql::SQLException &e) {
+		cout << "# ERR: SQLException in " << __FILE__;
+		cout << "(" << __FUNCTION__ << ") on line "	<< __LINE__ << popcendl;
+		cout << "# ERR: " << e.what();
+		cout << " (MySQL error code: " << e.getErrorCode();
+		cout << ", SQLState: " << e.getSQLState() << " )" << popcendl;
+	}
+	cout << popcendl;
+}
+
+void SensorProxy::clearDB()
+{
+	try {
+		sql::Statement *stmt;
+		sql::ResultSet *res;
+
+		cout<<"Creating statement" << popcendl;
+		stmt = con->createStatement();
+		cout<<"Executing query" << popcendl;
+		stmt->execute("Truncate table popwin_schema.POPSensorData;");
+		delete res;
+		delete stmt;
+	}
+	catch (sql::SQLException &e) {
+		cout << "# ERR: SQLException in " << __FILE__;
+		cout << "(" << __FUNCTION__ << ") on line "	<< __LINE__ << popcendl;
+		cout << "# ERR: " << e.what();
+		cout << " (MySQL error code: " << e.getErrorCode();
+		cout << ", SQLState: " << e.getSQLState() << " )" << popcendl;
+	}
+}
+
+POPSensorData SensorProxy::executeQuery(string sqlRequest)
+{
+	try {
+		sql::Statement *stmt;
+		sql::ResultSet *res;
 
 		cout<<"Creating statement" << popcendl;
 		stmt = con->createStatement();
@@ -237,10 +228,11 @@ void SensorProxy::TestSQL()
 					<< res->getString("sensorID") << " \t\t" << res->getString("value") << " \t" << res->getString("unit") << popcendl;
 
 		}
+		copyFromResultSetToPOPSensorData(res,&m_sensorData);
 		cout<<"Cleaning objects" << popcendl;
 		delete res;
 		delete stmt;
-		delete con;
+		return m_sensorData;
 
 	}
 	catch (sql::SQLException &e) {
@@ -250,7 +242,12 @@ void SensorProxy::TestSQL()
 		cout << " (MySQL error code: " << e.getErrorCode();
 		cout << ", SQLState: " << e.getSQLState() << " )" << popcendl;
 	}
-	cout << popcendl;
+	return m_sensorData;
+}
+
+void SensorProxy::copyFromResultSetToPOPSensorData(sql::ResultSet* set, POPSensorData* data)
+{
+
 }
 
 /// Send raw data to the gateway
@@ -346,18 +343,18 @@ void SensorProxy::StopListening()
 }
 
 /// Return a POPSensorData structure containing the messages received from sensors
-POPSensorData SensorProxy::Gather()
+/*POPSensorData SensorProxy::Gather()
 {
 	// cout << "Retrieve " << m_doubleData.size() << " records of type double" <<popcendl;
 	return m_sensorData;
-}
+}*/
 
 /// Clear the stored messages
-void SensorProxy::Clear()
+/*void SensorProxy::Clear()
 {
 	m_sensorData.Clear();
 	// m_subscriptions.clear();
-}
+}*/
 
 /// Handle all incoming messages
 void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
@@ -401,8 +398,6 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 			if(unbufferizeNotifyMessage(&msg, x_rawMsg.c_str(), x_rawMsg.size()) <= 0)
 				throw POPException("Cannot unbufferize notify message");
 
-			InsertSQL(&msg);
-
 			auto it = m_subscriptions.find(msg.measurementType);
 			bool subscribed = it != m_subscriptions.end() && it->second;
 			if(msg.measurementType == MSR_LOG)
@@ -423,7 +418,8 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 #ifdef EN_COUTS
 			cout<< "Proxy "<< m_id << ", stored notification   (" << explainMeasurementType(msg.measurementType) << "): '" << msg.data << "'" << popcendl;
 #endif
-			switch(msg.dataType)
+			InsertSQL(&msg);
+			/*switch(msg.dataType)
 			{
 			case TYPE_DOUBLE:
 			{
@@ -445,7 +441,7 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 			}
 			default:
 				printf("Unknown data type %d in %s\n", msg.dataType, x_rawMsg.c_str());
-			}
+			}*/
 		}
 		break;
 
@@ -679,13 +675,13 @@ void SensorProxy::UnSubscribe(int x_measurementType, int x_dataType)
 }
 
 /// Return the size of the stored data
-int SensorProxy::GetDataSize()
+/*int SensorProxy::GetDataSize()
 {
 	return m_sensorData.GetSize();
-}
+}*/
 
 /// Apply a reduce operation to the stored data {size, min, max, aver, sum, stdev}
-double SensorProxy::Reduce(int x_mtype, int x_dataType, int x_fct)
+/*double SensorProxy::Reduce(int x_mtype, int x_dataType, int x_fct)
 {
 	switch(x_dataType)
 	{
@@ -696,7 +692,7 @@ double SensorProxy::Reduce(int x_mtype, int x_dataType, int x_fct)
 	default:
 		throw POPException("No reduce operation for type " + string(explainDataType(static_cast<enum DataType>(x_dataType))));
 	}
-}
+}*/
 
 /// Send a notification to set the gwID GW as a GW
 void SensorProxy::SetAsGateway(int gwID)

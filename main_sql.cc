@@ -55,7 +55,9 @@ int main(int argc, char** argv)
 		{
 			waitPressKey();
 			cout << "Testing sql" << popcendl;
-			popLocal.TestSQL();
+			popLocal.executeQuery("");
+			popLocal.Clear();
+			//popLocal.TestSQL();
 		}
 
 		printf("end of main\n");

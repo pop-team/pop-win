@@ -38,11 +38,12 @@ public:
 	POPSensor(int x_pow, const std::string& x_resourceFileName, const int id) @{ od.power(x_pow); };
 	~POPSensor();
 
-	void TestSQL();
-	void TestInsertSQL();
+	POPSensorData executeQuery(string sqlRequest);
+	//void TestSQL();
+	//void TestInsertSQL();
 
 	/// Retrieve data gathered 
-	POPSensorData Gather();
+	//POPSensorData Gather();
 
 	/// Broacast data through the network
 	//void Broadcast(int x_publicationType, int x_data);
@@ -53,7 +54,7 @@ public:
 	void Broadcast(int x_measurementType, int x_measurementUnit, const std::string& x_data);
 
 	// Apply a reduce function to the data {size, min, max, aver, sum, stdev}
-	double Reduce(int x_mtype, int x_dataType, int x_fct);
+	//double Reduce(int x_mtype, int x_dataType, int x_fct);
 
 	/// Clear data gathered 
 	void Clear();
@@ -71,7 +72,7 @@ public:
 	bool IsConnected();
 
 	// Size of collected data
-	sync conc int GetDataSize();
+	//sync conc int GetDataSize();
 
 
 private:
