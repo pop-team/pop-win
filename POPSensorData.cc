@@ -15,6 +15,7 @@ POPSensorData::POPSensorData()
 {
 	list_iter = databaseValues.begin();
 	colNameSize = 0;
+	firstNextCall = true;
 }
 
 POPSensorData::~POPSensorData()
@@ -28,6 +29,53 @@ void POPSensorData::insert(map< string,boost::variant< int, float, double, std::
 	databaseValues.push_back(newMap);
 }
 
+/// Empty the data object
+void POPSensorData::clear()
+{
+	databaseValues.clear();
+}
+
+/// Return the number of rows
+int POPSensorData::getRow()
+{
+	return databaseValues.size();
+}
+
+/*! Center-aligns string within a field of width w. Pads with blank spaces
+    to enforce alignment. */
+std::string POPSensorData::center(const string s, const int w) {
+	stringstream ss, spaces;
+	int padding = w - s.size();                 // count excess room to pad
+	for(int i=0; i<padding/2; ++i)
+		spaces << " ";
+	ss << spaces.str() << s << spaces.str();    // format with padding
+	if(padding>0 && padding%2!=0)               // if odd #, add 1 space
+		ss << " ";
+	return ss.str();
+}
+
+void POPSensorData::printAll()
+{
+	cout 	<< center("type",10) 	<< " | "
+			<< center("genre",15) 	<< " | "
+			<< center("location",15)<< " | "
+			<< center("sensorID",10)<< " | "
+			<< center("value",10) 	<< " | "
+			<< center("unit",10) 	<< popcendl;
+	cout << string(10*4+15*2 + 5*3, '-') << popcendl;
+	first();
+	while (next()) {
+		/* Access column data by alias or column name */
+		cout 	<< center(getString("type"),10) 	<< " | "
+				<< center(getString("genre"),15) 	<< " | "
+				<< center(getString("location"),15) << " | "
+				<< center(getString("sensorID"),10) << " | "
+				<< center(getString("value"),10) 	<< " | "
+				<< center(getString("unit"),10) 	<< popcendl;
+
+	}
+}
+
 /// Insert data into the list
 void POPSensorData::insertColName(string colName)
 {
@@ -38,16 +86,18 @@ void POPSensorData::insertColName(string colName)
 void POPSensorData::first()
 {
 	list_iter = databaseValues.begin();
+	firstNextCall = true;
 }
 
 /// Iterate through all rows of the table of data
 bool POPSensorData::next()
 {
-	list_iter++;
+	if(!firstNextCall)
+		list_iter++;
+	else
+		firstNextCall = false;
 	if(list_iter == databaseValues.end())
-	{
 		return false;
-	}
 	else
 		return true;
 }
@@ -132,8 +182,6 @@ void POPSensorData::Serialize(POPBuffer &buf, bool pack)
 		buf.Pack(&size, 1);
 		cout << "Packing size:" << size << popcendl;
 		list_iter = databaseValues.begin();
-		cout << "list_iter is begin()" << popcendl;
-		cout << "list_iter is already end(): " << (list_iter == databaseValues.end()) << popcendl;
 		while(list_iter != databaseValues.end())
 		{
 			map_iter = list_iter->begin();

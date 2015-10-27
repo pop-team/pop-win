@@ -55,7 +55,8 @@ int main(int argc, char** argv)
 		{
 			waitPressKey();
 			cout << "Testing sql" << popcendl;
-			popLocal.executeQuery("");
+			POPSensorData d = popLocal.executeQuery("");
+			d.printAll();
 			popLocal.Clear();
 			//popLocal.TestSQL();
 		}

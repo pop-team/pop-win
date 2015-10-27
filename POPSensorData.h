@@ -43,6 +43,10 @@ public:
 
 	void first();
 	bool next();
+	int getRow();
+	void clear();
+	void printAll();
+
 	int getInt(string columnLabel);
 	int getInt(int columnIndex);
 
@@ -64,6 +68,9 @@ private:
 	map< string,boost::variant< int, float, double, std::string > >::iterator map_iter;
 	string colNames[20];
 	int colNameSize;
+	bool firstNextCall;
+
+	string center(const string s, const int w);
 
 };
 
