@@ -99,6 +99,11 @@ private:
 
 	/// ID of the POPSensor
 	int PopSID;
+
+	void copyFromResultSetToPOPSensorData(sql::ResultSet* set, POPSensorData* data);
+
+	sql::Driver *driver;
+	sql::Connection *con;
 };
 
 #endif

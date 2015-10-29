@@ -32,6 +32,15 @@ POPSensor::POPSensor(const std::string& x_url, const std::string& x_resourceFile
 	PopSID = 10000*id;
 	cout<<"Creating POPSensor with id="<< PopSID << popcendl;
 	Initialize(x_resourceFileName);
+	// init DB connection
+	/* Create a connection */
+	cout<<"Instantiating driver" << popcendl;
+	driver = get_driver_instance();
+	cout<<"Connecting to db" << popcendl;
+	con = driver->connect("tcp://127.0.0.1:3306", "root", "toor");
+	/* Connect to the MySQL test database */
+	//cout<<"Setting schema" << popcendl;
+	//con->setSchema("popwin_schema");
 }
 
 /// Constructor (power requirement of target platteform is specified)
@@ -161,9 +170,48 @@ void POPSensor::StopListening()
 /// Return a POPSensorData structure containing the messages received from sensors according to SQL request
 POPSensorData POPSensor::executeQuery(string sqlRequest)
 {
-	for(auto it : m_sensorsProxy)
-	{
-		return it->executeQuery(sqlRequest);
+	POPSensorData d;
+	d.insertColName("type");
+	d.insertColName("genre");
+	d.insertColName("location");
+	d.insertColName("unit");
+	d.insertColName("sensorID");
+	d.insertColName("value");
+	try {
+		sql::Statement *stmt;
+		sql::ResultSet *res;
+
+		//cout<<"Creating statement" << popcendl;
+		stmt = con->createStatement();
+		//cout<<"Executing query" << popcendl;
+		res = stmt->executeQuery("SELECT * FROM popwin_schema.POPSensorData");
+		copyFromResultSetToPOPSensorData(res,&d);
+		cout<<"Cleaning objects" << popcendl;
+		delete res;
+		delete stmt;
+	}
+	catch (sql::SQLException &e) {
+		cout << "# ERR: SQLException in " << __FILE__;
+		cout << "(" << __FUNCTION__ << ") on line "	<< __LINE__ << popcendl;
+		cout << "# ERR: " << e.what();
+		cout << " (MySQL error code: " << e.getErrorCode();
+		cout << ", SQLState: " << e.getSQLState() << " )" << popcendl;
+	}
+	return d;
+}
+
+void POPSensor::copyFromResultSetToPOPSensorData(sql::ResultSet* set, POPSensorData* data)
+{
+	while (set->next()) {
+		map< string,boost::variant< int, float, double, std::string > > rSetToPOPData;
+		rSetToPOPData["type"] = boost::variant< int, float, double, std::string >(set->getString("type"));
+		rSetToPOPData["genre"] = boost::variant< int, float, double, std::string >(set->getString("genre"));
+		rSetToPOPData["location"] = boost::variant< int, float, double, std::string >(set->getString("location"));
+		rSetToPOPData["unit"] = boost::variant< int, float, double, std::string >(set->getString("unit"));
+		rSetToPOPData["sensorID"] = boost::variant< int, float, double, std::string >(set->getInt("sensorID"));
+		rSetToPOPData["value"] = boost::variant< int, float, double, std::string >(set->getInt("value"));
+		data->insert(rSetToPOPData);
+		rSetToPOPData.clear();
 	}
 }
 
@@ -182,9 +230,23 @@ POPSensorData POPSensor::executeQuery(string sqlRequest)
 /// Clear the stored messages
 void POPSensor::Clear()
 {
-	for(auto it : m_sensorsProxy)
-	{
-		it->clearDB();
+	try {
+		sql::Statement *stmt;
+		sql::ResultSet *res;
+
+		//cout<<"Creating statement" << popcendl;
+		stmt = con->createStatement();
+		//cout<<"Executing query" << popcendl;
+		stmt->execute("Truncate table popwin_schema.POPSensorData;");
+		delete res;
+		delete stmt;
+	}
+	catch (sql::SQLException &e) {
+		cout << "# ERR: SQLException in " << __FILE__;
+		cout << "(" << __FUNCTION__ << ") on line "	<< __LINE__ << popcendl;
+		cout << "# ERR: " << e.what();
+		cout << " (MySQL error code: " << e.getErrorCode();
+		cout << ", SQLState: " << e.getSQLState() << " )" << popcendl;
 	}
 }
 

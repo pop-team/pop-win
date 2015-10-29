@@ -36,8 +36,8 @@ public:
 	SensorProxy(int x_id, const std::string& x_url, const std::string& x_device) @{ od.url(x_url); };
 	~SensorProxy();
 
-	sync seq POPSensorData executeQuery(string sqlRequest);
-	sync seq void TestSQL();
+	//sync seq POPSensorData executeQuery(string sqlRequest);
+	//sync seq void TestSQL();
 	//sync seq void TestInsertSQL();
 
 	/// Send notification to the connected sensor
@@ -76,7 +76,6 @@ public:
 
 	/// Clear data gathered 
 	//async conc void Clear();
-	async conc void clearDB();
 
 	//sync conc int GetDataSize();
 
@@ -87,16 +86,11 @@ private:
 
 	void InsertSQL(struct NotifyMessage* msg);
 
-	void copyFromResultSetToPOPSensorData(sql::ResultSet* set, POPSensorData* data);
-
 	int m_fd;
 	int m_id;
 	std::atomic<bool>  m_listening;
 	std::map<int,bool> m_subscriptions;
 	std::map<int,bool> m_publications;
-
-	// Different containers of data
-	POPSensorData m_sensorData;
 
 	sql::Driver *driver;
 	sql::Connection *con;

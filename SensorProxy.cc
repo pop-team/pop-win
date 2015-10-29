@@ -94,9 +94,9 @@ SensorProxy::SensorProxy(int x_id, const std::string& x_url, const string& x_dev
 	// m_debugOf.open("debug.txt");
 	// init DB connection
 	/* Create a connection */
-	cout<<"Instantiating driver" << popcendl;
+	//cout<<"Instantiating driver" << popcendl;
 	driver = get_driver_instance();
-	cout<<"Connecting to db" << popcendl;
+	//cout<<"Connecting to db" << popcendl;
 	con = driver->connect("tcp://127.0.0.1:3306", "root", "toor");
 	/* Connect to the MySQL test database */
 	//cout<<"Setting schema" << popcendl;
@@ -127,16 +127,16 @@ void SensorProxy::InsertSQL(struct NotifyMessage* msg)
 		std::stringstream ss;
 		ss << "INSERT INTO popwin_schema.POPSensorData(type,genre,location,sensorID,value,unit) VALUES('"
 				<< explainDataType(msg->dataType) << "','"
-				<< explainMeasurementType(msg->measurementType) << "','NULL',"
-				<<	msg->id << ","
-				<< (int)atof(msg->data) << ",'"
+				<< explainMeasurementType(msg->measurementType) << "','"
+				<< "NULL" << "','"
+				<< msg->id << "','"
+				<< (int)(atof(msg->data)) << "','"
 				<< explainMeasurementUnit(msg->unit) << "')";
 		std::string s = ss.str();
 		stmt->executeUpdate(s);
 
 		/* Access column data by alias or column name */
-		cout << "Inserted: " << "FLOAT" << " \t" << explainMeasurementType(msg->measurementType) << " \t" << "NULL" << " \t"
-				<< msg->id << " \t" << (int)atof(msg->data) << " \t" << explainMeasurementUnit(msg->unit) << popcendl;
+		cout << "Inserted 1 input message in DB" << popcendl;
 
 		//cout<<"Cleaning objects" << popcendl;
 		delete stmt;
@@ -151,112 +151,6 @@ void SensorProxy::InsertSQL(struct NotifyMessage* msg)
 		cout << ", SQLState: " << e.getSQLState() << " )" << popcendl;
 	}
 	cout << popcendl;
-}
-
-void SensorProxy::TestSQL()
-{
-
-	//MySQLConn* conn = new MySQLConn();
-	//conn->testMySQL();
-	try {
-		sql::Statement *stmt;
-		sql::ResultSet *res;
-
-		cout<<"Creating statement" << popcendl;
-		stmt = con->createStatement();
-		cout<<"Executing query" << popcendl;
-		res = stmt->executeQuery("SELECT * FROM popwin_schema.POPSensorData");
-		cout << "type \tgenre \t\tlocation \tsensorID \tvalue \tunit" << popcendl;
-		while (res->next()) {
-			/* Access column data by alias or column name */
-			cout << res->getDouble("type") << " \t" << res->getString("genre") << " \t" << res->getString("location") << " \t"
-					<< res->getString("sensorID") << " \t\t" << res->getString("value") << " \t" << res->getString("unit") << popcendl;
-
-		}
-		cout<<"Cleaning objects" << popcendl;
-		delete res;
-		delete stmt;
-		//delete con;
-
-	}
-	catch (sql::SQLException &e) {
-		cout << "# ERR: SQLException in " << __FILE__;
-		cout << "(" << __FUNCTION__ << ") on line "	<< __LINE__ << popcendl;
-		cout << "# ERR: " << e.what();
-		cout << " (MySQL error code: " << e.getErrorCode();
-		cout << ", SQLState: " << e.getSQLState() << " )" << popcendl;
-	}
-	cout << popcendl;
-}
-
-void SensorProxy::clearDB()
-{
-	try {
-		sql::Statement *stmt;
-		sql::ResultSet *res;
-
-		//cout<<"Creating statement" << popcendl;
-		stmt = con->createStatement();
-		//cout<<"Executing query" << popcendl;
-		stmt->execute("Truncate table popwin_schema.POPSensorData;");
-		delete res;
-		delete stmt;
-	}
-	catch (sql::SQLException &e) {
-		cout << "# ERR: SQLException in " << __FILE__;
-		cout << "(" << __FUNCTION__ << ") on line "	<< __LINE__ << popcendl;
-		cout << "# ERR: " << e.what();
-		cout << " (MySQL error code: " << e.getErrorCode();
-		cout << ", SQLState: " << e.getSQLState() << " )" << popcendl;
-	}
-}
-
-POPSensorData SensorProxy::executeQuery(string sqlRequest)
-{
-	POPSensorData d;
-	d.insertColName("type");
-	d.insertColName("genre");
-	d.insertColName("location");
-	d.insertColName("unit");
-	d.insertColName("sensorID");
-	d.insertColName("value");
-	try {
-		sql::Statement *stmt;
-		sql::ResultSet *res;
-
-		//cout<<"Creating statement" << popcendl;
-		stmt = con->createStatement();
-		//cout<<"Executing query" << popcendl;
-		res = stmt->executeQuery("SELECT * FROM popwin_schema.POPSensorData");
-		copyFromResultSetToPOPSensorData(res,&d);
-		cout<<"Cleaning objects" << popcendl;
-		delete res;
-		delete stmt;
-		return d;
-	}
-	catch (sql::SQLException &e) {
-		cout << "# ERR: SQLException in " << __FILE__;
-		cout << "(" << __FUNCTION__ << ") on line "	<< __LINE__ << popcendl;
-		cout << "# ERR: " << e.what();
-		cout << " (MySQL error code: " << e.getErrorCode();
-		cout << ", SQLState: " << e.getSQLState() << " )" << popcendl;
-	}
-	return d;
-}
-
-void SensorProxy::copyFromResultSetToPOPSensorData(sql::ResultSet* set, POPSensorData* data)
-{
-	while (set->next()) {
-		map< string,boost::variant< int, float, double, std::string > > rSetToPOPData;
-		rSetToPOPData["type"] = boost::variant< int, float, double, std::string >(set->getString("type"));
-		rSetToPOPData["genre"] = boost::variant< int, float, double, std::string >(set->getString("genre"));
-		rSetToPOPData["location"] = boost::variant< int, float, double, std::string >(set->getString("location"));
-		rSetToPOPData["unit"] = boost::variant< int, float, double, std::string >(set->getString("unit"));
-		rSetToPOPData["sensorID"] = boost::variant< int, float, double, std::string >(set->getInt("sensorID"));
-		rSetToPOPData["value"] = boost::variant< int, float, double, std::string >(set->getInt("value"));
-		data->insert(rSetToPOPData);
-		rSetToPOPData.clear();
-	}
 }
 
 /// Send raw data to the gateway
