@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "net/rime.h"
+#include "net/rime/rime.h"
 #include "contiki.h"
 
 void * memset ( void * ptr, int value, size_t num );

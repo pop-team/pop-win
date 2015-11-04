@@ -8,7 +8,7 @@
 #include "queue.h"
 #include "lib/memb.h"
 #include "lib/random.h"
-#include "net/rime.h"
+#include "net/rime/rime.h"
 #include "node-id.h"
 #include "dev/leds.h"
 
@@ -16,9 +16,9 @@
 #include "dev/i2cmaster.h" // for Zolteria Z1
 #include "dev/tmp102.h" // for Zolteria Z1
 #endif
-#include "dev/sht11.h" // for XM1000
+#include "dev/sht11/sht11.h" // for XM1000
 #include "dev/light-sensor.h" // for XM1000
-#include "dev/cc2420.h" // for tx_power
+#include "dev/cc2420/cc2420.h" // for tx_power
 #include "dev/button-sensor.h"
 
 
@@ -181,7 +181,7 @@ static void send_weight(){
 
 // ADD NEIGHBOR
 /* Add a neighbor on the mote's neighbor list */
-static void add_neighbor(uint8_t ntag, uint8_t nweight, const rimeaddr_t *from){
+static void add_neighbor(uint8_t ntag, uint8_t nweight, const linkaddr_t *from){
 
 	struct neighbor *n;
 
@@ -269,7 +269,7 @@ static void forward_message(){
 //BROADCAST RECEIVE
 /* This function is called whenever a broadcast message is received. */
 static void
-broadcast_recv(struct broadcast_conn *c, const rimeaddr_t *from)
+broadcast_recv(struct broadcast_conn *c, const linkaddr_t *from)
 {
 	struct Message *msg;
 
@@ -324,7 +324,7 @@ static const struct broadcast_callbacks broadcast_call = {broadcast_recv};
 // UNICAST RECEIVE
 /* This function is called for every incoming unicast packet. */
 static void
-recv_uc(struct unicast_conn *c, const rimeaddr_t *from)
+recv_uc(struct unicast_conn *c, const linkaddr_t *from)
 {
 	struct Message *msg;
 

@@ -11,8 +11,8 @@
  *
  */
 
-#define XM1000_FLASH // uncomment to flash code for XM1000 mote
-#define DRW_FLASH 1
+//#define XM1000_FLASH // uncomment to flash code for XM1000 mote
+#define DRW_FLASH 0
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,7 +23,7 @@
 #include "lib/list.h"
 #include "lib/memb.h"
 #include "lib/random.h"
-#include "net/rime.h"
+#include "net/rime/rime.h"
 #include "node-id.h"
 #include "dev/leds.h"
 
@@ -32,8 +32,8 @@
 #include "dev/i2cmaster.h" // for Zolteria Z1
 #include "dev/tmp102.h" // for Zolteria Z1
 #endif
-#include "dev/sht11.h" // for XM1000
-#include "dev/cc2420.h" // for tx_power
+#include "dev/sht11/sht11.h" // for XM1000
+#include "dev/cc2420/cc2420.h" // for tx_power
 #include "dev/button-sensor.h"
 #include "popwin_messages.h"
 #include "queue.h"
@@ -144,7 +144,7 @@ void sensorSendNotification(struct NotifyMessage* msg);
 int get_id()
 {
 	// Id is computed from rime address (for messaging)
-	return rimeaddr_node_addr.u8[0];
+	return linkaddr_node_addr.u8[0];
 }
 
 /// Log message (handled as a notification of type string): Only for use on the remote sensor
@@ -197,7 +197,7 @@ AUTOSTART_PROCESSES(&gateway_communication_process, &multihop_announce, &multiho
 //int countSentBroadcast = 0;
 
 static void
-broadcast_recvGWM(struct broadcast_conn *c, const rimeaddr_t *from)
+broadcast_recvGWM(struct broadcast_conn *c, const linkaddr_t *from)
 {
 	//printf("broadcast message received from %d.%d: '%s'\n",from->u8[0], from->u8[1], (char *)packetbuf_dataptr());
 	//	leds_toggle(LEDS_GREEN);
@@ -673,7 +673,7 @@ void generate_test_data_string(){
  * Print the id of the node
  */
 void print_id(){
-	LOG("ID of node is %d (= %d.%d)", get_id(), rimeaddr_node_addr.u8[0], rimeaddr_node_addr.u8[1]);
+	LOG("ID of node is %d (= %d.%d)", get_id(), linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
 }
 
 /*
@@ -708,7 +708,7 @@ void set_as_gateway(int id){
 
 struct example_neighbor {
 	struct example_neighbor *next;
-	rimeaddr_t addr;
+	linkaddr_t addr;
 	struct ctimer ctimer;
 };
 
@@ -740,7 +740,7 @@ remove_neighbor(void *n)
  */
 static void
 received_announcement(struct announcement *a,
-		const rimeaddr_t *from,
+		const linkaddr_t *from,
 		uint16_t id, uint16_t value)
 {
 	struct example_neighbor *e;
@@ -774,8 +774,8 @@ static struct announcement example_announcement;
  * This function is called at the final recepient of the message.
  */
 static void
-recv(struct multihop_conn *c, const rimeaddr_t *sender,
-		const rimeaddr_t *prevhop,
+recv(struct multihop_conn *c, const linkaddr_t *sender,
+		const linkaddr_t *prevhop,
 		uint8_t hops)
 {
 #ifdef EN_DEBUG
@@ -790,10 +790,10 @@ recv(struct multihop_conn *c, const rimeaddr_t *sender,
  * found, the function returns NULL to signal to the multihop layer
  * that the packet should be dropped.
  */
-static rimeaddr_t *
+static linkaddr_t *
 forward(struct multihop_conn *c,
-		const rimeaddr_t *originator, const rimeaddr_t *dest,
-		const rimeaddr_t *prevhop, uint8_t hops)
+		const linkaddr_t *originator, const linkaddr_t *dest,
+		const linkaddr_t *prevhop, uint8_t hops)
 {
 	/* Find a random neighbor to send to. */
 	int num, i;
@@ -829,7 +829,7 @@ static struct multihop_conn multihop;
 void sensorSendNotification(struct NotifyMessage* msg)
 {
 	// declare destination
-	rimeaddr_t to;
+	linkaddr_t to;
 	to.u8[0] = g_gateway; // ID of our gateway
 	to.u8[1] = 0;
 
@@ -1075,7 +1075,7 @@ PROCESS_THREAD(button_pressed, ev, data)
 		// send_broadcast_cmd();
 
 		/*---- start of multihop call ----*/
-		rimeaddr_t to;
+		linkaddr_t to;
 		to.u8[0] = g_gateway; // ID of our gateway
 		to.u8[1] = 0;
 

@@ -39,8 +39,8 @@ static int sense_counter = 0;
 
 static struct Message message_to_forward;
 static struct Message message_to_send;
-static rimeaddr_t unicast_target;
-static rimeaddr_t weight_target;
+static linkaddr_t unicast_target;
+static linkaddr_t weight_target;
 
 static Queue message_queue;
 
@@ -77,7 +77,7 @@ enum {
 struct neighbor {
 
   struct neighbor *next;
-  rimeaddr_t addr;
+  linkaddr_t addr;
   uint8_t tag;
   uint8_t weight;             // #neighbors tagged / total neihbors
 
