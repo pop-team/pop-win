@@ -11,7 +11,8 @@
  *
  */
 
-//#define XM1000_FLASH // uncomment to flash code for XM1000 mote
+#define CONTIKIv3 // comment for Contiki 2.6 and 2.7
+#define XM1000_FLASH // uncomment to flash code for XM1000 mote
 #define DRW_FLASH 0
 
 #include <stdio.h>
@@ -23,7 +24,15 @@
 #include "lib/list.h"
 #include "lib/memb.h"
 #include "lib/random.h"
+#ifdef CONTIKIv3
 #include "net/rime/rime.h"
+#include "dev/sht11/sht11.h" // for XM1000
+#include "dev/cc2420/cc2420.h" // for tx_power
+#else
+#include "net/rime.h"
+#include "dev/sht11.h" // for XM1000
+#include "dev/cc2420.h" // for tx_power
+#endif
 #include "node-id.h"
 #include "dev/leds.h"
 
@@ -32,8 +41,6 @@
 #include "dev/i2cmaster.h" // for Zolteria Z1
 #include "dev/tmp102.h" // for Zolteria Z1
 #endif
-#include "dev/sht11/sht11.h" // for XM1000
-#include "dev/cc2420/cc2420.h" // for tx_power
 #include "dev/button-sensor.h"
 #include "popwin_messages.h"
 #include "queue.h"
@@ -745,13 +752,15 @@ received_announcement(struct announcement *a,
 {
 	struct example_neighbor *e;
 
-	/*  printf("Got announcement from %d.%d, id %d, value %d\n",
-      from->u8[0], from->u8[1], id, value);*/
+#ifdef EN_LOGS
+	printf("Got announcement from %d.%d, id %d, value %d\n",
+      from->u8[0], from->u8[1], id, value);
+#endif
 
 	/* We received an announcement from a neighbor so we need to update
      the neighbor list, or add a new entry to the table. */
 	for(e = list_head(neighbor_table); e != NULL; e = e->next) {
-		if(rimeaddr_cmp(from, &e->addr)) {
+		if(linkaddr_cmp(from, &e->addr)) {
 			/* Our neighbor was found, so we update the timeout. */
 			ctimer_set(&e->ctimer, NEIGHBOR_TIMEOUT, remove_neighbor, e);
 			return;
@@ -763,7 +772,7 @@ received_announcement(struct announcement *a,
      necessary fields, and add it to the list. */
 	e = memb_alloc(&neighbor_mem);
 	if(e != NULL) {
-		rimeaddr_copy(&e->addr, from);
+		linkaddr_copy(&e->addr, from);
 		list_add(neighbor_table, e);
 		ctimer_set(&e->ctimer, NEIGHBOR_TIMEOUT, remove_neighbor, e);
 	}
@@ -808,7 +817,7 @@ forward(struct multihop_conn *c,
 		if(n != NULL) {
 #ifdef EN_DEBUG
 			printf("%d.%d: Forwarding packet to %d.%d (%d in list), hops %d\n",
-					rimeaddr_node_addr.u8[0], rimeaddr_node_addr.u8[1],
+					linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
 					n->addr.u8[0], n->addr.u8[1], num,
 					packetbuf_attr(PACKETBUF_ATTR_HOPS));
 #endif
@@ -817,7 +826,7 @@ forward(struct multihop_conn *c,
 	}
 #ifdef EN_DEBUG
 	printf("%d.%d: did not find a neighbor to foward to\n",
-			rimeaddr_node_addr.u8[0], rimeaddr_node_addr.u8[1]);
+			linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
 #endif
 	return NULL;
 }
@@ -850,6 +859,10 @@ void sensorSendNotification(struct NotifyMessage* msg)
 
 		/* Send the packet. */
 		multihop_send(&multihop, &to);
+
+#ifdef EN_DEBUG
+		printf("Multihop message sent from sensor to GW\n");
+#endif
 	}
 	else // on GW
 	{
@@ -873,7 +886,7 @@ unsigned char sense_leds()
 PROCESS_THREAD(multihop_announce, ev, data)
 {
 	PROCESS_EXITHANDLER(multihop_close(&multihop);)
-					PROCESS_BEGIN();
+	PROCESS_BEGIN();
 	printf("Launching process multihop_announce\n");
 
 	// Init for multihop -----
@@ -892,7 +905,7 @@ PROCESS_THREAD(multihop_announce, ev, data)
 
 	while(1){
 
-		//leds_on(LEDS_RED);
+		leds_on(LEDS_RED);
 		/* Register an announcement with the same announcement ID as the
 		   Rime channel we use to open the multihop connection above. */
 		announcement_register(&example_announcement,
@@ -901,7 +914,7 @@ PROCESS_THREAD(multihop_announce, ev, data)
 
 		/* Set a dummy value to start sending out announcments. */
 		announcement_set_value(&example_announcement, 0);
-		//leds_off(LEDS_RED);
+		leds_off(LEDS_RED);
 
 		etimer_set(&et, WAIT_SHORT * CLOCK_SECOND);
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));

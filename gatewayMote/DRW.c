@@ -8,7 +8,17 @@
 #include "queue.h"
 #include "lib/memb.h"
 #include "lib/random.h"
+
+#ifdef CONTIKIv3
 #include "net/rime/rime.h"
+#include "dev/sht11/sht11.h" // for XM1000
+#include "dev/cc2420/cc2420.h" // for tx_power
+#else
+#include "net/rime.h"
+#include "dev/sht11.h" // for XM1000
+#include "dev/cc2420.h" // for tx_power
+#endif
+
 #include "node-id.h"
 #include "dev/leds.h"
 
@@ -16,9 +26,8 @@
 #include "dev/i2cmaster.h" // for Zolteria Z1
 #include "dev/tmp102.h" // for Zolteria Z1
 #endif
-#include "dev/sht11/sht11.h" // for XM1000
+
 #include "dev/light-sensor.h" // for XM1000
-#include "dev/cc2420/cc2420.h" // for tx_power
 #include "dev/button-sensor.h"
 
 
@@ -38,24 +47,24 @@
 /*---------------------------------------------------------------------------*/
 
 float custom_atof(const char* s){
-  float rez = 0, fact = 1;
-  if (*s == '-'){
-    s++;
-    fact = -1;
-  };
-  int point_seen;
-  for (point_seen = 0; *s; s++){
-    if (*s == '.'){
-      point_seen = 1;
-      continue;
-    };
-    int d = *s - '0';
-    if (d >= 0 && d <= 9){
-      if (point_seen) fact /= 10.0f;
-      rez = rez * 10.0f + (float)d;
-    };
-  };
-  return rez * fact;
+	float rez = 0, fact = 1;
+	if (*s == '-'){
+		s++;
+		fact = -1;
+	};
+	int point_seen;
+	for (point_seen = 0; *s; s++){
+		if (*s == '.'){
+			point_seen = 1;
+			continue;
+		};
+		int d = *s - '0';
+		if (d >= 0 && d <= 9){
+			if (point_seen) fact /= 10.0f;
+			rez = rez * 10.0f + (float)d;
+		};
+	};
+	return rez * fact;
 };
 
 // PRINT INFO
@@ -191,7 +200,7 @@ static void add_neighbor(uint8_t ntag, uint8_t nweight, const linkaddr_t *from){
 		/* We break out of the loop if the address of the neighbor matches
              the address of the neighbor from which we received this
              broadcast message. */
-		if(rimeaddr_cmp(&n->addr, from)) {
+		if(linkaddr_cmp(&n->addr, from)) {
 			n->weight = nweight;
 			n->tag = ntag;
 			printf("Updating neighbor %d\n", from->u8[0]);
@@ -213,7 +222,7 @@ static void add_neighbor(uint8_t ntag, uint8_t nweight, const linkaddr_t *from){
 		}
 
 		/* Initialize the fields. */
-		rimeaddr_copy(&n->addr, from);
+		linkaddr_copy(&n->addr, from);
 		n->weight = nweight;
 		n->tag = ntag;
 
@@ -409,7 +418,7 @@ uint8_t sense_humidity(){
 
 float sense_temperature_float(){
 	float value = -39.60 + 0.01 * sht11_temp();
-	//DEBUG("sense temperature %d.%u (%u)", (int)value, DEC(value), sht11_temp());
+	DEBUG("sense temperature %d.%u (%u)", (int)value, DEC(value), sht11_temp());
 	return value;
 }
 

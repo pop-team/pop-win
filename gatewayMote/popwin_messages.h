@@ -19,7 +19,7 @@
 
 // The id of the gateway
 //#define GATEWAY_ID     158
-#define DEFAULT_GATEWAY_ID -1 // this means : is not a gateway (default sor sensors)
+#define DEFAULT_GATEWAY_ID 3 // this means : is not a gateway (default for sensors)
 
 /// Different types of messages
 enum MessageType
