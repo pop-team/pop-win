@@ -22,6 +22,8 @@
 #include <cppconn/driver.h>
 #include <cppconn/exception.h>
 #include <cppconn/resultset.h>
+#include <cppconn/resultset_metadata.h>
+#include <cppconn/datatype.h>
 #include <cppconn/statement.h>
 
 using namespace std;
@@ -171,12 +173,12 @@ void POPSensor::StopListening()
 POPSensorData POPSensor::executeQuery(string sqlRequest)
 {
 	POPSensorData d;
-	d.insertColName("type");
+	/*d.insertColName("type");
 	d.insertColName("genre");
 	d.insertColName("location");
 	d.insertColName("unit");
 	d.insertColName("sensorID");
-	d.insertColName("value");
+	d.insertColName("value");*/
 	try {
 		sql::Statement *stmt;
 		sql::ResultSet *res;
@@ -184,8 +186,18 @@ POPSensorData POPSensor::executeQuery(string sqlRequest)
 		//cout<<"Creating statement" << popcendl;
 		stmt = con->createStatement();
 		//cout<<"Executing query" << popcendl;
-		res = stmt->executeQuery("SELECT * FROM popwin_schema.POPSensorData");
-		copyFromResultSetToPOPSensorData(res,&d);
+		res = stmt->executeQuery(sqlRequest);
+		//res = stmt->executeQuery("SELECT * FROM popwin_schema.POPSensorData");
+
+		// Get names of columns requested by user
+		sql::ResultSetMetaData* rsmd = res->getMetaData();
+		int columnCount = rsmd->getColumnCount();
+		for(int i = 0;i<columnCount;i++)
+		{
+			d.insertColName(rsmd->getColumnLabel(i+1));
+			d.insertColType(rsmd->getColumnType(i+1));
+		}
+		copyFromResultSetToPOPSensorData(res,rsmd,&d);
 		cout<<"Cleaning objects" << popcendl;
 		delete res;
 		delete stmt;
@@ -200,16 +212,39 @@ POPSensorData POPSensor::executeQuery(string sqlRequest)
 	return d;
 }
 
-void POPSensor::copyFromResultSetToPOPSensorData(sql::ResultSet* set, POPSensorData* data)
+void POPSensor::copyFromResultSetToPOPSensorData(sql::ResultSet* set, sql::ResultSetMetaData* rsmd, POPSensorData* data)
 {
 	while (set->next()) {
 		map< string,boost::variant< int, float, double, std::string > > rSetToPOPData;
-		rSetToPOPData["type"] = boost::variant< int, float, double, std::string >(set->getString("type"));
+		int columnCount = rsmd->getColumnCount();
+		for(int i = 0;i<columnCount;i++)
+		{
+			const string crtLabel = rsmd->getColumnLabel(i+1);
+			if(rsmd->getColumnType(i+1) == sql::DataType::INTEGER)
+			{
+				rSetToPOPData[crtLabel] = boost::variant< int, float, double, std::string >(set->getInt(crtLabel));
+			}
+			// DataType float doesn't exist, even if FLOAT is available in database. REAL has the same value (7)
+			else if(rsmd->getColumnType(i+1) == sql::DataType::REAL)
+			{
+				// getFloat doesn't exist, use double instead
+				rSetToPOPData[crtLabel] = boost::variant< int, float, double, std::string >((double)set->getDouble(crtLabel));
+			}
+			else if(rsmd->getColumnType(i+1) == sql::DataType::DOUBLE)
+			{
+				rSetToPOPData[crtLabel] = boost::variant< int, float, double, std::string >((double)set->getDouble(crtLabel));
+			}
+			else if(rsmd->getColumnType(i+1) == sql::DataType::VARCHAR)
+			{
+				rSetToPOPData[crtLabel] = boost::variant< int, float, double, std::string >(set->getString(crtLabel));
+			}
+		}
+		/*rSetToPOPData["type"] = boost::variant< int, float, double, std::string >(set->getString("type"));
 		rSetToPOPData["genre"] = boost::variant< int, float, double, std::string >(set->getString("genre"));
 		rSetToPOPData["location"] = boost::variant< int, float, double, std::string >(set->getString("location"));
 		rSetToPOPData["unit"] = boost::variant< int, float, double, std::string >(set->getString("unit"));
 		rSetToPOPData["sensorID"] = boost::variant< int, float, double, std::string >(set->getInt("sensorID"));
-		rSetToPOPData["value"] = boost::variant< int, float, double, std::string >(set->getInt("value"));
+		rSetToPOPData["value"] = boost::variant< int, float, double, std::string >(set->getInt("value"));*/
 		data->insert(rSetToPOPData);
 		rSetToPOPData.clear();
 	}

@@ -20,6 +20,7 @@
 #include <cppconn/exception.h>
 #include <cppconn/resultset.h>
 #include <cppconn/statement.h>
+#include <cppconn/datatype.h>
 
 #include <boost/variant.hpp>
 #include <boost/serialization/variant.hpp>
@@ -40,6 +41,7 @@ public:
 	void insert(map< string,boost::variant< int, float, double, std::string > > newMap);
 
 	void insertColName(string colName);
+	void insertColType(int colType);
 
 	void first();
 	bool next();
@@ -67,7 +69,9 @@ private:
 	list< map< string, boost::variant< int, float, double, std::string > > >::iterator list_iter;
 	map< string,boost::variant< int, float, double, std::string > >::iterator map_iter;
 	string colNames[20];
+	int colTypes[20];
 	int colNameSize;
+	int colTypeSize;
 	bool firstNextCall;
 
 	string center(const string s, const int w);

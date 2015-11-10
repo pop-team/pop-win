@@ -15,6 +15,7 @@ POPSensorData::POPSensorData()
 {
 	list_iter = databaseValues.begin();
 	colNameSize = 0;
+	colTypeSize = 0;
 	firstNextCall = true;
 }
 
@@ -76,10 +77,16 @@ void POPSensorData::printAll()
 	}
 }
 
-/// Insert data into the list
+/// Insert column name (value, id...) into the list
 void POPSensorData::insertColName(string colName)
 {
 	colNames[colNameSize++] = colName;
+}
+
+/// Insert column type (float, double, string...) into the list
+void POPSensorData::insertColType(int colType)
+{
+	colTypes[colTypeSize++] = colType;
 }
 
 /// make itnernal iterator point to first row again
@@ -180,9 +187,88 @@ void POPSensorData::Serialize(POPBuffer &buf, bool pack)
 	{
 		int size = databaseValues.size();
 		buf.Pack(&size, 1);
+		buf.Pack(&colNameSize,1);
+		for(int i = 0;i<colNameSize;i++)
+		{
+			int size = colNames[i].length();
+			buf.Pack(&size,1);
+			buf.Pack(colNames[i].c_str(),size);
+		}
+		buf.Pack(&colTypeSize,1);
+		buf.Pack(colTypes,colTypeSize);
 		cout << "Packing size:" << size << popcendl;
 		for(list_iter = databaseValues.begin(); list_iter != databaseValues.end(); ++list_iter)
 		{
+			for(int i = 0;i<colTypeSize;i++)
+			{
+				map_iter = list_iter->find(colNames[i]);
+
+				int crtType = colTypes[i];
+				if(crtType == sql::DataType::INTEGER)
+				{
+					int typeValue = sql::DataType::INTEGER;
+					buf.Pack(&typeValue,1);
+					if(int* sensorIDValue = boost::get<int>(&(map_iter->second)))
+					{
+						//cout << "Packing sensorIDValue " << *sensorIDValue << popcendl;
+						buf.Pack(sensorIDValue,1);
+					}
+					else
+					{
+						int empty = 0;
+						//cout << "Packing empty sensorIDValue " << empty << popcendl;
+						buf.Pack(&empty,1);
+					}
+				}
+				// DataType float doesn't exist, even if FLOAT is available in database. REAL has the same value (7)
+				else if(crtType == sql::DataType::REAL)
+				{
+					int typeValue = sql::DataType::REAL;
+					buf.Pack(&typeValue,1);
+					if(float* sensorIDValue = boost::get<float>(&(map_iter->second)))
+					{
+						//cout << "Packing sensorIDValue " << *sensorIDValue << popcendl;
+						buf.Pack(sensorIDValue,1);
+					}
+					else
+					{
+						float empty = 0.0f;
+						//cout << "Packing empty sensorIDValue " << empty << popcendl;
+						buf.Pack(&empty,1);
+					}
+				}
+				else if(crtType == sql::DataType::DOUBLE)
+				{
+					int typeValue = sql::DataType::DOUBLE;
+					buf.Pack(&typeValue,1);
+					if(double* sensorIDValue = boost::get<double>(&(map_iter->second)))
+					{
+						//cout << "Packing sensorIDValue " << *sensorIDValue << popcendl;
+						buf.Pack(sensorIDValue,1);
+					}
+					else
+					{
+						double empty = 0.0;
+						//cout << "Packing empty sensorIDValue " << empty << popcendl;
+						buf.Pack(&empty,1);
+					}
+				}
+				else if(crtType == sql::DataType::VARCHAR)
+				{
+					int typeValue = sql::DataType::VARCHAR;
+					buf.Pack(&typeValue,1);
+					if(string* typeValue = boost::get<string>(&(map_iter->second)))
+					{
+						//cout << "Packing typeValue " << *typeValue << popcendl;
+						buf.Pack(typeValue,1);
+					}
+					else
+					{
+						string empty = "";
+						buf.Pack(&empty,1);
+					}
+				}
+			}
 			map_iter = list_iter->find("type");
 			//string typeKey = map_iter->first;
 			//buf.Pack(&typeKey,1);
@@ -291,6 +377,17 @@ void POPSensorData::Serialize(POPBuffer &buf, bool pack)
 	{
 		int size = 0;
 		buf.UnPack(&size,1);
+		buf.UnPack(&colNameSize,1);
+		for(int i = 0;i<colNameSize;i++)
+		{
+			int size;
+			buf.UnPack(&size,1);
+			char* crtName = new char[size];
+			buf.UnPack(crtName,1);
+			colNames[i] = string(crtName);
+		}
+		buf.UnPack(&colTypeSize,1);
+		buf.UnPack(colTypes,colTypeSize);
 		cout << "UnPacking size:" << size << popcendl;
 		databaseValues.clear();
 		for(int i=0 ; i < size ; i++)
