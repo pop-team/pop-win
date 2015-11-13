@@ -57,13 +57,13 @@ POPSensor::POPSensor(int x_pow, const std::string& x_resourceFileName, const int
 POPSensor::~POPSensor()
 {
 	StopListening();
-	m_jsonResources = "";
 	cout<<"Destroying POPSensor and its "<<m_sensorsProxy.size() << " SensorProxy." <<popcendl;
 	SubscribeToResources(false); // unsubscribe
+	m_jsonResources = "";
 	for(auto it : m_sensorsProxy)
 	{
-		it->UnPublish(MSR_SET_GW); // this one is not from JSON file, cf. Initialize()
-		//delete(it);
+		//it->UnPublish(MSR_SET_GW); // this one is not from JSON file, cf. Initialize()
+		delete(it);
 	}
 	m_sensorsProxy.clear();
 	cout<<"Finished destroying POPSensor" << popcendl;
@@ -173,21 +173,13 @@ void POPSensor::StopListening()
 POPSensorData POPSensor::executeQuery(string sqlRequest)
 {
 	POPSensorData d;
-	/*d.insertColName("type");
-	d.insertColName("genre");
-	d.insertColName("location");
-	d.insertColName("unit");
-	d.insertColName("sensorID");
-	d.insertColName("value");*/
+
 	try {
 		sql::Statement *stmt;
 		sql::ResultSet *res;
 
-		//cout<<"Creating statement" << popcendl;
 		stmt = con->createStatement();
-		//cout<<"Executing query" << popcendl;
 		res = stmt->executeQuery(sqlRequest);
-		//res = stmt->executeQuery("SELECT * FROM popwin_schema.POPSensorData");
 
 		// Get names of columns requested by user
 		sql::ResultSetMetaData* rsmd = res->getMetaData();
@@ -239,12 +231,7 @@ void POPSensor::copyFromResultSetToPOPSensorData(sql::ResultSet* set, sql::Resul
 				rSetToPOPData[crtLabel] = boost::variant< int, float, double, std::string >(set->getString(crtLabel));
 			}
 		}
-		/*rSetToPOPData["type"] = boost::variant< int, float, double, std::string >(set->getString("type"));
-		rSetToPOPData["genre"] = boost::variant< int, float, double, std::string >(set->getString("genre"));
-		rSetToPOPData["location"] = boost::variant< int, float, double, std::string >(set->getString("location"));
-		rSetToPOPData["unit"] = boost::variant< int, float, double, std::string >(set->getString("unit"));
-		rSetToPOPData["sensorID"] = boost::variant< int, float, double, std::string >(set->getInt("sensorID"));
-		rSetToPOPData["value"] = boost::variant< int, float, double, std::string >(set->getInt("value"));*/
+
 		data->insert(rSetToPOPData);
 		rSetToPOPData.clear();
 	}
@@ -267,13 +254,9 @@ void POPSensor::Clear()
 {
 	try {
 		sql::Statement *stmt;
-		sql::ResultSet *res;
 
-		//cout<<"Creating statement" << popcendl;
 		stmt = con->createStatement();
-		//cout<<"Executing query" << popcendl;
 		stmt->execute("Truncate table popwin_schema.POPSensorData;");
-		delete res;
 		delete stmt;
 	}
 	catch (sql::SQLException &e) {
@@ -295,11 +278,11 @@ void POPSensor::Clear()
 }*/
 
 /// Broadcast a message to all sensors
-void POPSensor::Broadcast(int x_measurementType, int x_measurementUnit, int x_data)
+void POPSensor::Broadcast(int x_genre, int x_unit, int x_data)
 {
 	for(auto it : m_sensorsProxy)
 	{
-		it->Notify(x_measurementType, x_measurementUnit, x_data);
+		it->Notify(x_genre, x_unit, x_data);
 	}
 }
 
@@ -313,11 +296,11 @@ void POPSensor::Broadcast(int x_measurementType, int x_measurementUnit, int x_da
 }*/
 
 /// Broadcast a message to all sensors
-void POPSensor::Broadcast(int x_measurementType, int x_measurementUnit, double x_data)
+void POPSensor::Broadcast(int x_genre, int x_unit, double x_data)
 {
 	for(auto it : m_sensorsProxy)
 	{
-		it->Notify(x_measurementType, x_measurementUnit, x_data);
+		it->Notify(x_genre, x_unit, x_data);
 	}
 }
 
@@ -331,29 +314,29 @@ void POPSensor::Broadcast(int x_measurementType, int x_measurementUnit, double x
 }*/
 
 /// Broadcast a message to all sensors
-void POPSensor::Broadcast(int x_measurementType, int x_measurementUnit, const std::string& x_data)
+void POPSensor::Broadcast(int x_genre, int x_unit, const std::string& x_data)
 {
 	for(auto it : m_sensorsProxy)
 	{
-		it->Notify(x_measurementType, x_measurementUnit, x_data);
+		it->Notify(x_genre, x_unit, x_data);
 	}
 }
 
 /// Send a notification to all sensors
-void POPSensor::Notify(int x_measurementType, int x_measurementUnit, const std::string& x_message)
+void POPSensor::Notify(int x_genre, int x_unit, const std::string& x_message)
 {
 	for(auto it : m_sensorsProxy)
 	{
-		it->Notify(x_measurementType, x_measurementUnit, x_message);
+		it->Notify(x_genre, x_unit, x_message);
 	}
 }
 
 /// Subscribe to messages of given type and data type
-void POPSensor::Subscribe(int x_measurementType, int x_dataType)
+void POPSensor::Subscribe(int x_genre, int x_dataType)
 {
 	for(auto it : m_sensorsProxy)
 	{
-		it->Subscribe(x_measurementType, x_dataType);
+		it->Subscribe(x_genre, x_dataType);
 	}
 }
 
@@ -384,6 +367,8 @@ void POPSensor::SubscribeToResources(bool sub)
 	{
 		enum MeasurementType mtype;
 		enum DataType dtype;
+		string locationType;
+		enum MeasurementUnit unit;
 		//enum PublicationType ptype;
 		bool incoming              = false;
 		bool outgoing			   = false;
@@ -391,20 +376,24 @@ void POPSensor::SubscribeToResources(bool sub)
 		if(str == "IN")
 		{
 			incoming = true;
-			mtype = translateMeasurementType(root["wsns"]["nodes"][i].get("measurementType", "log").asString().c_str());
-			dtype = translateDataType(root["wsns"]["nodes"][i].get("dataType", "unknown").asString().c_str());
+			mtype = translateMeasurementType(root["wsns"]["nodes"][i].get("genre", "log").asString().c_str());
+			dtype = translateDataType(root["wsns"]["nodes"][i].get("type", "unknown").asString().c_str());
+			unit = translateMeasurementUnit(root["wsns"]["nodes"][i].get("unit", "no unit").asString().c_str());
+			locationType = root["wsns"]["nodes"][i].get("location", "none").asString();
 		}
 		else if(str == "OUT")
 		{
 			outgoing = true;
-			mtype = translateMeasurementType(root["wsns"]["nodes"][i].get("measurementType", "log").asString().c_str());
+			mtype = translateMeasurementType(root["wsns"]["nodes"][i].get("genre", "log").asString().c_str());
 		}
 		else if(str == "INOUT")
 		{
 			incoming = true;
 			outgoing = true;
-			mtype = translateMeasurementType(root["wsns"]["nodes"][i].get("measurementType", "log").asString().c_str());
-			dtype = translateDataType(root["wsns"]["nodes"][i].get("dataType", "unknown").asString().c_str());
+			mtype = translateMeasurementType(root["wsns"]["nodes"][i].get("genre", "log").asString().c_str());
+			dtype = translateDataType(root["wsns"]["nodes"][i].get("type", "unknown").asString().c_str());
+			unit = translateMeasurementUnit(root["wsns"]["nodes"][i].get("unit", "no unit").asString().c_str());
+			locationType = root["wsns"]["nodes"][i].get("location", "none").asString();
 		}
 		else
 		{
@@ -412,7 +401,7 @@ void POPSensor::SubscribeToResources(bool sub)
 		}
 
 		if((str == "IN" || str == "OUT" || str == "INOUT") && mtype == static_cast<int>(MSR_LOG))
-			throw POPException("measurementType not found in JSON resources description");
+			throw POPException("genre not found in JSON resources description");
 
 		// note: dataType is not mandatory
 		// if(dtype == static_cast<int>(TYPE_UNKNOWN))

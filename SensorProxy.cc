@@ -128,15 +128,15 @@ void SensorProxy::InsertSQL(struct NotifyMessage* msg)
 		ss << "INSERT INTO popwin_schema.POPSensorData(type,genre,location,sensorID,value,unit) VALUES('"
 				<< explainDataType(msg->dataType) << "','"
 				<< explainMeasurementType(msg->measurementType) << "','"
-				<< "NULL" << "','"
+				<< msg->location << "','"
 				<< msg->id << "','"
-				<< (int)(atof(msg->data)) << "','"
+				<< msg->data << "','"
 				<< explainMeasurementUnit(msg->unit) << "')";
 		std::string s = ss.str();
 		stmt->executeUpdate(s);
 
 		/* Access column data by alias or column name */
-		cout << "Inserted 1 input message in DB" << popcendl;
+		cout << "Inserted 1 input message in DB: " << msg->data << popcendl;
 
 		//cout<<"Cleaning objects" << popcendl;
 		delete stmt;

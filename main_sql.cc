@@ -44,35 +44,33 @@ int main(int argc, char** argv)
 
 	try
 	{
-		cout << "Creating POPSensor for temperature" << popcendl;
+		cout << "Creating POPSensor 1" << popcendl;
 		POPSensor popLocal(argv[1], argv[2],0);
-		POPSensorData localData;
 
-		//popLocal.TestSQL();
-		//popLocal.TestInsertSQL();
-
-		for(int i = 0 ; i < 3000 ; i++)
+		for(int i = 0 ; i < 1 ; i++)
 		{
 			waitPressKey();
-			cout << "Testing sql" << popcendl;
-			POPSensorData d = popLocal.executeQuery("SELECT value FROM popwin_schema.POPSensorData");
+			POPSensorData d = popLocal.executeQuery("SELECT genre,value FROM popwin_schema.POPSensorData WHERE genre=\"temperature\"");
+			//POPSensorData d = popLocal.executeQuery("SELECT * FROM popwin_schema.POPSensorData");
 			d.printAll();
+			d.first();
+			while(d.next())
+			{
+				cout << "Getting string value from database : " << d.getString("genre") << popcendl;
+			}
 			popLocal.Clear();
-			//popLocal.TestSQL();
 		}
-
-		printf("end of main\n");
 	}
 	catch(std::exception &e)
 	{
 		cerr<<"Exception caught in popwin main loop: " << e.what() << popcendl;
-		exit(0);
+		//exit(0);
 		return 1;
 	}
 	catch(...)
 	{
 		cerr<<"Exception caught in popwin main loop" << popcendl;
-		exit(0);
+		//exit(0);
 		return 1;
 	}
 

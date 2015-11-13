@@ -9,12 +9,18 @@
 	"wsns":{
 		"nodes":[
 			{
-				"measurementType": "led",
-				"direction":   "INOUT"
+				"genre": "led",
+				"direction":   "INOUT",
+				"type": "int",
+				"location": "batiment A",
+				"unit": "no unit"
 			},
 			{
-				"measurementType": "temperature",
-				"direction":   "IN"
+				"genre": "temperature",
+				"direction":   "IN",
+				"type": "float",
+				"location": "batiment A",
+				"unit": "celsius"
 			}
 		]
 	}

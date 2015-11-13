@@ -98,25 +98,29 @@ int unbufferizeUnSubscribeMessage(struct UnSubscribeMessage* xp_msg, const char*
 int bufferizeNotifyMessage(const struct NotifyMessage* x_msg, char* xp_buffer, size_t x_bufferSize)
 {
 	// note: sizeof(size_t) = 2 for contiki but we use 4 for compatibility
-	int ret = snprintf(xp_buffer, x_bufferSize, "%02x %02x %02x %04x %02x %04x %s",
+	int ret = snprintf(xp_buffer, x_bufferSize, "%02x %02x %02x %04x %02x %04x %04x %s %s",
 			MSG_NOTIFY,
 			x_msg->dataType,
 			x_msg->measurementType,
 			x_msg->id,
 			x_msg->unit,
 			(int)x_msg->dataSize,
-			x_msg->data
+			(int)x_msg->locationSize,
+			x_msg->data,
+			x_msg->location
 	);
 
 	//printf("'%s' buffer\n",xp_buffer);
-	/*printf("buffered xp_buffer: %02x %02x %02x %04x %02x %04x %s\n",
+	/*printf("buffered xp_buffer: %02x %02x %02x %04x %02x %04x %04x %s %s\n",
 			MSG_NOTIFY,
 			x_msg->dataType,
 			x_msg->measurementType,
 			x_msg->id,
 			x_msg->unit,
 			(int)x_msg->dataSize,
-			x_msg->data);*/
+			(int)x_msg->locationSize,
+			x_msg->data,
+			x_msg->location);*/
 
 	return ret > 0 && ret < x_bufferSize;
 }
@@ -131,51 +135,74 @@ int unbufferizeNotifyMessage(struct NotifyMessage* xp_msg, const char* x_buffer,
 	int dt    = -1;
 	int un    = -1;
 	int dataSize = 0;
+	int locationSize = 0;
 
-	int ret = sscanf(x_buffer, "%02x %02x %02x %04x %02x %04x",
+	int ret = sscanf(x_buffer, "%02x %02x %02x %04x %02x %04x %04x",
 			&mtype,
 			&dt,
 			&mt,
 			&id,
 			&un,
-			&dataSize
+			&dataSize,
+			&locationSize
 	);
 
 	// printf("data %s --> %02x %02x %02x %04x %02x %04d (data) (%d)\n", x_buffer, mtype, dt,mt,id,un,dataSize,/*data,*/ ret);
-	if(ret == 6 && mtype == MSG_NOTIFY)
+	if(ret == 7 && mtype == MSG_NOTIFY)
 	{
+		//printf("'%s', unbuffer %d, mtype %d\n",x_buffer, ret,mtype);
 		xp_msg->measurementType = (enum MeasurementType) mt;
 		xp_msg->dataType        = (enum DataType) dt;
 		xp_msg->id              = id;
 		xp_msg->unit            = (enum MeasurementUnit) un;
 		xp_msg->dataSize        = (size_t) dataSize;
-		if(dataSize + 1 > x_maxDataSize)
+		xp_msg->locationSize    = (size_t) locationSize;
+		if(dataSize + locationSize + 2 > x_maxDataSize)
 		{
-			printf("ERROR: Buffer has insufficient size %d > %d\n", dataSize + 1, (int)x_maxDataSize);
+			printf("ERROR: Buffer has insufficient size %d > %d\n", dataSize + locationSize + 2, (int)x_maxDataSize);
 			return 0;
 		}
-		int s = snprintf(xp_msg->data, sizeof(xp_msg->data), "%s", x_buffer + 21 + 1);
-		//printf("'%s' unbuffer\n",x_buffer);
-		/*printf("unbuffered x_buffer: %02x %02x %02x %04x %02x %04x %s\n",
+		int offsetData = 2+2+2+4+2+4+4+7*1;
+		//printf("sizeof: %d",sizeof(xp_msg->data));
+		int s = snprintf(xp_msg->data, dataSize+1, "%s", x_buffer + offsetData);
+		int offsetLocation = offsetData+dataSize+1;
+		int sizeLocation = snprintf(xp_msg->location, locationSize+1, "%s", x_buffer + offsetLocation);
+		return 1;
+		/*printf("unbuffered x_buffer: %02x %02x %02x %04x %02x %04x %04x %s %s\n",
 				MSG_NOTIFY,
 				xp_msg->dataType,
 				xp_msg->measurementType,
 				xp_msg->id,
 				xp_msg->unit,
 				(int)xp_msg->dataSize,
-				xp_msg->data);*/
-		if(s == dataSize)
+				(int)xp_msg->locationSize,
+				xp_msg->data,
+				xp_msg->location);*/
+		/*if(s == dataSize+1)
 		{
 			//printf("OK: Data has the correct size %d=%d\n", s, dataSize);
 			return 1;
 		}
 		else
 		{
-			printf("WARNING: Data has the wrong size %d!=%d\n", s, dataSize);
+			printf("WARNING: Data has the wrong size %d!=%d\n", s, dataSize+1);
 			return 1;
 		}
+		if(sizeLocation == locationSize+1)
+		{
+			//printf("OK: Data has the correct size %d=%d\n", s, dataSize);
+			return 1;
+		}
+		else
+		{
+			printf("WARNING: Location has the wrong size %d!=%d\n", sizeLocation, locationSize+1);
+			return 1;
+		}*/
 	}
-	else return 0;
+	else
+	{
+		return 0;
+	}
 }
 
 // -------------------------------------------------------------------------------- //
@@ -317,6 +344,7 @@ const char* explainMeasurementType(enum MeasurementType x)
 enum MeasurementUnit translateMeasurementUnit(const char* x_str)
 {
 	if(!strcmp(x_str, "no unit"))     return UNT_NONE;
+	if(!strcmp(x_str, "none"))     	  return UNT_NONE;
 	if(!strcmp(x_str, "celsius"))     return UNT_CELSIUS;
 	if(!strcmp(x_str, "kelvin"))      return UNT_KELVIN;
 	if(!strcmp(x_str, "seconds"))     return UNT_SECONDS;

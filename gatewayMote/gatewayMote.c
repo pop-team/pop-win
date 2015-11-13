@@ -12,7 +12,7 @@
  */
 
 #define CONTIKIv3 // comment for Contiki 2.6 and 2.7
-#define XM1000_FLASH // uncomment to flash code for XM1000 mote
+//#define XM1000_FLASH // uncomment to flash code for XM1000 mote
 #define DRW_FLASH 0
 
 #include <stdio.h>
@@ -169,6 +169,8 @@ void logging(const char *format,...)
 	msg.dataType        = TYPE_STRING;
 	msg.id              = get_id();
 	msg.dataSize        = strlen(msg.data);
+	msg.locationSize	= 0;
+	sprintf(msg.location, "%s", "");
 	gwSendNotificationSerial(&msg);
 }
 
@@ -754,7 +756,7 @@ received_announcement(struct announcement *a,
 
 #ifdef EN_LOGS
 	printf("Got announcement from %d.%d, id %d, value %d\n",
-      from->u8[0], from->u8[1], id, value);
+			from->u8[0], from->u8[1], id, value);
 #endif
 
 	/* We received an announcement from a neighbor so we need to update
@@ -886,7 +888,7 @@ unsigned char sense_leds()
 PROCESS_THREAD(multihop_announce, ev, data)
 {
 	PROCESS_EXITHANDLER(multihop_close(&multihop);)
-	PROCESS_BEGIN();
+									PROCESS_BEGIN();
 	printf("Launching process multihop_announce\n");
 
 	// Init for multihop -----
@@ -978,6 +980,8 @@ PROCESS_THREAD(multihop_sense, ev, data)
 		//sprintf(msg.data, "%d.%d", senseTemp / 100, senseTemp % 100); // for Zolteria Z1
 		msg.id              = get_id();
 		msg.dataSize        = strlen(msg.data);
+		sprintf(msg.location,"%s","d2015");
+		msg.locationSize	= strlen(msg.location);
 		sensorSendNotification(&msg);
 
 #ifdef XM1000_FLASH
@@ -993,6 +997,8 @@ PROCESS_THREAD(multihop_sense, ev, data)
 		//sprintf(msg.data, "%d.%d", senseHumi / 100, senseHumi % 100); // for Zolteria Z1
 		msg.id              = get_id();
 		msg.dataSize        = strlen(msg.data);
+		sprintf(msg.location,"%s","d2015");
+		msg.locationSize	= strlen(msg.location);
 		sensorSendNotification(&msg);
 
 		memset(&msg, 0, sizeof(msg));
@@ -1005,6 +1011,8 @@ PROCESS_THREAD(multihop_sense, ev, data)
 		sprintf(msg.data, "%d", sense_light());// XM1000
 		msg.id              = get_id();
 		msg.dataSize        = strlen(msg.data);
+		sprintf(msg.location,"%s","d2015");
+		msg.locationSize	= strlen(msg.location);
 		sensorSendNotification(&msg);
 
 		memset(&msg, 0, sizeof(msg));
@@ -1017,6 +1025,8 @@ PROCESS_THREAD(multihop_sense, ev, data)
 		sprintf(msg.data, "%d", sense_infrared());// XM1000
 		msg.id              = get_id();
 		msg.dataSize        = strlen(msg.data);
+		sprintf(msg.location,"%s","d2015");
+		msg.locationSize	= strlen(msg.location);
 		sensorSendNotification(&msg);
 #endif XM1000
 
@@ -1030,6 +1040,8 @@ PROCESS_THREAD(multihop_sense, ev, data)
 		sprintf(msg.data, "%d", sense_leds());// XM1000 || Z1
 		msg.id              = get_id();
 		msg.dataSize        = strlen(msg.data);
+		sprintf(msg.location,"%s","d2015");
+		msg.locationSize	= strlen(msg.location);
 		sensorSendNotification(&msg);
 
 		//break;

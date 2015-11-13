@@ -55,26 +55,27 @@ std::string POPSensorData::center(const string s, const int w) {
 	return ss.str();
 }
 
+/// Print all data received in a table format.
 void POPSensorData::printAll()
 {
-	cout 	<< center("type",10) 	<< " | "
-			<< center("genre",15) 	<< " | "
-			<< center("location",15)<< " | "
-			<< center("sensorID",10)<< " | "
-			<< center("value",10) 	<< " | "
-			<< center("unit",10) 	<< popcendl;
-	cout << string(10*4+15*2 + 5*3, '-') << popcendl;
+	string output = "|";
+	cout << popcendl;
+	for(int i = 0;i<colTypeSize;i++)
+	{
+		output+= center(colNames[i],15) + " | ";
+	}
+	cout << output << popcendl;
+	cout << string(15*colTypeSize + colTypeSize*3, '-') << popcendl;
 	first();
 	while (next()) {
-		/* Access column data by alias or column name */
-		cout 	<< center(getString("type"),10) 	<< " | "
-				<< center(getString("genre"),15) 	<< " | "
-				<< center(getString("location"),15) << " | "
-				<< center(getString("sensorID"),10) << " | "
-				<< center(getString("value"),10) 	<< " | "
-				<< center(getString("unit"),10) 	<< popcendl;
-
+		output = "|";
+		for(int i = 0;i<colTypeSize;i++)
+		{
+			output+= center(getString(colNames[i]),15) + " | ";
+		}
+		cout << output << popcendl;
 	}
+	cout << popcendl;
 }
 
 /// Insert column name (value, id...) into the list
@@ -99,14 +100,18 @@ void POPSensorData::first()
 /// Iterate through all rows of the table of data
 bool POPSensorData::next()
 {
-	if(!firstNextCall)
+	if(!firstNextCall) {
 		list_iter++;
-	else
+	}
+	else {
 		firstNextCall = false;
-	if(list_iter == databaseValues.end())
+	}
+	if(list_iter == databaseValues.end()) {
 		return false;
-	else
+	}
+	else {
 		return true;
+	}
 }
 
 int POPSensorData::getInt(string columnLabel)
@@ -115,6 +120,18 @@ int POPSensorData::getInt(string columnLabel)
 	if(int* val = boost::get<int>(&(map_iter->second)))
 	{
 		return *val;
+	}
+	else if(string* val = boost::get<string>(&(map_iter->second)))
+	{
+		int defaultInt = 0;
+		try
+		{
+			return boost::lexical_cast<int>(*val);
+		} catch(const boost::bad_lexical_cast &)
+		{
+			fprintf(stderr,"Warning: cannot cast \"%s\" from string to int.\n",val->c_str());
+			return defaultInt;
+		}
 	}
 	else return 0;
 }
@@ -158,7 +175,21 @@ float POPSensorData::getFloat(string columnLabel)
 	{
 		return *val;
 	}
-	else return 0.0f;
+	else if(string* val = boost::get<string>(&(map_iter->second)))
+	{
+		try
+		{
+			return boost::lexical_cast<float>(*val);
+		} catch(const boost::bad_lexical_cast &)
+		{
+			fprintf(stderr,"Warning: cannot cast \"%s\" from string to float.\n",val->c_str());
+			return 0.0f;
+		}
+	}
+	else
+	{
+		return 0.0f;
+	}
 }
 
 float POPSensorData::getFloat(int columnIndex)
@@ -172,6 +203,18 @@ double POPSensorData::getDouble(string columnLabel)
 	if(double* val = boost::get<double>(&(map_iter->second)))
 	{
 		return *val;
+	}
+	else if(string* val = boost::get<string>(&(map_iter->second)))
+	{
+		double defaultDouble = 0.0;
+		try
+		{
+			return boost::lexical_cast<double>(*val);
+		} catch(const boost::bad_lexical_cast &)
+		{
+			fprintf(stderr,"Warning: cannot cast \"%s\" from string to double.\n",val->c_str());
+			return defaultDouble;
+		}
 	}
 	else return 0.0;
 }
@@ -190,13 +233,17 @@ void POPSensorData::Serialize(POPBuffer &buf, bool pack)
 		buf.Pack(&colNameSize,1);
 		for(int i = 0;i<colNameSize;i++)
 		{
-			int size = colNames[i].length();
+			int size = colNames[i].length()+1; // length() doesn't take in account the null terminating char, careful !
 			buf.Pack(&size,1);
 			buf.Pack(colNames[i].c_str(),size);
 		}
 		buf.Pack(&colTypeSize,1);
 		buf.Pack(colTypes,colTypeSize);
-		cout << "Packing size:" << size << popcendl;
+		if(colNameSize != colTypeSize)
+		{
+			cout << "Error in matching colName with colType size, aborting..." << popcendl;
+			exit(1);
+		}
 		for(list_iter = databaseValues.begin(); list_iter != databaseValues.end(); ++list_iter)
 		{
 			for(int i = 0;i<colTypeSize;i++)
@@ -206,12 +253,11 @@ void POPSensorData::Serialize(POPBuffer &buf, bool pack)
 				int crtType = colTypes[i];
 				if(crtType == sql::DataType::INTEGER)
 				{
-					int typeValue = sql::DataType::INTEGER;
-					buf.Pack(&typeValue,1);
-					if(int* sensorIDValue = boost::get<int>(&(map_iter->second)))
+					//buf.Pack(&crtType,1);
+					if(int* val = boost::get<int>(&(map_iter->second)))
 					{
-						//cout << "Packing sensorIDValue " << *sensorIDValue << popcendl;
-						buf.Pack(sensorIDValue,1);
+						//cout << "Packing value|colName|colType " << *val << "|" << colNames[i] << "|" << crtType << popcendl;
+						buf.Pack(val,1);
 					}
 					else
 					{
@@ -223,28 +269,26 @@ void POPSensorData::Serialize(POPBuffer &buf, bool pack)
 				// DataType float doesn't exist, even if FLOAT is available in database. REAL has the same value (7)
 				else if(crtType == sql::DataType::REAL)
 				{
-					int typeValue = sql::DataType::REAL;
-					buf.Pack(&typeValue,1);
-					if(float* sensorIDValue = boost::get<float>(&(map_iter->second)))
+					//buf.Pack(&crtType,1);
+					if(float* val = boost::get<float>(&(map_iter->second)))
 					{
-						//cout << "Packing sensorIDValue " << *sensorIDValue << popcendl;
-						buf.Pack(sensorIDValue,1);
+						//cout << "Packing value|colName|colType " << *val << "|" << colNames[i] << "|" << crtType << popcendl;
+						buf.Pack(val,1);
 					}
 					else
 					{
 						float empty = 0.0f;
-						//cout << "Packing empty sensorIDValue " << empty << popcendl;
+						//cout << "Packing value|colName|colType " << empty << "|" << colNames[i] << "|" << crtType << popcendl;
 						buf.Pack(&empty,1);
 					}
 				}
 				else if(crtType == sql::DataType::DOUBLE)
 				{
-					int typeValue = sql::DataType::DOUBLE;
-					buf.Pack(&typeValue,1);
-					if(double* sensorIDValue = boost::get<double>(&(map_iter->second)))
+					//buf.Pack(&crtType,1);
+					if(double* val = boost::get<double>(&(map_iter->second)))
 					{
-						//cout << "Packing sensorIDValue " << *sensorIDValue << popcendl;
-						buf.Pack(sensorIDValue,1);
+						//cout << "Packing value|colName|colType " << *val << "|" << colNames[i] << "|" << crtType << popcendl;
+						buf.Pack(val,1);
 					}
 					else
 					{
@@ -255,12 +299,11 @@ void POPSensorData::Serialize(POPBuffer &buf, bool pack)
 				}
 				else if(crtType == sql::DataType::VARCHAR)
 				{
-					int typeValue = sql::DataType::VARCHAR;
-					buf.Pack(&typeValue,1);
-					if(string* typeValue = boost::get<string>(&(map_iter->second)))
+					//buf.Pack(&crtType,1);
+					if(string* val = boost::get<string>(&(map_iter->second)))
 					{
-						//cout << "Packing typeValue " << *typeValue << popcendl;
-						buf.Pack(typeValue,1);
+						//cout << "Packing value|colName|colType " << *val << "|" << colNames[i] << "|" << crtType << popcendl;
+						buf.Pack(val,1);
 					}
 					else
 					{
@@ -269,182 +312,68 @@ void POPSensorData::Serialize(POPBuffer &buf, bool pack)
 					}
 				}
 			}
-			map_iter = list_iter->find("type");
-			//string typeKey = map_iter->first;
-			//buf.Pack(&typeKey,1);
-			if(string* typeValue = boost::get<string>(&(map_iter->second)))
-			{
-				//cout << "Packing typeValue " << *typeValue << popcendl;
-				buf.Pack(typeValue,1);
-			}
-			else
-			{
-				string empty = "";
-				buf.Pack(&empty,1);
-			}
 
-			map_iter = list_iter->find("genre");
-			//string genreKey = map_iter->first;
-			//buf.Pack(&genreKey,1);
-			if(string* genreValue = boost::get<string>(&(map_iter->second)))
-			{
-				//cout << "Packing genreValue " << *genreValue << popcendl;
-				buf.Pack(genreValue,1);
-			}
-			else
-			{
-				string empty = "";
-				buf.Pack(&empty,1);
-			}
-
-			map_iter = list_iter->find("location");
-			//string locationKey = map_iter->first;
-			//buf.Pack(&locationKey,1);
-			if(string* locationValue = boost::get<string>(&(map_iter->second)))
-			{
-				//cout << "Packing locationValue " << *locationValue << popcendl;
-				buf.Pack(locationValue,1);
-			}
-			else
-			{
-				string empty = "";
-				buf.Pack(&empty,1);
-			}
-
-			map_iter = list_iter->find("unit");
-			//string unitKey = map_iter->first;
-			//buf.Pack(&unitKey,1);
-			if(string* unitValue = boost::get<string>(&(map_iter->second)))
-			{
-				//cout << "Packing unitValue " << *unitValue << popcendl;
-				buf.Pack(unitValue,1);
-			}
-			else
-			{
-				string empty = "";
-				buf.Pack(&empty,1);
-			}
-
-			map_iter = list_iter->find("sensorID");
-			//string sensorIDKey = map_iter->first;
-			//buf.Pack(&sensorIDKey,1);
-			if(int* sensorIDValue = boost::get<int>(&(map_iter->second)))
-			{
-				//cout << "Packing sensorIDValue " << *sensorIDValue << popcendl;
-				buf.Pack(sensorIDValue,1);
-			}
-			else
-			{
-				int empty = 0;
-				//cout << "Packing empty sensorIDValue " << empty << popcendl;
-				buf.Pack(&empty,1);
-			}
-
-			map_iter = list_iter->find("value");
-			//string valueKey = map_iter->first;
-			//buf.Pack(&valueKey,1);
-			// find what type of data is value
-			if(string* val = boost::get<string>(&(map_iter->second)))
-			{
-				uint8_t PODType = 0;
-				buf.Pack(&PODType,1);
-				buf.Pack(val,1);
-			}
-			else if(int* val = boost::get<int>(&(map_iter->second)))
-			{
-				uint8_t PODType = 1;
-				buf.Pack(&PODType,1);
-				//cout << "Packing val " << *val << popcendl;
-				buf.Pack(val,1);
-			}
-			else if(float* val = boost::get<float>(&(map_iter->second)))
-			{
-				uint8_t PODType = 2;
-				buf.Pack(&PODType,1);
-				buf.Pack(val,1);
-			}
-			else if(double* val = boost::get<double>(&(map_iter->second)))
-			{
-				uint8_t PODType = 3;
-				buf.Pack(&PODType,1);
-				buf.Pack(val,1);
-			}
-			++map_iter;
 		}
 		cout << "Finished packing" << popcendl;
 	}
 	else
 	{
+
 		int size = 0;
 		buf.UnPack(&size,1);
 		buf.UnPack(&colNameSize,1);
 		for(int i = 0;i<colNameSize;i++)
 		{
-			int size;
-			buf.UnPack(&size,1);
-			char* crtName = new char[size];
-			buf.UnPack(crtName,1);
+			int charSize;
+			buf.UnPack(&charSize,1);
+			char* crtName = new char[charSize];
+			buf.UnPack(crtName,charSize);
 			colNames[i] = string(crtName);
 		}
 		buf.UnPack(&colTypeSize,1);
 		buf.UnPack(colTypes,colTypeSize);
-		cout << "UnPacking size:" << size << popcendl;
 		databaseValues.clear();
 		for(int i=0 ; i < size ; i++)
 		{
 			map< string,boost::variant< int, float, double, std::string > > unPackMap;
 
-			string typeValue;
-			buf.UnPack(&typeValue,1);
-			//cout << "UnPacking typeValue " << typeValue << popcendl;
-			unPackMap["type"] = boost::variant< int, float, double, std::string >(typeValue);
-
-			string genreValue;
-			buf.UnPack(&genreValue,1);
-			//cout << "UnPacking genreValue " << genreValue << popcendl;
-			unPackMap["genre"] = boost::variant< int, float, double, std::string >(genreValue);
-
-			string locationValue;
-			buf.UnPack(&locationValue,1);
-			//cout << "UnPacking locationValue " << locationValue << popcendl;
-			unPackMap["location"] = boost::variant< int, float, double, std::string >(locationValue);
-
-			string unitValue;
-			buf.UnPack(&unitValue,1);
-			//cout << "UnPacking unitValue " << unitValue << popcendl;
-			unPackMap["unit"] = boost::variant< int, float, double, std::string >(unitValue);
-
-			int sensorIDValue;
-			buf.UnPack(&sensorIDValue,1);
-			//cout << "UnPacking sensorIDValue " << sensorIDValue << popcendl;
-			unPackMap["sensorID"] = boost::variant< int, float, double, std::string >(sensorIDValue);
-
-			uint8_t PODType;
-			buf.UnPack(&PODType,1);
-			if(PODType == 0) // string
+			for(int i = 0;i<colTypeSize;i++)
 			{
-				string valueValue;
-				buf.UnPack(&valueValue,1);
-				unPackMap["value"] = boost::variant< int, float, double, std::string >(valueValue);
-			}
-			else if(PODType == 1) // int
-			{
-				int valueValue;
-				buf.UnPack(&valueValue,1);
-				//cout << "UnPacking valueValue " << valueValue << popcendl;
-				unPackMap["value"] = boost::variant< int, float, double, std::string >(valueValue);
-			}
-			else if(PODType == 2) // float
-			{
-				float valueValue;
-				buf.UnPack(&valueValue,1);
-				unPackMap["value"] = boost::variant< int, float, double, std::string >(valueValue);
-			}
-			else if(PODType == 3) // double
-			{
-				double valueValue;
-				buf.UnPack(&valueValue,1);
-				unPackMap["value"] = boost::variant< int, float, double, std::string >(valueValue);
+				string crtName = colNames[i];
+				int crtType = colTypes[i];
+				if(crtType == sql::DataType::INTEGER)
+				{
+					//buf.Pack(&crtType,1);
+					int val;
+					buf.UnPack(&val,1);
+					unPackMap[crtName] = boost::variant< int, float, double, std::string >(val);
+					//cout << "UnPacking value|colName|colType " << val << "|" << crtName << "|" << crtType << popcendl;
+				}
+				// DataType float doesn't exist, even if FLOAT is available in database. REAL has the same value (7)
+				else if(crtType == sql::DataType::REAL)
+				{
+					//buf.Pack(&crtType,1);
+					float val;
+					buf.UnPack(&val,1);
+					unPackMap[crtName] = boost::variant< int, float, double, std::string >(val);
+					//cout << "UnPacking value|colName|colType " << val << "|" << crtName << "|" << crtType << popcendl;
+				}
+				else if(crtType == sql::DataType::DOUBLE)
+				{
+					//buf.Pack(&crtType,1);
+					double val;
+					buf.UnPack(&val,1);
+					unPackMap[crtName] = boost::variant< int, float, double, std::string >(val);
+					//cout << "UnPacking value|colName|colType " << val << "|" << crtName << "|" << crtType << popcendl;
+				}
+				else if(crtType == sql::DataType::VARCHAR)
+				{
+					//buf.Pack(&crtType,1);
+					string val;
+					buf.UnPack(&val,1);
+					unPackMap[crtName] = boost::variant< int, float, double, std::string >(val);
+					//cout << "UnPacking value|colName|colType " << val << "|" << crtName << "|" << crtType << popcendl;
+				}
 			}
 
 			databaseValues.push_back(unPackMap);

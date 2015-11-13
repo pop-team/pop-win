@@ -184,14 +184,18 @@ int unbufferizeUnSubscribeMessage(struct UnSubscribeMessage* xp_msg, const char*
 
 struct NotifyMessage
 {
-	/// Type of measurement
+	/// Genre of data, temperature, humidity, light, ...
 	enum MeasurementType measurementType;
-	/// Type of data
+	/// Type of data, float, double, string, int, ...
 	enum DataType        dataType;
 	/// Id of emitter: Id is not mandatory. Only for convenience
 	unsigned short       id;
-	/// Unit of measurement
+	/// Unit of measurement, e.g. celsius, lumens, none, ...
 	enum MeasurementUnit unit;
+	/// Size of the location data, for storage in buffer
+	size_t               locationSize;
+	/// Location of measurement, e.g floor 1, room 2, ...
+	char 				 location[BUFFERDATASIZE];
 	/// Size of the data, for storage in buffer
 	size_t               dataSize;
 	/// Buffer containing the data on text format
