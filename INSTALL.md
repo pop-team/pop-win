@@ -69,18 +69,8 @@ Get the sources and compiling the example natively
 	git clone git://github.com/contiki-os/contiki.git contiki
 	cd contiki
 	git checkout release-3-0
-	cd examples/hello-world
-	make TARGET=native hello-world
 
-This should give you the following output:
-
-	Contiki-2.6-1935-gb6b5c6e started with IPV6, RPL
-	Rime started with address 1.2.3.4.5.6.7.8
-	MAC nullmac RDC nullrdc NETWORK sicslowpan
-	Tentative link-local IPv6 address fe80:0000:0000:0000:0302:0304:0506:0708
-	Hello, world
-
-To compile the example for the sensor and upload it
+To compile the example for the sensor and upload it. Use savetarget if you want to remember the target platform to avoid typing it all the time.
 
 	make TARGET=z1 hello-world
 	make TARGET=z1 savetarget
