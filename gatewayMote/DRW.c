@@ -418,7 +418,7 @@ uint8_t sense_humidity(){
 
 float sense_temperature_float(){
 	float value = -39.60 + 0.01 * sht11_temp();
-	DEBUG("sense temperature %d.%u (%u)", (int)value, DEC(value), sht11_temp());
+	//DEBUG("sense temperature %d.%u (%u)", (int)value, DEC(value), sht11_temp());
 	return value;
 }
 

@@ -13,7 +13,7 @@
 
 #define CONTIKIv3 // comment for Contiki 2.6 and 2.7
 //#define XM1000_FLASH // uncomment to flash code for XM1000 mote
-#define DRW_FLASH 0
+#define DRW_FLASH 0 // 0 for HEIA-FR test code, 1 for DRW code (UNIGE)
 
 #include <stdio.h>
 #include <stdlib.h>

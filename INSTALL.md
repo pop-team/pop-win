@@ -1,7 +1,7 @@
 Technical documentation
 =======================
-- **Author:** Laurent Winkler
-- **Date:**   Decembre 2014
+- **Authors:** Laurent Winkler, Marco Lourenço
+- **Date:**    November 2015
 
 This documentation describes the more advanced aspects of the development of POPWin and is meant for developers only. 
 
@@ -11,6 +11,7 @@ Contacts
 	- Pierre Kuonen <pierre.kuonen@hefr.ch>
 	- Laurent Winkler <laurent.winkler@hefr.ch>
 	- Lu Yao <yao.lu@edu.hefr.ch>
+	- Marco Lourenço <marco.lourenco@hefr.ch>
 - UNI GE
 	- Pierre Leone <Pierre.Leone@unige.ch>
 	- Cristina Munoz Illescas <Cristina.Munoz@unige.ch>
@@ -66,7 +67,9 @@ Dependencies to install (on Ubuntu):
 Get the sources and compiling the example natively
 
 	git clone git://github.com/contiki-os/contiki.git contiki
-	cd contiki/examples/hello-world
+	cd contiki
+	git checkout release-3-0
+	cd examples/hello-world
 	make TARGET=native hello-world
 
 This should give you the following output:
@@ -104,17 +107,18 @@ Agents
 
 
 ### Installing the demo
-This section indicates how to prepare the demonstration. The PC is running Ubuntu 14.10.
+This section indicates how to prepare the demonstration. The PC is running Ubuntu 14.04.
 
 #### Compilation of POP-C++
-Downloading the develop version of POP-C++. As soon as the release is made the 3.0 version can also be used.
+Downloading the 3.0 release version of POP-C++.
 
 In case of problem with the installation, please refer to the README file contained in POP-C++.
 
 ```
 	sudo apt-get install git-core g++ flex bison cxxtest zlib1g-dev
-	git clone https://github.com/pop-team/pop-cpp.git -b develop
+	git clone https://github.com/pop-team/pop-cpp.git
 	cd pop-cpp
+	git checkout -b release3.0 tags/3.0
 	cmake .
 	make
 	sudo make install
@@ -123,14 +127,15 @@ In case of problem with the installation, please refer to the README file contai
 Type 'y' and enter and do not forget to add POPC_LOCATION to your path as specified at the end of the installation. Then restart another shell.
 
 #### Installation of Contiki
-Contiki must be installed as mentionned above. The version to install is 2.6.
+Contiki must be installed as mentionned above. The version to install is 3.0.
 
 ```
 	git clone git://github.com/contiki-os/contiki.git
-	git checkout -b 2.6 2.6-rc0
+	cd contiki
+	git checkout release-3-0
 ```
 
-Do not forget to install the mentionned patch for **cpu/msp430/Makefile.msp430**
+Do not forget to install the mentionned patch for **cpu/msp430/Makefile.msp430** if you choose to run the 2.6 version.
 
 #### Download and compile the sources of POPWin
 
@@ -201,11 +206,13 @@ Support for templates in POP-C++ is only experimental. Not included in this rele
 
 Installation of contiki files for xm1000
 ----------------------------------------
-To compile the code for xm1000 mote, you will need to add the following files to your Contiki directory:
+To compile the code for xm1000 mote, you will need to add files to your Contiki directory. This is because Contiki doesn't provide them for xm1000, only for Z1 platform.
 
-In directory popwin/gatewayMote: decompress the files in archive contiki-xm1000-v2012-08-29.rar (along with popwin sources). Then copy the content of tools/ and platform/ directories in your Contiki directory.
+In directory popwin/gatewayMote: decompress the files in archive popwin_patch_contiki3.tar.gz. Then copy the content of tools/ and platform/ directories in your Contiki directory.
 
-You can find the latest version of the code on page:
+Please note that these files are based on the v2.7 ones and modified to work for Contiki 3.0. Getting the ones from the website (see below) won't work for Contiki 3.0.
+
+You can find the latest version of the code on page (november 2015, currently for 2.7 only):
 
 	http://www.advanticsys.com/shop/asxm1000-p-24.html
 	http://www.advanticsys.com/wiki/index.php?title=XM1000
@@ -216,25 +223,9 @@ Examples of programmation
 Troubleshooting
 ---------------
 ### Problem
-You can't run the hello-world example inside contiki/examples/hello-world
-
-Message:
-	
-	using saved target 'z1'
-	../../tools/sky/serialdump-linux -b115200 /dev/ttyUSB0
-	connecting to /dev/ttyUSB0 (115200)
-	open: Invalid argument
-	make: *** [login] Error 255
-
-### Solution
-
-Use the same contiki version as for the demo (2.6), doing inside contiki/ folder
-
-	git checkout -b 2.6 2.6-rc0
-
-### Problem
 The sensors outputs garbage characters with serialdump or nothing at all
 ### Solution
+- You are running an old version of Contiki (2.6 or 2.7), our install was updated to use Contiki 3.0.
 - The reset (using the sensor button) is not handled properly. You need to unplug the device of USB port and plug it back in after at least 5 seconds.
 - Another solution to this problem (with the Zolertia z1) is to hit the reset button repeatidly until an output can be seen
 
@@ -242,7 +233,7 @@ The sensors outputs garbage characters with serialdump or nothing at all
 
 	stty -F /dev/ttyUSB0
 
-The SensorProxy class of POPWin will try to reset the value to 115200 but this does apparently not work each time.
+The SensorProxy class of POPWin will try to reset the value to 115200 but this does apparently not work all the time.
 
 ### Problem
 Cannot compile application with Contiki 2.6:
@@ -320,7 +311,7 @@ If the application is already in communication, the port will be busy and the up
 
 
 ### Problem
-With contiki 2.7 while compiling for xm1000
+With contiki 2.7+ while compiling for xm1000
 
 	.../dev/sht11.c: In function ‘sht11_init’:
 	.../dev/sht11.c:218:4: warning: #warning SHT11: DISABLING I2C BUS [-Wcpp]
@@ -403,12 +394,12 @@ I was not able to fix this problem so I used a workaround instead: I used the Zo
 
 Limitations
 -----------
-- **Broadcast of messages**: In the current state of advancement the communication is enabled from the PC to the sensor but not the other way around since the sensors are not yet allowed to emit messages (to be done by UNIGE)
+- **Broadcast of messages**: Broadcast of message is working only in HEIA_FR code (not DRW) and mainly for test to light some LEDs.
 - **Full implementation of routing** : So far the routing of message is implemented twice: the first implementation is a full implementation made by UNIGE (slow), the second is a faster implementation using the libraries of Contiki (fast). The second implementation was used for tests.
 
 ```
 	// note: we can choose here which version of the code we want to run:
-	\#if 0
+	\#if DRW_FLASH
 	// Processes to run with routing algo of UNIGE
 	AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &communication_process, &drw, &sensor_events); // Processes to run with algo of UNIGE
 	\#else
@@ -416,6 +407,4 @@ Limitations
 	AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &multihop_announce, &multihop_sense);
 	\#endif
 ```
-
-- **Temperature sensor on Zolertia Z1**: The temperature sensor works ok on AdvanticSys xm1000 sensors but is currently broken on Zolertia Z1.
 

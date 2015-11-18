@@ -50,6 +50,7 @@ int main(int argc, char** argv)
 		for(int i = 0 ; i < 1 ; i++)
 		{
 			waitPressKey();
+			popLocal.Broadcast(MSR_LED, UNT_NONE, LED_GREEN_TOGGLE); // MSR_LED=notify for led, all off
 			POPSensorData d = popLocal.executeQuery("SELECT genre,value FROM popwin_schema.POPSensorData WHERE genre=\"temperature\"");
 			//POPSensorData d = popLocal.executeQuery("SELECT * FROM popwin_schema.POPSensorData");
 			d.printAll();

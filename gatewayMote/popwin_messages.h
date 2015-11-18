@@ -18,8 +18,8 @@
 #define BUFFERDATASIZE 64
 
 // The id of the gateway
-//#define GATEWAY_ID     158
-#define DEFAULT_GATEWAY_ID 3 // this means : is not a gateway (default for sensors)
+// the sensor with ID X will be the gateway, this does not define the ID of the sensor to X
+#define DEFAULT_GATEWAY_ID 3
 
 /// Different types of messages
 enum MessageType
