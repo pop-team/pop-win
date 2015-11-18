@@ -105,7 +105,7 @@ Downloading the 3.0 release version of POP-C++.
 In case of problem with the installation, please refer to the README file contained in POP-C++.
 
 ```
-	sudo apt-get install git-core g++ flex bison cxxtest zlib1g-dev
+	sudo apt-get install git-core g++ flex bison cxxtest zlib1g-dev cmake
 	git clone https://github.com/pop-team/pop-cpp.git
 	cd pop-cpp
 	git checkout -b release3.0 tags/3.0
