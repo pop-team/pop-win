@@ -148,7 +148,7 @@ Do not forget to install the mentionned patch for **cpu/msp430/Makefile.msp430**
 #### Download and compile the sources of POPWin
 
 ```
-	sudo apt-get install libjsoncpp-dev libmysqlcppconn-dev
+	sudo apt-get install libjsoncpp-dev libmysqlcppconn-dev mysql-server-5.6
 	git clone https://github.com/pop-team/pop-win.git
 	cd pop-win
 	make clean && make
