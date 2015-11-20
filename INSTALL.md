@@ -201,7 +201,7 @@ Makefile:
 	CONTIKI=/home/lwinkler/prog/contiki/
 	include $(CONTIKI)/Makefile.include
 ```
-- Compile and upload
+- Compile and upload to Z1 sensor (use TARGET=xm1000 for xm1000 sensors)
 
 ```
 	make TARGET=z1 clean
@@ -210,38 +210,34 @@ Makefile:
 ```
 
 #### Start the demo on PC
-In your POPWin directory type:
+In your root POPWin directory type:
 
 
 ```
-	make run
+	make sql
 ```
 
 This should give you the following output:
 
 ```
 	=======================================================================================
-	POPWin demo: type a command to interact with your sensors                             
+ 	POPWin demo: Launching the demo                                                       
 	=======================================================================================
-	q: Quit
-	a: Ask the sensor to read temperature
-	b: Make leds blink on sensor
-	c + <nb>: Send a custom command to sensor. 'c0' should list the available commands.
-	g: Generate test data
-	e: Clear stored data
-	p: Print stored data
-	---------------------------------------------------------------------------------------
-
+	Creating POPSensor 1
+	Creating POPSensor with id=0
 	Creating sensor proxy with id=1000 on port /dev/ttyUSB0
-	2015-04-02 16:21:16  9908 WARN  POP-C++ exception in paroc_broker::DoInvoke Cannot open device: /dev/ttyUSB1 (broker_serve.cc:214 DoInvoke)
-	2015-04-02 16:21:16  9928 WARN  POP-C++ exception in paroc_broker::DoInvoke Cannot open device: /dev/ttyUSB2 (broker_serve.cc:214 DoInvoke)
-	2015-04-02 16:21:16  9948 WARN  POP-C++ exception in paroc_broker::DoInvoke Cannot open device: /dev/ttyUSB3 (broker_serve.cc:214 DoInvoke)
 	Created 1 sensor proxy objects
-	Enter selection:
+	Gateway 1000 subscribes to led type:int direction: IN
+	Gateway 1000 can publish led commands, direction: OUT
+	Gateway 1000 subscribes to temperature type:float direction: IN
+	Instantiating driver
+	Connecting to db
+
+	Press key to continue
 
 ```
 
-By typing commands in the application you will be able to interact with your sensors. Enjoy!
+Wait for some values to be inserted in the DB and then press a keyboard key to show values from DB. Feel free to change main_sql.cc to test other SQL queries (~line 53).
 
 
 Installation of POP-C++ with support for templates
