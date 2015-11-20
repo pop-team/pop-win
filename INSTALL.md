@@ -147,12 +147,40 @@ Do not forget to install the mentionned patch for **cpu/msp430/Makefile.msp430**
 
 #### Download and compile the sources of POPWin
 
+When prompted for MySQL admin password during mysql-server-5.6 install, choose one and remember it !
+
 ```
 	sudo apt-get install libjsoncpp-dev libmysqlcppconn-dev mysql-server-5.6
 	git clone https://github.com/pop-team/pop-win.git
 	cd pop-win
 	make clean && make
 ```
+
+#### Install the MySQL workbench and setup MySQL tables
+
+- Go to http://dev.mysql.com/downloads/workbench/
+- Or use direct link for workbench 6.3.5 for Ubuntu 14.04 x64 : http://bit.ly/1MZ72tL
+- Then execute (in the right directory) :
+	
+	sudo dpkg -i mysql-workbench-community-6.3.5-1ubu1404-amd64.deb
+	sudo apt-get -f install
+
+- Launch workbench
+
+	mysql-workbench &
+
+- Connect to DB with PWD created when mysql-server-5.6 was installed
+- Create schema with query :
+ 
+	CREATE SCHEMA `popwin_schema` ;
+
+- Reconnect to DB/refresh if needed for schema to appear, make it default (right-click on name) then execute :
+
+	CREATE TABLE `POPSensorData` (`idPOPSensorData` int(11) NOT NULL AUTO_INCREMENT,
+	`type` varchar(45) DEFAULT NULL, `genre` varchar(45) DEFAULT NULL,
+  	`location` varchar(45) DEFAULT NULL, `sensorID` int(11) NOT NULL,
+  	`value` varchar(45) NOT NULL, `unit` varchar(45) DEFAULT NULL,
+  	PRIMARY KEY (`idPOPSensorData`)) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 #### Install the application on the gateway mote
 - Connect the mote to your PC. In our setup we use a Zolertia z1 mote
