@@ -158,7 +158,7 @@ When prompted for MySQL admin password during mysql-server-5.6 install, choose o
 
 #### Install the MySQL workbench and setup MySQL tables
 
-- Go to http://dev.mysql.com/downloads/workbench/
+- Go to http://dev.mysql.com/downloads/workbench/ and download workbench
 - Or use direct link for workbench 6.3.5 for Ubuntu 14.04 x64 : http://bit.ly/1MZ72tL
 - Then execute (in the right directory) :
 
@@ -466,3 +466,4 @@ Limitations
 	\#endif
 ```
 
+- **SQL queries**: SQL queries of type SELECT or TRUNCATE work as expected. Types like UPDATE will work but if you update the value for a LED, the LED won't change color or go on/off. Instead you simply changed a value in the DB.
