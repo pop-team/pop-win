@@ -69,8 +69,26 @@ Get the sources and compiling the example natively
 	git clone git://github.com/contiki-os/contiki.git contiki
 	cd contiki
 	git checkout release-3-0
+	
+Contiki 3.0 has a bug with the serialdump utility, so we have to patch it manually :
 
-To compile the example for the sensor and upload it. Use savetarget if you want to remember the target platform to avoid typing it all the time.
+	cd tools/sky/
+	rm serialdump-linux
+	
+Open the serialdump.c file and at line 167, replace
+
+	#ifdef O_SYNC
+	
+with
+
+	#ifndef O_SYNC
+	
+Now you can recompile the file
+
+	make
+	cd ../../examples/hello-world
+
+Run the commands below to compile the example for the sensor and upload it. Use savetarget if you want to remember the target platform to avoid typing it all the time.
 
 	make TARGET=z1 hello-world
 	make TARGET=z1 savetarget
@@ -130,7 +148,7 @@ Do not forget to install the mentionned patch for **cpu/msp430/Makefile.msp430**
 #### Download and compile the sources of POPWin
 
 ```
-	sudo apt-get install libjsoncpp-dev
+	sudo apt-get install libjsoncpp-dev libmysqlcppconn-dev
 	git clone https://github.com/pop-team/pop-win.git
 	cd pop-win
 	make clean && make
@@ -212,6 +230,24 @@ Examples of programmation
 
 Troubleshooting
 ---------------
+
+### Problem
+When connecting to sensor with
+
+	make login
+	
+or
+
+	./serialdump-linux -b115200 /dev/ttyUSB0
+	
+you get the following error :
+
+	connecting to /dev/ttyUSB0 (115200)
+	open: Invalid argument
+	
+### Solution
+You didn't patch and recompile the file in contiki/tools/sky/serialdump.c (see instructions in **Installing the toolchain**).
+
 ### Problem
 The sensors outputs garbage characters with serialdump or nothing at all
 ### Solution
