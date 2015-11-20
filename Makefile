@@ -26,8 +26,8 @@ popwin_messages.o: lineComm/popwin_messages.c
 POPSensor.obj: POPSensor.obj.o POPSensor.phstub.o SensorProxy.stub.o popwin_messages.o POPSensorData.o
 	${POPCC} ${INC} -object -o POPSensor.obj POPSensor.obj.o POPSensor.phstub.o SensorProxy.stub.o popwin_messages.o POPSensorData.o ${LIBS}
 
-SensorProxy.obj: SensorProxy.obj.o SensorProxy.phstub.o POPSensor.stub.o popwin_messages.o POPSensorData.o MySQLConn.o
-	${POPCC} ${INC} -object -o SensorProxy.obj SensorProxy.obj.o SensorProxy.phstub.o POPSensor.stub.o popwin_messages.o POPSensorData.o MySQLConn.o ${LIBS}
+SensorProxy.obj: SensorProxy.obj.o SensorProxy.phstub.o POPSensor.stub.o popwin_messages.o POPSensorData.o
+	${POPCC} ${INC} -object -o SensorProxy.obj SensorProxy.obj.o SensorProxy.phstub.o POPSensor.stub.o popwin_messages.o POPSensorData.o ${LIBS}
 
 main: main.o POPSensor.stub.o SensorProxy.stub.o popwin_messages.o POPSensorData.o
 	${POPCC} ${INC} -o main main.o POPSensor.stub.o SensorProxy.stub.o popwin_messages.o POPSensorData.o ${LIBS}
@@ -41,8 +41,8 @@ main_plot: main_plot.o POPSensorData.o popwin_messages.o
 main_demo: main_demo.o POPSensor.stub.o SensorProxy.stub.o popwin_messages.o POPSensorData.o
 	${POPCC} ${INC} -o main_demo main_demo.o POPSensor.stub.o SensorProxy.stub.o popwin_messages.o POPSensorData.o ${LIBS}
 	
-main_sql: main_sql.o POPSensor.stub.o SensorProxy.stub.o popwin_messages.o POPSensorData.o MySQLConn.o
-	${POPCC} ${INC} -o main_sql main_sql.o POPSensor.stub.o SensorProxy.stub.o popwin_messages.o POPSensorData.o MySQLConn.o ${LIBS}
+main_sql: main_sql.o POPSensor.stub.o SensorProxy.stub.o popwin_messages.o POPSensorData.o 
+	${POPCC} ${INC} -o main_sql main_sql.o POPSensor.stub.o SensorProxy.stub.o popwin_messages.o POPSensorData.o ${LIBS}
 	
 main_fribourg: main_fribourg.o POPSensor.stub.o SensorProxy.stub.o popwin_messages.o POPSensorData.o
 	${POPCC} ${INC} -o main_fribourg main_fribourg.o POPSensor.stub.o SensorProxy.stub.o popwin_messages.o POPSensorData.o ${LIBS}

@@ -23,8 +23,6 @@
 #include <cppconn/statement.h>
 #include <cppconn/prepared_statement.h>
 
-#include "MySQLConn.h"
-
 #include "POPSensor.ph"
 #include "lineComm/popwin_messages.h"
 
