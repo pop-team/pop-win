@@ -230,6 +230,24 @@ Examples of programmation
 
 Troubleshooting
 ---------------
+
+### Problem
+When connecting to sensor with
+
+	make login
+	
+or
+
+	./serialdump-linux -b115200 /dev/ttyUSB0
+	
+you get the following error :
+
+	connecting to /dev/ttyUSB0 (115200)
+	open: Invalid argument
+	
+### Solution
+You didn't patch and recompile the file in contiki/tools/sky/serialdump.c (see instructions in **Installing the toolchain**).
+
 ### Problem
 The sensors outputs garbage characters with serialdump or nothing at all
 ### Solution
