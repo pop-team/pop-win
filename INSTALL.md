@@ -124,6 +124,7 @@ In case of problem with the installation, please refer to the README file contai
 
 ```
 	sudo apt-get install git-core g++ flex bison cxxtest zlib1g-dev cmake
+	cd ~
 	git clone https://github.com/pop-team/pop-cpp.git
 	cd pop-cpp
 	git checkout -b release3.0 tags/3.0
@@ -138,6 +139,7 @@ Type 'y' and enter and do not forget to add POPC_LOCATION to your path as specif
 Contiki must be installed as mentionned above. The version to install is 3.0.
 
 ```
+	cd ~
 	git clone git://github.com/contiki-os/contiki.git
 	cd contiki
 	git checkout release-3-0
@@ -151,6 +153,7 @@ When prompted for MySQL admin password during mysql-server-5.6 install, choose o
 
 ```
 	sudo apt-get install libjsoncpp-dev libmysqlcppconn-dev mysql-server-5.6
+	cd ~
 	git clone https://github.com/pop-team/pop-win.git
 	cd pop-win
 	make clean && make
