@@ -88,7 +88,7 @@ Now you can recompile the file
 	make
 	cd ../../examples/hello-world
 
-Run the commands below to compile the example for the sensor and upload it. Use savetarget if you want to remember the target platform to avoid typing it all the time.
+Run the commands below to compile the example for the sensor and upload it. Use savetarget if you want to remember the target platform to avoid typing it all the time. You may have to reboot your computer if you have a "can't open port" error after the first connection of the Z1 sensor.
 
 	make TARGET=z1 hello-world
 	make TARGET=z1 savetarget
