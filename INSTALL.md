@@ -201,10 +201,17 @@ When prompted for MySQL admin password during mysql-server-5.6 install, choose o
 Makefile:
 
 ```
-	CONTIKI=/home/lwinkler/prog/contiki/
+	CONTIKI=$(HOME)/contiki/
 	include $(CONTIKI)/Makefile.include
 ```
-- Compile and upload to Z1 sensor (use TARGET=xm1000 for xm1000 sensors)
+
+Make sure XM1000_FLASH is commented in **gatewayMote.c** if you want to flash for Z1 :
+
+```
+	//#define XM1000_FLASH
+```
+
+- Compile and upload to Z1 sensor (use TARGET=xm1000 for xm1000 sensors).
 
 ```
 	make TARGET=z1 clean
