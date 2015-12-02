@@ -1,7 +1,8 @@
 /*
  * Copyright (c) 2014, EIA-FR.
  * All rights reserved.
- * Laurent Winkler <lwinkler888@gmail.com>. 
+ * @author Laurent Winkler <lwinkler888@gmail.com>.
+ * @author Marco Lourenço <kriegalex@gmail.com>.
  */
 
 //----------------------------------------------------------------- 
@@ -110,18 +111,6 @@ int bufferizeNotifyMessage(const struct NotifyMessage* x_msg, char* xp_buffer, s
 			x_msg->location
 	);
 
-	//printf("'%s' buffer\n",xp_buffer);
-	/*printf("buffered xp_buffer: %02x %02x %02x %04x %02x %04x %04x %s %s\n",
-			MSG_NOTIFY,
-			x_msg->dataType,
-			x_msg->measurementType,
-			x_msg->id,
-			x_msg->unit,
-			(int)x_msg->dataSize,
-			(int)x_msg->locationSize,
-			x_msg->data,
-			x_msg->location);*/
-
 	return ret > 0 && ret < x_bufferSize;
 }
 
@@ -167,37 +156,8 @@ int unbufferizeNotifyMessage(struct NotifyMessage* xp_msg, const char* x_buffer,
 		int s = snprintf(xp_msg->data, dataSize+1, "%s", x_buffer + offsetData);
 		int offsetLocation = offsetData+dataSize+1;
 		int sizeLocation = snprintf(xp_msg->location, locationSize+1, "%s", x_buffer + offsetLocation);
+		//printf("sizeLocation: %d",sizeLocation);
 		return 1;
-		/*printf("unbuffered x_buffer: %02x %02x %02x %04x %02x %04x %04x %s %s\n",
-				MSG_NOTIFY,
-				xp_msg->dataType,
-				xp_msg->measurementType,
-				xp_msg->id,
-				xp_msg->unit,
-				(int)xp_msg->dataSize,
-				(int)xp_msg->locationSize,
-				xp_msg->data,
-				xp_msg->location);*/
-		/*if(s == dataSize+1)
-		{
-			//printf("OK: Data has the correct size %d=%d\n", s, dataSize);
-			return 1;
-		}
-		else
-		{
-			printf("WARNING: Data has the wrong size %d!=%d\n", s, dataSize+1);
-			return 1;
-		}
-		if(sizeLocation == locationSize+1)
-		{
-			//printf("OK: Data has the correct size %d=%d\n", s, dataSize);
-			return 1;
-		}
-		else
-		{
-			printf("WARNING: Location has the wrong size %d!=%d\n", sizeLocation, locationSize+1);
-			return 1;
-		}*/
 	}
 	else
 	{

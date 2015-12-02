@@ -2,15 +2,13 @@
  *
  *
  * @author Laurent Winkler based on work by Valentin Bourqui
- * @date   May 2015
- * @brief  Example executable for the POPWIN project: The main routine shows the usage of the different C++ class of the POPWIN project.
+ * @author Marco Lourenço
+ * @date   November 2015
+ * @brief  Example executable for the POPWIN project: The main routine shows the usage of the different C++ class of the POPWIN project for 2 sensor networks.
  *
  *
  */
 
-// #include <unistd.h>
-// #include <termios.h>
-// #include <map>
 #include <fstream>
 
 #include "POPSensor.ph"
@@ -33,7 +31,7 @@ int main(int argc, char** argv)
 {
 	if(argc != 5)
 	{
-		cout << "usage: popcrun <obj.map> ./main_example localhost INOUT.json 160.98.X.X IN.json" << popcendl;
+		cout << "usage: popcrun <obj.map> ./main_demo localhost INOUT.json 160.98.X.X IN.json" << popcendl;
 		exit(0);
 	}
 	// Input a list of commands
@@ -44,15 +42,11 @@ int main(int argc, char** argv)
 
 	try
 	{
-		cout << "Creating POPSensor for temperature" << popcendl;
+		cout << "Creating POPSensor for WSN no1" << popcendl;
 		POPSensor popLocal(argv[1], argv[2],0);
-		POPSensorData localData;
 
-		popLocal.TestSQL();
-
-		cout << "Creating POPSensor for leds" << popcendl;
+		cout << "Creating POPSensor for WSN no2" << popcendl;
 		POPSensor popRemote(argv[3], argv[4],1);
-		POPSensorData remoteData;
 
 		popLocal.Broadcast(MSR_LED, UNT_NONE, LED_ALL_OFF); // MSR_LED=notify for led, all off
 
@@ -64,30 +58,25 @@ int main(int argc, char** argv)
 		waitPressKey();
 
 		cout << "Gather temperatures..." << popcendl;
-		for(int i = 0 ; i < 3000 ; i++)
+		for(int i = 0 ; i < 30 ; i++)
 		{
+            // PUB == OUT
 			popLocal.Broadcast(MSR_LED, UNT_NONE, LED_GREEN_TOGGLE); // PUB_LED=publish for led, green toggle
-			localData = popLocal.Gather();
-			remoteData = popRemote.Gather();
+
+            // SUB == IN
+			POPSensorData d1 = popLocal.executeQuery("SELECT genre,value FROM popwin_schema.POPSensorData WHERE genre=\"temperature\"");
+			POPSensorData d2 = popRemote.executeQuery("SELECT genre,value FROM popwin_schema.POPSensorData WHERE genre=\"leds\"");
+			d1.printAll();
+			d2.printAll();
 			popLocal.Clear();
 			popRemote.Clear();
-			//printf("\n-----------------------------------------------------------------------------------------------\n");
-			//remoteData.Print();
-			//printf("\n-----------------------------------------------------------------------------------------------\n");
-			printf("\n");
-			localData.Print();
-			printf("\n");
-			printf("\n");
-			remoteData.Print();
-			printf("\n");
-			//printf("\n-----------------------------------------------------------------------------------------------\n");
-			waitPressKey();
-			//sleep(3);
+
+			//waitPressKey();
+			sleep(1);
 		}
-		cout << "Finished gathering temperatures" << popcendl;
 
 		cout << "Broadcast green LED OFF" << popcendl;
-		popLocal.Broadcast(MSR_LED, UNT_NONE, LED_GREEN_TOGGLE); // PUB_LED=publish for led, green toggle
+		popLocal.Broadcast(MSR_LED, UNT_NONE, LED_GREEN_OFF); // PUB_LED=publish for led, green toggle
 
 		printf("end of main\n");
 	}

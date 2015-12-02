@@ -2,7 +2,8 @@
  *
  *
  * @author Laurent Winkler based on work by Valentin Bourqui
- * @date Dec 2014
+ * @author Marco Lourenço
+ * @date   November 2015
  * @brief POPSensor class for the POPWIN project. This object handles the data gathering of a group of sensors.
  *
  *
@@ -28,7 +29,12 @@
 
 using namespace std;
 
-/// Constructor (URL of target platteform is specified)
+/// @brief Constructor with IP of target machine specified.
+///
+/// The given id will be multiplied by 10'000, allowing one POPSensor to have 10'000 SensorProxy.
+/// @param x_url the IP address of the machine that will instantiate remote POPSensor object
+/// @param x_resourceFileName the path to JSON resource file
+/// @param id the ID (0,1,2,3,...) of this sensor
 POPSensor::POPSensor(const std::string& x_url, const std::string& x_resourceFileName, const int id)
 {
 	PopSID = 10000*id;
@@ -42,18 +48,24 @@ POPSensor::POPSensor(const std::string& x_url, const std::string& x_resourceFile
 	con = driver->connect("tcp://127.0.0.1:3306", "root", "toor");
 	/* Connect to the MySQL test database */
 	//cout<<"Setting schema" << popcendl;
-	//con->setSchema("popwin_schema");
+	//con->setSchema("popwin_schema"); // doesn't work, get's exception TODO find why
 }
 
-/// Constructor (power requirement of target platteform is specified)
+/// @brief Constructor with power requirement of target machine specified.
+///
+/// The given id will be multiplied by 10'000, allowing one POPSensor to have 10'000 SensorProxy.
+/// @param x_pow the power of the machine (POP-C++ power)
+/// @param x_resourceFileName the path to JSON resource file
+/// @param id the ID (0,1,2,3,...) of this sensor
 POPSensor::POPSensor(int x_pow, const std::string& x_resourceFileName, const int id)
 {
+	// each POPSensor is of ID 0,10000,20000,30000...
 	PopSID = 10000*id;
 	cout<<"Creating POPSensor with id="<< PopSID << popcendl;
 	Initialize(x_resourceFileName);
 }
 
-/// Destructor
+/// @brief Destructor
 POPSensor::~POPSensor()
 {
 	StopListening();
@@ -69,7 +81,8 @@ POPSensor::~POPSensor()
 	cout<<"Finished destroying POPSensor" << popcendl;
 }
 
-/// Initialization using parameters in resource.json
+/// @brief Initialization using parameters in x_resourceFileName (i.e. resource.json)
+/// @param x_resourceFileName the path to JSON resource file
 void POPSensor::Initialize(const std::string& x_resourceFileName)
 {
 	// Read json resource file into string
@@ -134,24 +147,16 @@ void POPSensor::Initialize(const std::string& x_resourceFileName)
 
 	StartListening();
 	SubscribeToResources(true); // subscribe
-
-	// Send a command to the gateway mote to set it as the gateway
-	// note: since some mote have trouble with the serial line you may need to set it manually later
-	//for(auto it : m_sensorsProxy)
-	//{
-	//it->Publish(MSR_SET_GW);
-	//it->Publish(PUB_COMMAND, 8); // 8 is the command id for set_as
-	//it->Notify(MSR_SET_GW, UNT_NONE, 0);
-	//}
 }
 
-/// Return true if the POPSensor is connected to at least one sensor
+/// @brief Check if the POPSensor is connected to at least one sensor
+/// @return true if the POPSensor is connected to at least one sensor
 bool POPSensor::IsConnected()
 {
 	return !m_sensorsProxy.empty();
 }
 
-/// Start listening to messages coming from sensors
+/// @brief Start listening to messages coming from sensors
 void POPSensor::StartListening()
 {
 	for(auto it : m_sensorsProxy)
@@ -160,7 +165,7 @@ void POPSensor::StartListening()
 	}
 }
 
-/// Stop listening to messages coming from sensors
+/// @brief Stop listening to messages coming from sensors
 void POPSensor::StopListening()
 {
 	for(auto it : m_sensorsProxy)
@@ -169,7 +174,9 @@ void POPSensor::StopListening()
 	}
 }
 
-/// Return a POPSensorData structure containing the messages received from sensors according to SQL request
+/// @brief Return a POPSensorData structure containing the messages received from sensors according to SQL request
+/// @param sqlRequest a string containing the SQL request we want to execute
+/// @return a POPSensorData object with the data returned by the SQL request
 POPSensorData POPSensor::executeQuery(string sqlRequest)
 {
 	POPSensorData d;
@@ -204,6 +211,7 @@ POPSensorData POPSensor::executeQuery(string sqlRequest)
 	return d;
 }
 
+/// @brief Transform a ResultSet returned by MySQL into a serializable POPSensorData (for POP framework)
 void POPSensor::copyFromResultSetToPOPSensorData(sql::ResultSet* set, sql::ResultSetMetaData* rsmd, POPSensorData* data)
 {
 	while (set->next()) {
@@ -237,19 +245,7 @@ void POPSensor::copyFromResultSetToPOPSensorData(sql::ResultSet* set, sql::Resul
 	}
 }
 
-
-/// Return a POPSensorData structure containing the messages received from sensors
-/*POPSensorData POPSensor::Gather()
-{
-	POPSensorData fullData;
-	for(auto it : m_sensorsProxy)
-	{
-		fullData.Insert(it->Gather());
-	}
-	return fullData;
-}*/
-
-/// Clear the stored messages
+/// @brief Clear all the messages stored in the local database
 void POPSensor::Clear()
 {
 	try {
@@ -268,16 +264,10 @@ void POPSensor::Clear()
 	}
 }
 
-/// Broadcast a message to all sensors
-/*void POPSensor::Broadcast(int x_publicationType, int x_data)
-{
-	for(auto it : m_sensorsProxy)
-	{
-		//it->Publish(x_publicationType, x_data);
-	}
-}*/
-
-/// Broadcast a message to all sensors
+/// @brief Broadcast a message to all sensors in type int
+/// @param x_genre the genre of data (temp, light, humidity, ...)
+/// @param x_unit the unit of the data (celsius, lumen, ...)
+/// @param x_data the data itself (32, 45, 0, ...)
 void POPSensor::Broadcast(int x_genre, int x_unit, int x_data)
 {
 	for(auto it : m_sensorsProxy)
@@ -286,16 +276,10 @@ void POPSensor::Broadcast(int x_genre, int x_unit, int x_data)
 	}
 }
 
-/// Broadcast a message to all sensors
-/*void POPSensor::Broadcast(int x_publicationType, double x_data)
-{
-	for(auto it : m_sensorsProxy)
-	{
-		//it->Publish(x_publicationType, x_data);
-	}
-}*/
-
-/// Broadcast a message to all sensors
+/// @brief Broadcast a message to all sensors in type double
+/// @param x_genre the genre of data (temp, light, humidity, ...)
+/// @param x_unit the unit of the data (celsius, lumen, ...)
+/// @param x_data the data itself (32.4, 45.2, 0.9, ...)
 void POPSensor::Broadcast(int x_genre, int x_unit, double x_data)
 {
 	for(auto it : m_sensorsProxy)
@@ -304,16 +288,12 @@ void POPSensor::Broadcast(int x_genre, int x_unit, double x_data)
 	}
 }
 
-/// Broadcast a message to all sensors
-/*void POPSensor::Broadcast(int x_publicationType, const std::string& x_data)
-{
-	for(auto it : m_sensorsProxy)
-	{
-		//it->Publish(x_publicationType, x_data);
-	}
-}*/
-
-/// Broadcast a message to all sensors
+/// @brief Broadcast a message to all sensors in type string
+/// @param x_genre the genre of data (temp, light, humidity, ...)
+/// @param x_unit the unit of the data (celsius, lumen, ...)
+/// @param x_data the data itself ("hot", "cold", "wet", ...)
+// TODO for now is identical to Notify, must make that Broadcast is specifically used to reach all sensors and not only one
+// TODO missing Unicast method would also use Notify but to reach one specific sensor
 void POPSensor::Broadcast(int x_genre, int x_unit, const std::string& x_data)
 {
 	for(auto it : m_sensorsProxy)
@@ -322,7 +302,10 @@ void POPSensor::Broadcast(int x_genre, int x_unit, const std::string& x_data)
 	}
 }
 
-/// Send a notification to all sensors
+/// @brief Send a notification to all sensors
+/// @param x_genre the genre of data (temp, light, humidity, ...)
+/// @param x_unit the unit of the data (celsius, lumen, ...)
+/// @param x_message the data itself ("hot", "cold", "wet", ...)
 void POPSensor::Notify(int x_genre, int x_unit, const std::string& x_message)
 {
 	for(auto it : m_sensorsProxy)
@@ -331,8 +314,10 @@ void POPSensor::Notify(int x_genre, int x_unit, const std::string& x_message)
 	}
 }
 
-/// Subscribe to messages of given type and data type
-void POPSensor::Subscribe(int x_genre, int x_dataType)
+/// @brief Subscribe to messages of given type and data type
+/// @param x_genre the genre of data (temp, light, humidity, ...)
+/// @param x_dataType the type of data
+void POPSensor::Subscribe(int x_genre, DataType x_dataType)
 {
 	for(auto it : m_sensorsProxy)
 	{
@@ -340,18 +325,8 @@ void POPSensor::Subscribe(int x_genre, int x_dataType)
 	}
 }
 
-/// Return the size of the stored data
-/*int POPSensor::GetDataSize()
-{
-	int cpt = 0;
-	for(auto it : m_sensorsProxy)
-	{
-		cpt += it->GetDataSize();
-	}
-	return cpt;
-}*/
-
-/// Subscribe to all resources contained in resource.json
+/// @brief (Un)Subscribe to all resources contained in resource.json
+///
 void POPSensor::SubscribeToResources(bool sub)
 {
 	if(m_jsonResources.empty())
@@ -369,7 +344,6 @@ void POPSensor::SubscribeToResources(bool sub)
 		enum DataType dtype;
 		string locationType;
 		enum MeasurementUnit unit;
-		//enum PublicationType ptype;
 		bool incoming              = false;
 		bool outgoing			   = false;
 		string str = root["wsns"]["nodes"][i].get("direction", "<not found>").asString();
@@ -440,39 +414,5 @@ void POPSensor::SubscribeToResources(bool sub)
 		}
 	}
 }
-
-/// Apply a reduce operation to the stored data {size, min, max, aver, sum, stdev}
-/*double POPSensor::Reduce(int x_mtype, int x_dataType, int x_fct)
-{
-	std::vector<double> vect;
-
-	for(auto it : m_sensorsProxy)
-	{
-		vect.push_back(it->Reduce(x_mtype, x_dataType, x_fct));
-	}
-
-	if(vect.empty())
-		return 0;
-
-	switch(x_fct)
-	{
-	case POPSensorData::size:  return vect.size();
-	case POPSensorData::min:   return *std::min_element(vect.begin(), vect.end());
-	case POPSensorData::max:   return *std::max_element(vect.begin(), vect.end());
-	case POPSensorData::aver:  return std::accumulate(vect.begin(), vect.end(), 0.0) / vect.size();
-	case POPSensorData::sum:   return std::accumulate(vect.begin(), vect.end(), 0.0);
-	case POPSensorData::stdev:
-	{
-		double sum = std::accumulate(vect.begin(), vect.end(), 0.0);
-		double mean = sum / vect.size();
-		std::vector<double> diff(vect.size());
-		std::transform(vect.begin(), vect.end(), diff.begin(),
-				std::bind2nd(std::minus<double>(), mean));
-		double sq_sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
-		return std::sqrt(sq_sum / vect.size());
-	}
-
-	}
-}*/
 
 @pack(POPSensor);

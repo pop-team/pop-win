@@ -10,7 +10,7 @@
 
 #include "POPSensorData.h"
 
-
+/// Constructor
 POPSensorData::POPSensorData()
 {
 	list_iter = databaseValues.begin();
@@ -19,6 +19,7 @@ POPSensorData::POPSensorData()
 	firstNextCall = true;
 }
 
+/// Destructor
 POPSensorData::~POPSensorData()
 {
 	databaseValues.clear();
@@ -42,8 +43,8 @@ int POPSensorData::getRow()
 	return databaseValues.size();
 }
 
-/*! Center-aligns string within a field of width w. Pads with blank spaces
-    to enforce alignment. */
+/// Center-aligns string within a field of width w.
+/// Pads with blank spaces to enforce alignment.
 std::string POPSensorData::center(const string s, const int w) {
 	stringstream ss, spaces;
 	int padding = w - s.size();                 // count excess room to pad

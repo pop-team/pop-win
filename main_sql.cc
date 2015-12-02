@@ -2,15 +2,13 @@
  *
  *
  * @author Laurent Winkler based on work by Valentin Bourqui
- * @date   May 2015
- * @brief  Example executable for the POPWIN project: The main routine shows the usage of the different C++ class of the POPWIN project.
+ * @author Marco Lourenço
+ * @date   November 2015
+ * @brief  Example executable for the POPWIN project: The main routine shows the usage of the different C++ class of the POPWIN project for 1 sensor network.
  *
  *
  */
 
-// #include <unistd.h>
-// #include <termios.h>
-// #include <map>
 #include <fstream>
 
 #include "POPSensor.ph"
@@ -33,7 +31,7 @@ int main(int argc, char** argv)
 {
 	if(argc != 3)
 	{
-		cout << "usage: popcrun <obj.map> ./main_example localhost INOUT.json" << popcendl;
+		cout << "usage: popcrun <obj.map> ./main_sql localhost INOUT.json" << popcendl;
 		exit(0);
 	}
 	// Input a list of commands
@@ -47,7 +45,7 @@ int main(int argc, char** argv)
 		cout << "Creating POPSensor 1" << popcendl;
 		POPSensor popLocal(argv[1], argv[2],0);
 
-		for(int i = 0 ; i < 1 ; i++)
+		for(int i = 0 ; i < 10 ; i++)
 		{
 			waitPressKey();
 			popLocal.Broadcast(MSR_LED, UNT_NONE, LED_GREEN_TOGGLE); // MSR_LED=notify for led, all off

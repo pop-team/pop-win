@@ -1,6 +1,9 @@
 /*
- * Date: Jan 2015
+ * Date: Nov 2015
  * Authors: Laurent Winkler and Cristina Munoz
+ * @author Laurent Winkler
+ * @author Cristina Munoz
+ * @author Marco Lourenço
  *
  * This file is part of the POPWin project.
  *
@@ -12,7 +15,7 @@
  */
 
 #define CONTIKIv3 // comment for Contiki 2.6 and 2.7
-//#define XM1000_FLASH // uncomment to flash code for XM1000 mote
+//#define XM1000_FLASH // uncomment to flash code for XM1000 sensor
 #define DRW_FLASH 0 // 0 for HEIA-FR test code, 1 for DRW code (UNIGE)
 
 #include <stdio.h>
@@ -62,25 +65,6 @@
 
 //#define EN_LOGS 1 // enable log messages, comment to disable
 //#define EN_DEBUG 1 // enable debug messages, comment to disable
-
-/****************************/
-/*** COMMANDS TO BE CALLED  */
-/****************************/
-void list_functions();
-void read_temperature();
-void generate_test_data_double();
-void generate_test_data_int();
-void generate_test_data_string();
-void print_id();
-void send_broadcast_cmd();
-void toggle_debug();
-void set_as_gateway(int id);
-
-// All functions are stored in a table
-typedef void (*FunctionCall)(void);
-#define NB_COMMANDS 9
-const FunctionCall g_commands[NB_COMMANDS] = {list_functions, read_temperature, generate_test_data_double, generate_test_data_int, generate_test_data_string, print_id, send_broadcast_cmd, toggle_debug, set_as_gateway};
-const char* g_commandNames[NB_COMMANDS]    = {"list_functions", "read_temperature", "generate_test_data_double", "generate_test_data_int", "generate_test_data_string", "print_id", "send_broadcast_cmd", "toggle_debug", "set_as_gateway"};
 
 /****************************/
 /*** DECLARE FUNCTIONS      */
@@ -196,33 +180,17 @@ AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &communicat
 #else
 // Processes to use the routing of messages given by the multihop example
 //AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &multihop_announce, &multihop_sense);
-//AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &multihop_sense);
 AUTOSTART_PROCESSES(&gateway_communication_process, &multihop_announce, &multihop_sense);
-//AUTOSTART_PROCESSES(&gateway_communication_process, &multihop_announce);
-//AUTOSTART_PROCESSES(&gateway_communication_process);
 #endif
-
-//int countRecBroadcast = 0;
-//int countSentBroadcast = 0;
 
 static void
 broadcast_recvGWM(struct broadcast_conn *c, const linkaddr_t *from)
 {
 	//printf("broadcast message received from %d.%d: '%s'\n",from->u8[0], from->u8[1], (char *)packetbuf_dataptr());
-	//	leds_toggle(LEDS_GREEN);
-	/*if(g_gateway == get_id())
-	{
-		printf("received broadcast on GW\n");
-	}
-	else
-	{
-		printf("received broadcast on sensor: %d\n",++countRecBroadcast);
-	}*/
 	gwHandleMessage((char *)packetbuf_dataptr(), 1); // careful with parameter fromProxy ! (here 1)
 }
 
 static const struct broadcast_callbacks broadcast_callGWM = {broadcast_recvGWM};
-//static struct broadcast_conn broadcast;
 
 /*---------------------------------------------------------------------------*/
 
@@ -324,10 +292,6 @@ void gwHandleNotification(const char* data, char fromProxy)
 	// Proxy: the SensorProxy of POPWin
 	if(fromProxy)
 	{
-#ifdef EN_DEBUG
-		DEBUG("Handle notification dataType=%d", msg.dataType);
-#endif
-
 		switch(msg.dataType)
 		{
 		case TYPE_DOUBLE:
@@ -342,18 +306,6 @@ void gwHandleNotification(const char* data, char fromProxy)
 			{
 			case MSR_LED:
 			{
-#ifdef EN_DEBUG
-				if(g_gateway == get_id())
-				{
-					DEBUG("On GW, blink led %d\n", dataInt);
-					//printf("On GW, blink led %d\n", dataInt);
-				}
-				else
-				{
-					DEBUG("On sensor, blink led %d\n", dataInt);
-					//printf("On sensor, blink led %d\n", dataInt);
-				}
-#endif
 				switch(dataInt)
 				{
 				case LED_BLUE_TOGGLE:
@@ -361,6 +313,12 @@ void gwHandleNotification(const char* data, char fromProxy)
 					break;
 				case LED_GREEN_TOGGLE:
 					leds_toggle(LEDS_GREEN);
+					break;
+				case LED_GREEN_OFF:
+					leds_off(LEDS_GREEN);
+					break;
+				case LED_GREEN_ON:
+					leds_on(LEDS_GREEN);
 					break;
 				case LED_RED_TOGGLE:
 					leds_toggle(LEDS_RED);
@@ -407,14 +365,7 @@ void gwHandleNotification(const char* data, char fromProxy)
 		{
 			packetbuf_copyfrom(data, strlen(data) + 1);
 			broadcast_send(&broadcast);
-			//printf("broadcast message sent from GW to sensors: %d\n",++countSentBroadcast);
-#ifdef EN_LOGS
-			LOG("broadcast notify message sent from GW to sensors\n");
-#endif
 		}
-#ifdef EN_LOGS
-		LOG("Proxy has sent notification: %s", data);
-#endif
 	}
 	else gwSendNotificationSerial(&msg);
 }
@@ -440,9 +391,6 @@ void gwHandleSubscription(const char* data, char fromProxy)
 		// 
 		// note: the forwarding of messages to the network of sensors is not implemented yet
 		//
-#ifdef EN_LOGS
-		LOG("Proxy has sent subscription to %s", explainMeasurementType(msg.measurementType));
-#endif
 	}
 	else gwSendSubscriptionSerial(&msg);
 }
@@ -461,10 +409,6 @@ void gwHandlePublication(const char* data, char fromProxy)
 		return;
 	}
 
-#ifdef EN_DEBUG
-	DEBUG("Handle publication publicationType=%d", msg.publicationType);
-#endif
-
 	if(!fromProxy) //TODO check if really needed
 	{
 		gwSendPublicationSerial(&msg);
@@ -473,101 +417,6 @@ void gwHandlePublication(const char* data, char fromProxy)
 
 	int isGWCmd = 0; // used to not rebroadcast set_as_gateway command
 
-	/*switch(msg.dataType)
-	{
-	case TYPE_DOUBLE:
-	{
-		ERROR("publication of type TYPE_DOUBLE are not handled yet");
-	}
-	break;
-	case TYPE_INT:
-	{
-		int dataInt = atoi(msg.data);
-		switch(msg.publicationType)
-		{
-		case PUB_LED:
-		{
-#ifdef EN_DEBUG
-			if(g_gateway == get_id())
-			{
-				DEBUG("On GW, blink led %d\n", dataInt);
-				//printf("On GW, blink led %d\n", dataInt);
-			}
-			else
-			{
-				DEBUG("On sensor, blink led %d\n", dataInt);
-				//printf("On sensor, blink led %d\n", dataInt);
-			}
-#endif
-			switch(dataInt)
-			{
-			case 0:
-				leds_toggle(LEDS_BLUE);
-				break;
-			case 1:
-				leds_toggle(LEDS_GREEN);
-				break;
-			case 2:
-				leds_toggle(LEDS_RED);
-				break;
-			case 3:
-				leds_off(LEDS_ALL);
-				break;
-			case 4:
-				leds_on(LEDS_ALL);
-				break;
-			case 5:
-				leds_toggle(LEDS_ALL);
-				break;
-			default:
-				LOG("unknown PUB_LED command");
-			}
-		}
-		break;
-		case PUB_COMMAND:
-		{
-			// Commands can be seen as a type of publication
-#ifdef EN_DEBUG
-			DEBUG("Call command %d", dataInt);
-#endif
-			if(dataInt >= 0 && dataInt < NB_COMMANDS)
-			{
-				g_commands[dataInt]();
-				if(dataInt == 8)
-					isGWCmd = 1;
-			}
-			else
-			{
-				ERROR("Unknown command number");
-			}
-		}
-		break;
-		case PUB_SWITCH:
-		{
-			ERROR("publication of type PUB_SWITCH are not handled yet");
-		}
-		break;
-		case PUB_GW_ALIVE:
-		{
-			ERROR("publication of type PUB_GW_ALIVE are not handled yet");
-		}
-		break;
-		default:
-			ERROR("Unknown publication type");
-			printf("PUB msg code: %d\n",msg.publicationType);
-		}
-	}
-	break;
-	case TYPE_STRING:
-	{
-		ERROR("publication of type TYPE_STRING are not handled yet");
-	}
-	break;
-	default:
-		ERROR("Unknown data type");
-		printf("data type msg code: %d\n",msg.dataType);
-	}*/ // end switch msg.dataType
-
 	// If on GW and the message comes from the Proxy --> forward it
 	// do not rebroadcast set_as_gateway command
 	if(g_gateway == get_id() && !isGWCmd)
@@ -575,106 +424,6 @@ void gwHandlePublication(const char* data, char fromProxy)
 		packetbuf_copyfrom(data, strlen(data) + 1);
 		broadcast_send(&broadcast);
 		//printf("broadcast message sent from GW to sensors: %d\n",++countSentBroadcast);
-#ifdef EN_LOGS
-		LOG("broadcast publication sent from GW to sensors\n");
-#endif
-	}
-}
-
-/****************************/
-/******** COMMANDS  *********/
-/****************************/
-
-/*
- * List the available functionalities on sensor
- */
-void list_functions()
-{
-	int i;
-	for( i = 0 ; i < NB_COMMANDS ; i++)
-	{
-		LOG("Command %d: %s", i, g_commandNames[i]);
-	}
-} 
-
-
-/*
- * Return data to the gateway
- */
-void read_temperature(){
-	// Note: this function sends the data via serial line. It should not be used directly
-
-	struct NotifyMessage msg;
-	memset(&msg, 0, sizeof(msg));
-	float fl            = sense_temperature_float();
-	sprintf(msg.data, "%d.%u", (int)fl, DEC(fl));
-	msg.measurementType = MSR_TEMPERATURE;
-	msg.dataType        = TYPE_DOUBLE;
-	msg.unit            = UNT_CELSIUS;
-	msg.id              = get_id();
-	msg.dataSize        = strlen(msg.data);
-	// TODO for broadcast
-	//gwSendNotificationSerial(&msg);
-	sensorSendNotification(&msg);
-}
-
-/*
- * Generate data for testing purposes
- */
-void generate_test_data_double(){
-
-	int d = 100;
-	int i = 0;
-	for(i = 0 ; i < 10 ; i++)
-	{
-		// Due to a bug of Contiki we cannot print doubles
-		d *= 3;
-		struct NotifyMessage msg;
-		memset(&msg, 0, sizeof(msg));
-		sprintf(msg.data, "%d.%02d", d / 100, ABS(d % 100));
-		msg.measurementType = MSR_TEST;
-		msg.dataType        = TYPE_DOUBLE;
-		msg.id              = get_id();
-		msg.dataSize        = strlen(msg.data);
-		gwSendNotificationSerial(&msg);
-	}
-}
-
-/*
- * Generate data for testing purposes
- */
-void generate_test_data_int(){
-	int n = -32000;
-	int i = 0;
-	for(i = 0 ; i < 10 ; i++)
-	{
-		n += 1e4;
-		struct NotifyMessage msg;
-		memset(&msg, 0, sizeof(msg));
-		sprintf(msg.data, "%d", n);
-		msg.measurementType = MSR_TEST;
-		msg.dataType        = TYPE_INT;
-		msg.id              = get_id();
-		msg.dataSize        = strlen(msg.data);
-		gwSendNotificationSerial(&msg);
-	}
-}
-
-/*
- * Generate data for testing purposes
- */
-void generate_test_data_string(){
-	int i = 0;
-	for(i = 0 ; i < 10 ; i++)
-	{
-		struct NotifyMessage msg;
-		memset(&msg, 0, sizeof(msg));
-		sprintf(msg.data, "Test string number %d !", i);
-		msg.measurementType = MSR_TEST;
-		msg.dataType        = TYPE_STRING;
-		msg.id              = get_id();
-		msg.dataSize        = strlen(msg.data);
-		gwSendNotificationSerial(&msg);
 	}
 }
 
@@ -683,26 +432,6 @@ void generate_test_data_string(){
  */
 void print_id(){
 	LOG("ID of node is %d (= %d.%d)", get_id(), linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
-}
-
-/*
- * Send a test broadcast message
- */
-void send_broadcast_cmd(){
-	// note: this is only used as a test
-	packetbuf_copyfrom("Hello", 6);
-	broadcast_send(&broadcast);
-#ifdef EN_LOGS
-	LOG("broadcast message sent");
-#endif
-}
-
-/*
- * Turn debug messages on/off
- */
-void toggle_debug(){
-	g_debug = !g_debug;
-	LOG("Debug messages %s", g_debug ? "on" : "off");
 }
 
 /*
@@ -754,11 +483,6 @@ received_announcement(struct announcement *a,
 {
 	struct example_neighbor *e;
 
-#ifdef EN_LOGS
-	printf("Got announcement from %d.%d, id %d, value %d\n",
-			from->u8[0], from->u8[1], id, value);
-#endif
-
 	/* We received an announcement from a neighbor so we need to update
      the neighbor list, or add a new entry to the table. */
 	for(e = list_head(neighbor_table); e != NULL; e = e->next) {
@@ -789,9 +513,6 @@ recv(struct multihop_conn *c, const linkaddr_t *sender,
 		const linkaddr_t *prevhop,
 		uint8_t hops)
 {
-#ifdef EN_DEBUG
-	printf("multihop message received '%s'\n", (char *)packetbuf_dataptr());
-#endif
 	gwHandleMessage((char *)packetbuf_dataptr(), 0);
 }
 /*
@@ -817,23 +538,14 @@ forward(struct multihop_conn *c,
 			++i;
 		}
 		if(n != NULL) {
-#ifdef EN_DEBUG
-			printf("%d.%d: Forwarding packet to %d.%d (%d in list), hops %d\n",
-					linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-					n->addr.u8[0], n->addr.u8[1], num,
-					packetbuf_attr(PACKETBUF_ATTR_HOPS));
-#endif
 			return &n->addr;
 		}
 	}
-#ifdef EN_DEBUG
 	printf("%d.%d: did not find a neighbor to foward to\n",
 			linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
-#endif
 	return NULL;
 }
 
-//#include "example-multihop.c"
 static const struct multihop_callbacks multihop_call = {recv, forward};
 static struct multihop_conn multihop;
 
@@ -843,9 +555,6 @@ void sensorSendNotification(struct NotifyMessage* msg)
 	linkaddr_t to;
 	to.u8[0] = g_gateway; // ID of our gateway
 	to.u8[1] = 0;
-
-	// In case we are on the gateway/sensor: send via serial to PC
-	//gwSendNotificationSerial(msg);
 
 	// if on sensor
 	if(g_gateway != get_id())
@@ -861,10 +570,6 @@ void sensorSendNotification(struct NotifyMessage* msg)
 
 		/* Send the packet. */
 		multihop_send(&multihop, &to);
-
-#ifdef EN_DEBUG
-		printf("Multihop message sent from sensor to GW\n");
-#endif
 	}
 	else // on GW
 	{
@@ -875,9 +580,6 @@ void sensorSendNotification(struct NotifyMessage* msg)
 unsigned char sense_leds()
 {
 	unsigned char value = leds_get();
-#ifdef EN_DEBUG
-	DEBUG("sense leds status %u", value);
-#endif
 	return value;
 }
 
@@ -941,19 +643,11 @@ PROCESS_THREAD(multihop_sense, ev, data)
 
 	static struct etimer et;
 
-	//static uint8_t push = 0;	// Keeps the number of times the user pushes the button sensor
-
 	const unsigned int WAIT_SENSE = 5;
 
 	while(1){
 		etimer_set(&et, WAIT_SENSE * CLOCK_SECOND);
-		// PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et) || ((ev==sensors_event) && (data == &button_sensor)));
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-
-		//leds_on(LEDS_BLUE);
-
-		// Send a broadcast message
-		// send_broadcast_cmd();
 
 		/*---- start of multihop call ----*/
 		struct NotifyMessage msg;
@@ -961,12 +655,7 @@ PROCESS_THREAD(multihop_sense, ev, data)
 
 		// Alternate the type of measurement
 		float fl = 0;
-		//int16_t senseTemp = 0;
-		//int16_t senseHumi = 0;
 
-		//switch(push%5)
-		//{
-		//case 0:
 		msg.measurementType = MSR_TEMPERATURE;
 		msg.dataType        = TYPE_DOUBLE;
 		msg.unit            = UNT_CELSIUS;
@@ -976,8 +665,6 @@ PROCESS_THREAD(multihop_sense, ev, data)
 		fl					= sense_temperature_float(); // XM1000
 #endif
 		sprintf(msg.data, "%d.%u", (int)fl, DEC(fl)); // for XM1000
-		//senseTemp           = sense_temperature_float(); // Z1
-		//sprintf(msg.data, "%d.%d", senseTemp / 100, senseTemp % 100); // for Zolteria Z1
 		msg.id              = get_id();
 		msg.dataSize        = strlen(msg.data);
 		sprintf(msg.location,"%s","d2015");
@@ -987,14 +674,11 @@ PROCESS_THREAD(multihop_sense, ev, data)
 #ifdef XM1000_FLASH
 		memset(&msg, 0, sizeof(msg));
 		fl = 0;
-		//break;
-		//case 1:
 		msg.measurementType = MSR_HUMIDITY;
 		msg.dataType        = TYPE_DOUBLE;
 		msg.unit            = UNT_PERCENT;
 		fl                  = sense_humidity_float();// XM1000
 		sprintf(msg.data, "%d.%u", (int)fl, DEC(fl));// XM1000
-		//sprintf(msg.data, "%d.%d", senseHumi / 100, senseHumi % 100); // for Zolteria Z1
 		msg.id              = get_id();
 		msg.dataSize        = strlen(msg.data);
 		sprintf(msg.location,"%s","d2015");
@@ -1003,8 +687,6 @@ PROCESS_THREAD(multihop_sense, ev, data)
 
 		memset(&msg, 0, sizeof(msg));
 		fl = 0;
-		//break;
-		//case 2:
 		msg.measurementType = MSR_LIGHT;
 		msg.dataType        = TYPE_INT;
 		msg.unit            = UNT_LUX;
@@ -1017,8 +699,6 @@ PROCESS_THREAD(multihop_sense, ev, data)
 
 		memset(&msg, 0, sizeof(msg));
 		fl = 0;
-		//break;
-		//case 3:
 		msg.measurementType = MSR_INFRARED;
 		msg.dataType        = TYPE_INT;
 		msg.unit            = UNT_LUX;
@@ -1028,12 +708,10 @@ PROCESS_THREAD(multihop_sense, ev, data)
 		sprintf(msg.location,"%s","d2015");
 		msg.locationSize	= strlen(msg.location);
 		sensorSendNotification(&msg);
-#endif XM1000
+#endif
 
 		memset(&msg, 0, sizeof(msg));
 		fl = 0;
-		//break;
-		//case 4:
 		msg.measurementType = MSR_LED;
 		msg.dataType        = TYPE_INT;
 		msg.unit            = UNT_NONE;
@@ -1044,32 +722,6 @@ PROCESS_THREAD(multihop_sense, ev, data)
 		msg.locationSize	= strlen(msg.location);
 		sensorSendNotification(&msg);
 
-		//break;
-		//}
-		//msg.id              = get_id();
-		//msg.dataSize        = strlen(msg.data);
-		//push++;
-
-		// In case we are on the gateway: send via serial to PC
-		//gwSendNotificationSerial(&msg);
-
-		//if(g_gateway != get_id())
-		//{
-		//char buf[BUFFERSIZE];
-		//if(bufferizeNotifyMessage(&msg, buf, sizeof(buf)) <= 0)
-		//ERROR("Cannot write message to buffer");
-
-		// Use the multihop method to send a message
-		/* Copy the "Hello" to the packet buffer. */
-		//packetbuf_copyfrom(buf, strlen(buf) + 1);
-
-		/* Send the packet. */
-		//multihop_send(&multihop, &to);
-		//}
-
-		//sensorSendNotification(&msg);
-
-		//leds_off(LEDS_BLUE);
 	}
 	PROCESS_END();
 }
@@ -1087,7 +739,7 @@ PROCESS_THREAD(button_pressed, ev, data)
 	/* Initialize stuff here. */ 
 
 	SENSORS_ACTIVATE(button_sensor);
-	leds_on(LEDS_ALL);
+	//leds_on(LEDS_ALL);
 
 	while(1) {
 		/* Do the rest of the stuff here. */
@@ -1095,9 +747,6 @@ PROCESS_THREAD(button_pressed, ev, data)
 		static uint8_t push = 0;	// Keeps the number of times the user pushes the button sensor
 		PROCESS_WAIT_EVENT_UNTIL((ev==sensors_event) && (data == &button_sensor));
 		printf("Button event !\n");
-
-		// Send a broadcast message
-		// send_broadcast_cmd();
 
 		/*---- start of multihop call ----*/
 		linkaddr_t to;
@@ -1117,7 +766,6 @@ PROCESS_THREAD(button_pressed, ev, data)
 		gwSendNotificationSerial(&msg);
 #ifndef DRW_CODE
 		if(g_gateway != get_id())
-			//if(0)
 		{
 			char buf[BUFFERSIZE];
 			if(bufferizeNotifyMessage(&msg, buf, sizeof(buf)) <= 0)
@@ -1155,15 +803,20 @@ PROCESS_THREAD(button_pressed, ev, data)
 		LOG("Sensor has id %d (%d)", get_id(), node_id);
 
 		// To test the sensor: read value and printf
-		sense_temperature_float();
+#ifndef XM1000_FLASH
+		sense_temperature_float_Z1(); // Z1
+#else
+		sense_temperature_float(); // XM1000
 		sense_humidity_float();
-		sense_light(); 
-		sense_infrared(); 
+		sense_light();
+		sense_infrared();
+#endif
+
 	}
 
 	exit:
 	printf("exit button pressed\n");
-	leds_off(LEDS_ALL);
+	//leds_off(LEDS_ALL);
 	PROCESS_END();
 }
 

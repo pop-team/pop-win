@@ -1,7 +1,8 @@
 /*
- * Copyright (c) 2014, EIA-FR.
+ * Copyright (c) 2015, HEIA-FR.
  * All rights reserved.
- * Laurent Winkler <lwinkler888@gmail.com>. 
+ * Laurent Winkler <lwinkler888@gmail.com>.
+ * Marco Lourenço <marco.lourenco@hefr.ch>
  */
 
 //----------------------------------------------------------------- 
@@ -17,8 +18,7 @@
 // The size of the data itself (e.g. in Notify messages)
 #define BUFFERDATASIZE 64
 
-// The id of the gateway
-// the sensor with ID X will be the gateway, this does not define the ID of the sensor to X
+// the sensor with ID below will be the gateway, this does not change the ID of the sensor
 #define DEFAULT_GATEWAY_ID 3
 
 /// Different types of messages
@@ -222,14 +222,8 @@ struct PublishMessage
 {
 	/// Type of the publication
 	enum MeasurementType publicationType;
-	/// Type of the data
-	//enum DataType        dataType;
 	/// Id of emitter
 	unsigned short       id;               // not mandatory, for convenience
-	/// Size of the data for buffering
-	//size_t               dataSize;
-	/// Buffer containing the serialized data
-	//char                 data[BUFFERDATASIZE];
 };
 
 // Note: no unpublish message for the first version. The structure will be similar to publish messages
@@ -254,14 +248,8 @@ struct UnPublishMessage
 {
 	/// Type of the publication
 	enum MeasurementType publicationType;
-	/// Type of the data
-	//enum DataType        dataType;
 	/// Id of emitter
 	unsigned short       id;               // not mandatory, for convenience
-	/// Size of the data for buffering
-	//size_t               dataSize;
-	/// Buffer containing the serialized data
-	//char                 data[BUFFERDATASIZE];
 };
 
 /// Print message to buffer

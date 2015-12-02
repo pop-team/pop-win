@@ -2,7 +2,8 @@
  *
  *
  * @author Laurent Winkler based on work by Valentin Bourqui
- * @date Dec 2014
+ * @author Marco Lourenço
+ * @date   November 2015
  * @brief Proxy class that handles communication with one sensor but resides on the same machine as the gateway
  *
  *
@@ -36,7 +37,7 @@
 
 using namespace std;
 
-/// Constructor
+/// @brief Constructor
 /// @param x_id  Id to set to this object (for low-level communication)
 /// @param x_url URL on which this parallel object is allocated
 /// @param x_device Device name e.g. /dev/ttyUSB0
@@ -92,18 +93,17 @@ SensorProxy::SensorProxy(int x_id, const std::string& x_url, const string& x_dev
 	}
 
 	// m_debugOf.open("debug.txt");
+
 	// init DB connection
 	/* Create a connection */
-	//cout<<"Instantiating driver" << popcendl;
 	driver = get_driver_instance();
-	//cout<<"Connecting to db" << popcendl;
 	con = driver->connect("tcp://127.0.0.1:3306", "root", "toor");
 	/* Connect to the MySQL test database */
 	//cout<<"Setting schema" << popcendl;
 	//con->setSchema("popwin_schema");
 }
 
-/// Destructur
+/// @brief Destructor
 SensorProxy::~SensorProxy()
 {
 	// Destroy object
@@ -113,17 +113,14 @@ SensorProxy::~SensorProxy()
 	delete con;
 }
 
+/// @brief Insert a message from sensor network to the database
+/// @param msg  Message received from sensor network with data like temperature, location, ...
 void SensorProxy::InsertSQL(struct NotifyMessage* msg)
 {
-
-	//MySQLConn* conn = new MySQLConn();
-	//conn->testMySQL();
 	try {
 		sql::Statement *stmt;
 
-		//cout<<"Creating statement" << popcendl;
 		stmt = con->createStatement();
-		//cout<<"Executing query" << popcendl;
 		std::stringstream ss;
 		ss << "INSERT INTO popwin_schema.POPSensorData(type,genre,location,sensorID,value,unit) VALUES('"
 				<< explainDataType(msg->dataType) << "','"
@@ -138,10 +135,7 @@ void SensorProxy::InsertSQL(struct NotifyMessage* msg)
 		/* Access column data by alias or column name */
 		cout << "Inserted 1 input message in DB: " << msg->data << popcendl;
 
-		//cout<<"Cleaning objects" << popcendl;
 		delete stmt;
-		//delete con;
-
 	}
 	catch (sql::SQLException &e) {
 		cout << "# ERR: SQLException in " << __FILE__;
@@ -153,7 +147,8 @@ void SensorProxy::InsertSQL(struct NotifyMessage* msg)
 	cout << popcendl;
 }
 
-/// Send raw data to the gateway
+/// @brief Send raw data to the gateway
+/// @param x_data the data to be sent
 void SensorProxy::SendRawData(const std::string& x_data)
 {
 	// m_debugOf << x_data; m_debugOf.flush();
@@ -183,7 +178,8 @@ void SensorProxy::SendRawData(const std::string& x_data)
 
 }
 
-/// Read data coming from the gateway
+/// @brief Read data coming from the gateway
+/// @param xr_ostream the output stream where read data is written
 void SensorProxy::ReadData(std::ostream& xr_ostream)
 {
 	while(m_listening.load()) {   
@@ -213,7 +209,7 @@ void SensorProxy::ReadData(std::ostream& xr_ostream)
 	}
 }
 
-/// Start listening to messages coming from sensors
+/// @brief Start listening to messages coming from sensors
 void SensorProxy::StartListening()
 {
 	m_listening.store(true);
@@ -239,27 +235,14 @@ void SensorProxy::StartListening()
 	}
 }
 
-/// Stop listening to messages coming from sensors
+/// @brief Stop listening to messages coming from sensors
 void SensorProxy::StopListening()
 {
 	m_listening.store(false);
 }
 
-/// Return a POPSensorData structure containing the messages received from sensors
-/*POPSensorData SensorProxy::Gather()
-{
-	// cout << "Retrieve " << m_doubleData.size() << " records of type double" <<popcendl;
-	return m_sensorData;
-}*/
-
-/// Clear the stored messages
-/*void SensorProxy::Clear()
-{
-	m_sensorData.Clear();
-	// m_subscriptions.clear();
-}*/
-
-/// Handle all incoming messages
+/// @brief Handle all incoming messages
+/// @param x_rawMsg the raw message (encoded in chars)
 void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 {
 	// cout << "received :" << x_rawMsg << popcendl;
@@ -305,9 +288,6 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 			bool subscribed = it != m_subscriptions.end() && it->second;
 			if(msg.measurementType == MSR_LOG)
 			{
-#ifdef EN_COUTS
-				cout << "Proxy received log from " << msg.id << " : " << msg.data << popcendl;
-#endif
 				break;
 			}
 			else if(!subscribed)
@@ -322,29 +302,6 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 			cout<< "Proxy "<< m_id << ", stored notification   (" << explainMeasurementType(msg.measurementType) << "): '" << msg.data << "'" << popcendl;
 #endif
 			InsertSQL(&msg);
-			/*switch(msg.dataType)
-			{
-			case TYPE_DOUBLE:
-			{
-				std::pair<RecordHeader, double> pair(RecordHeader(ms, msg), atof(msg.data));
-				m_sensorData.Insert(pair);
-				break;
-			}
-			case TYPE_INT:
-			{
-				std::pair<RecordHeader, int> pair(RecordHeader(ms, msg), atoi(msg.data));
-				m_sensorData.Insert(pair);
-				break;
-			}
-			case TYPE_STRING:
-			{
-				std::pair<RecordHeader, std::string> pair(RecordHeader(ms, msg), std::string(msg.data));
-				m_sensorData.Insert(pair);
-				break;
-			}
-			default:
-				printf("Unknown data type %d in %s\n", msg.dataType, x_rawMsg.c_str());
-			}*/
 		}
 		break;
 
@@ -362,7 +319,10 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 
 }
 
-/// Send a notification to the gateway
+/// @brief Send a notification with int data to the gateway
+/// @param x_measurementType the type of measurement we want to notify (temp, light, ...)
+/// @param x_measurementUnit the unit of the measurement we want to notify (celsius, lumen, ...)
+/// @param x_data the measurement we want to notify (32, 45, 0, ...)
 void SensorProxy::Notify(int x_measurementType, int x_measurementUnit, int x_data)
 {
 	enum MeasurementType msgType = static_cast<MeasurementType>(x_measurementType);
@@ -393,7 +353,10 @@ void SensorProxy::Notify(int x_measurementType, int x_measurementUnit, int x_dat
 	SendRawData(buffer);
 }
 
-/// Send a notification to the gateway
+/// @brief Send a notification with double data to the gateway
+/// @param x_measurementType the type of measurement we want to notify (temp, light, ...)
+/// @param x_measurementUnit the unit of the measurement we want to notify (celsius, lumen, ...)
+/// @param x_data the measurement we want to notify (32.4, 45.9, 0.1, ...)
 void SensorProxy::Notify(int x_measurementType, int x_measurementUnit, double x_data)
 {
 	enum MeasurementType msgType = static_cast<MeasurementType>(x_measurementType);
@@ -424,7 +387,10 @@ void SensorProxy::Notify(int x_measurementType, int x_measurementUnit, double x_
 	SendRawData(buffer);
 }
 
-/// Send a notification to the gateway
+/// @brief Send a notification with string data to the gateway
+/// @param x_measurementType the type of measurement we want to notify (temp, light, ...)
+/// @param x_measurementUnit the unit of the measurement we want to notify (celsius, lumen, ...)
+/// @param x_data the measurement we want to notify ("hot", "cold", "wet", ...)
 void SensorProxy::Notify(int x_measurementType, int x_measurementUnit, const std::string& x_message)
 {
 	enum MeasurementType msgType = static_cast<MeasurementType>(x_measurementType);
@@ -455,7 +421,8 @@ void SensorProxy::Notify(int x_measurementType, int x_measurementUnit, const std
 	SendRawData(buffer);
 }
 
-/// Send a publication to the gateway
+/// @brief Send a message to tell that we start publishing
+/// @param x_measurementType the type of measurement we want to start publishing (temp, light, ...)
 void SensorProxy::Publish(int x_measurementType)
 {
 	m_publications[x_measurementType] = true;
@@ -477,43 +444,8 @@ void SensorProxy::Publish(int x_measurementType)
 	SendRawData(buffer);
 }
 
-/// Send a publication to the gateway
-/*void SensorProxy::Publish(int x_publicationType, double x_data)
-{
-	struct PublishMessage msg;
-	memset(&msg, 0, sizeof(struct PublishMessage));
-	//sprintf(msg.data, "%lf", x_data);
-	msg.publicationType = static_cast<PublicationType>(x_publicationType);
-	//msg.dataType        = TYPE_DOUBLE;
-	msg.id              = m_id;
-	//msg.dataSize        = strlen(msg.data);
-
-	char buffer[BUFFERSIZE];
-	if(bufferizePublishMessage(&msg, buffer, BUFFERSIZE) <= 0)
-		throw POPException("Cannot bufferize publish message", buffer);
-	// cout<< "Sending " << buf << popcendl;
-	SendRawData(buffer);
-}*/
-
-/// Send a publication to the gateway
-/*void SensorProxy::Publish(int x_publicationType, const string& x_data)
-{
-	struct PublishMessage msg;
-	memset(&msg, 0, sizeof(struct PublishMessage));
-	//sprintf(msg.data, "%s", x_data.c_str());
-	msg.publicationType = static_cast<PublicationType>(x_publicationType);
-	//msg.dataType        = TYPE_STRING;
-	// msg.unit            = UNT_UNKNOWN;
-	msg.id              = m_id;
-	//msg.dataSize        = strlen(msg.data);
-
-	char buffer[BUFFERSIZE];
-	if(bufferizePublishMessage(&msg, buffer, BUFFERSIZE) <= 0)
-		throw POPException("Cannot bufferize publish message", buffer);
-	// cout<< "Sending " << buf << popcendl;
-	SendRawData(buffer);
-}*/
-
+/// @brief Send a message to tell that we stop publishing
+/// @param x_measurementType the type of measurement we want to stop publishing (temp, light, ...)
 void SensorProxy::UnPublish(int x_measurementType)
 {
 	m_publications[x_measurementType] = false;
@@ -535,7 +467,9 @@ void SensorProxy::UnPublish(int x_measurementType)
 	SendRawData(buffer);
 }
 
-/// Send a subscription to the gateway
+/// @brief Send a message to tell we start subscription to new data
+/// @param x_measurementType the type of measurement we want to subscribe to (temp, light, ...)
+/// @param x_dataType the type of data we want to subscribe to (int, double, string)
 void SensorProxy::Subscribe(int x_measurementType, int x_dataType)
 {
 	char buf[BUFFERSIZE];
@@ -556,7 +490,9 @@ void SensorProxy::Subscribe(int x_measurementType, int x_dataType)
 	SendRawData(buf);
 }
 
-/// Send a subscription to the gateway
+/// @brief Send a message to tell we stop subscription to data
+/// @param x_measurementType the type of measurement we want to unsubscribe from (temp, light, ...)
+/// @param x_dataType the type of data we want to unsubscribe from (int, double, string)
 void SensorProxy::UnSubscribe(int x_measurementType, int x_dataType)
 {
 	char buf[BUFFERSIZE];
@@ -577,27 +513,8 @@ void SensorProxy::UnSubscribe(int x_measurementType, int x_dataType)
 	SendRawData(buf);
 }
 
-/// Return the size of the stored data
-/*int SensorProxy::GetDataSize()
-{
-	return m_sensorData.GetSize();
-}*/
-
-/// Apply a reduce operation to the stored data {size, min, max, aver, sum, stdev}
-/*double SensorProxy::Reduce(int x_mtype, int x_dataType, int x_fct)
-{
-	switch(x_dataType)
-	{
-	case TYPE_INT:
-		return m_sensorData.Reduce<int>(static_cast<enum MeasurementType>(x_mtype), static_cast<POPSensorData::POPReduceF>(x_fct));
-	case TYPE_DOUBLE:
-		return m_sensorData.Reduce<int>(static_cast<enum MeasurementType>(x_mtype), static_cast<POPSensorData::POPReduceF>(x_fct));
-	default:
-		throw POPException("No reduce operation for type " + string(explainDataType(static_cast<enum DataType>(x_dataType))));
-	}
-}*/
-
-/// Send a notification to set the gwID GW as a GW
+/// @brief Send a notification to transform a sensor into the gateway of the sensor network
+/// @param gwID the ID of the sensor that will become gateway
 void SensorProxy::SetAsGateway(int gwID)
 {
 	Notify(MSR_SET_GW, UNT_NONE, gwID);
