@@ -7,7 +7,7 @@ Examples of programmation
 ### main_example.cpp
 This file contains the a simple example on how to uses the different classes of the POPWin project. The main code of this examples is:
 
-	// Create a POPSensor object on the local machine with resource description
+    // Create a POPSensor object on the local machine with resource description
 	POPSensor popSensor("localhost", "resource.json");
 
 	// Start listening to the remote sensors

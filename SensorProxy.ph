@@ -25,7 +25,7 @@
 #include <cppconn/prepared_statement.h>
 
 #include "POPSensor.ph"
-#include "lineComm/popwin_messages.h"
+#include "gatewayMote/popwin_messages.h"
 
 
 parclass SensorProxy {

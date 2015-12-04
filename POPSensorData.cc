@@ -1,16 +1,8 @@
-/**
- *
- *
- * @author Laurent Winkler based on work by Valentin Bourqui
- * @date Dec 2014
- * @brief POPSensorData class for the POPWIN project. This object represents the data gathered from sensor.
- *
- *
- */
-
 #include "POPSensorData.h"
 
-/// Constructor
+/*!
+ * \brief Constructor
+ */
 POPSensorData::POPSensorData()
 {
 	list_iter = databaseValues.begin();
@@ -19,32 +11,48 @@ POPSensorData::POPSensorData()
 	firstNextCall = true;
 }
 
-/// Destructor
+/*!
+ * \brief Destructor
+ */
 POPSensorData::~POPSensorData()
 {
 	databaseValues.clear();
 }
 
-/// Insert data into the list
+/*!
+ * \brief Insert a new row in the list
+ * \param newMap a map to insert as a new row in the table
+ */
 void POPSensorData::insert(map< string,boost::variant< int, float, double, std::string > > newMap)
 {
 	databaseValues.push_back(newMap);
 }
 
-/// Empty the data object
+/*!
+ * \brief Empty the data object
+ */
 void POPSensorData::clear()
 {
 	databaseValues.clear();
 }
 
-/// Return the number of rows
+/*!
+ * \brief Return the number of rows of the table
+ */
 int POPSensorData::getRow()
 {
 	return databaseValues.size();
 }
 
-/// Center-aligns string within a field of width w.
-/// Pads with blank spaces to enforce alignment.
+/*!
+ * \brief Center-aligns string within a field of width w.
+ *
+ * Pads with blank spaces to enforce alignment.
+ *
+ * \param s the string to center
+ * \param w the maximum width it can occupy
+ * \return a string of width w centered with spaces
+ */
 std::string POPSensorData::center(const string s, const int w) {
 	stringstream ss, spaces;
 	int padding = w - s.size();                 // count excess room to pad
@@ -56,7 +64,9 @@ std::string POPSensorData::center(const string s, const int w) {
 	return ss.str();
 }
 
-/// Print all data received in a table format.
+/*!
+ * \brief Print all data received in a SQL like table format.
+ */
 void POPSensorData::printAll()
 {
 	string output = "|";
@@ -79,26 +89,46 @@ void POPSensorData::printAll()
 	cout << popcendl;
 }
 
-/// Insert column name (value, id...) into the list
+/*!
+ * \brief Insert new column name into the table
+ *
+ * Each column in a sql table has a name, created at the same time as the table. This method
+ * allows to tell POPSensorData object what those identifiers are.
+ *
+ * \param colName a string with the name of a new column to add
+ */
 void POPSensorData::insertColName(string colName)
 {
 	colNames[colNameSize++] = colName;
 }
 
-/// Insert column type (float, double, string...) into the list
+/*!
+ * \brief Insert a new column type into the table
+ *
+ * The type of a column is an integer but is defined in sql::Datatype in datatype.h as an enum. Most common
+ * are INTEGER, REAL, DOUBLE, VARCHAR...
+ *
+ * \param colType the SQL datatype of the column in it's integer form
+ */
 void POPSensorData::insertColType(int colType)
 {
 	colTypes[colTypeSize++] = colType;
 }
 
-/// make itnernal iterator point to first row again
+/*!
+ * \brief Make internal iterator point to first row again.
+ */
 void POPSensorData::first()
 {
 	list_iter = databaseValues.begin();
 	firstNextCall = true;
 }
 
-/// Iterate through all rows of the table of data
+/*!
+ * \brief Make internal iterator point to the next row
+ * \return true if next row available, otherwise false.
+ * \pre If data was already iterated, must be set to first row with method first().
+ */
 bool POPSensorData::next()
 {
 	if(!firstNextCall) {
@@ -115,6 +145,10 @@ bool POPSensorData::next()
 	}
 }
 
+/*!
+ * \brief Get the value of the column named columnLabel as a string, if possible
+ * \param TODO
+ */
 int POPSensorData::getInt(string columnLabel)
 {
 	map_iter = list_iter->find(columnLabel);

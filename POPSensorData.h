@@ -1,13 +1,3 @@
-/**
- *
- *
- * @author Laurent Winkler based on work by Valentin Bourqui
- * @date Dec 2014
- * @brief POPSensorData class for the POPWIN project. This object represents the data gathered from sensor.
- *
- *
- */
-
 #ifndef POPSENSOR_DATA_H
 #define POPSENSOR_DATA_H
 
@@ -31,7 +21,17 @@
 
 using namespace std;
 
-/// A serializable object that can store the results of data acquisition
+/*!
+ * \brief A serializable object that can store the results of data acquisition
+ *
+ * This class is used to encapsulate the data returned by a user SQL request in a serializable way that POP-C++ framework can use to transfer data
+ * across the network. Those POP-C++ compatibe object must inherit Serialize method from POPBase. POPSensorData is intended to work in a similar way
+ * as the MySQL object <a href="https://dev.mysql.com/doc/connector-cpp/en/connector-cpp-examples-results.html" target="_blank">ResultSet</a>.
+ *
+ * \author Laurent Winkler based on work by Valentin Bourqui
+ * \author Marco Lourenço
+ * \date 2013-2015
+ */
 class POPSensorData : public POPBase
 {
 public:

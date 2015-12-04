@@ -51,10 +51,7 @@ enum MeasurementType
 	// ... //
 };
 
-/// Translate a measurement type from text to enum
 enum MeasurementType translateMeasurementType(const char* x_str);
-
-/// Translate a measurement type enum to text
 const char* explainMeasurementType(enum MeasurementType x);
 
 /// Different types of measurement
@@ -70,10 +67,7 @@ enum MeasurementUnit
 	// ... // 
 };
 
-/// Translate a measurement unit from text to enum
 enum MeasurementUnit translateMeasurementUnit(const char* x_str);
-
-/// Translate a measurement unit enum to text
 const char* explainMeasurementUnit(enum MeasurementUnit x);
 
 /// Different types of publication
@@ -104,10 +98,7 @@ enum LedActions
 	// ... //
 };
 
-/// Translate a publication type from text to enum
 enum PublicationType translatePublicationType(const char* x_str);
-
-/// Translate a measurement unit enum to text
 const char* explainPublicationType(enum PublicationType x);
 
 /// Different types of measurement
@@ -119,10 +110,7 @@ enum DataType
 	TYPE_STRING     = 3
 };
 
-/// Translate a data type from text to enum
 enum DataType translateDataType(const char* x_str);
-
-/// Translate a data type enum to text
 const char* explainDataType(enum DataType x);
 
 //
@@ -141,17 +129,8 @@ struct SubscribeMessage
 	enum DataType        dataType;
 };
 
-/// Print message to buffer
-///
-/// @param x_msg     Incoming message
-/// @param xp_buffer Output buffer
-/// @param x_bufferSize Size of the buffer for safety
 int bufferizeSubscribeMessage(const struct SubscribeMessage* x_msg, char* xp_buffer, size_t x_bufferSize);
 
-/// Read message from buffer
-///
-/// @param xp_msg         Output: message structure
-/// @param x_buffer       Input:  message is read from here
 int unbufferizeSubscribeMessage(struct SubscribeMessage* xp_msg, const char* x_buffer);
 
 // -------------------------------------------------------------------------------- //
@@ -166,17 +145,8 @@ struct UnSubscribeMessage
 	enum DataType        dataType;
 };
 
-/// Print message to buffer
-///
-/// @param x_msg     Incoming message
-/// @param xp_buffer Output buffer
-/// @param x_bufferSize Size of the buffer for safety
 int bufferizeUnSubscribeMessage(const struct UnSubscribeMessage* x_msg, char* xp_buffer, size_t x_bufferSize);
 
-/// Read message from buffer
-/// 
-/// @param xp_msg         Output: message structure
-/// @param x_buffer       Input:  message is read from here
 int unbufferizeUnSubscribeMessage(struct UnSubscribeMessage* xp_msg, const char* x_buffer);
 
 // -------------------------------------------------------------------------------- //
@@ -202,18 +172,9 @@ struct NotifyMessage
 	char                 data[BUFFERDATASIZE];
 };
 
-/// Print message to buffer
-///
-/// @param x_msg     Incoming message
-/// @param xp_buffer Output buffer
-/// @param x_bufferSize Size of the buffer for safety
+
 int bufferizeNotifyMessage(const struct NotifyMessage* x_msg, char* xp_buffer, size_t x_bufferSize);
 
-/// Read message from buffer
-/// 
-/// @param xp_msg         Output: message structure
-/// @param x_buffer       Input:  message is read from here
-/// @param x_maxDataSize: Size of the data buffer for safety
 int unbufferizeNotifyMessage(struct NotifyMessage* x_msg, const char* x_buffer, size_t x_dataSize);
 
 // -------------------------------------------------------------------------------- //
@@ -228,18 +189,8 @@ struct PublishMessage
 
 // Note: no unpublish message for the first version. The structure will be similar to publish messages
 
-/// Print message to buffer
-///
-/// @param x_msg     Incoming message
-/// @param xp_buffer Output buffer
-/// @param x_bufferSize Size of the buffer for safety
 int bufferizePublishMessage(const struct PublishMessage* x_msg, char* xp_buffer, size_t x_bufferSize);
 
-/// Read message from buffer
-/// 
-/// @param xp_msg         Output: message structure
-/// @param x_buffer       Input:  message is read from here
-/// @param x_maxDataSize: Size of the data buffer for safety
 int unbufferizePublishMessage(struct PublishMessage* xp_msg, const char* x_buffer, size_t x_dataSize);
 
 // -------------------------------------------------------------------------------- //
@@ -252,23 +203,12 @@ struct UnPublishMessage
 	unsigned short       id;               // not mandatory, for convenience
 };
 
-/// Print message to buffer
-///
-/// @param x_msg     Incoming message
-/// @param xp_buffer Output buffer
-/// @param x_bufferSize Size of the buffer for safety
 int bufferizeUnPublishMessage(const struct UnPublishMessage* x_msg, char* xp_buffer, size_t x_bufferSize);
 
-/// Read message from buffer
-///
-/// @param xp_msg         Output: message structure
-/// @param x_buffer       Input:  message is read from here
-/// @param x_maxDataSize: Size of the data buffer for safety
 int unbufferizeUnPublishMessage(struct UnPublishMessage* xp_msg, const char* x_buffer, size_t x_dataSize);
 
 // -------------------------------------------------------------------------------- //
 
-/// Retrieve the type of the message (first 2 bytes)
 enum MessageType getMessageType(const char* x_msg);
 
 

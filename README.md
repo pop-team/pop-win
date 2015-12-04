@@ -1,7 +1,7 @@
 POPWin
 ======
-- **Author:** Laurent Winkler
-- **Date:**   Decembre 2014
+- **Authors:** Laurent Winkler, Marco Lourenço
+- **Date:**    November 2015
 
 This document contains a general description of the POPWin project, specifications and examples of programmation. 
 
@@ -10,6 +10,7 @@ Contacts
 - EIFR
 	- Pierre Kuonen <pierre.kuonen@hefr.ch>
 	- Laurent Winkler <laurent.winkler@hefr.ch>
+	- Marco Lourenço <marco.lourenco@hefr.ch>
 	- Lu Yao <yao.lu@edu.hefr.ch>
 - UNI GE
 	- Pierre Leone <Pierre.Leone@unige.ch>
@@ -70,11 +71,9 @@ To start the main example of POPWin:
 3. Compile the files in directory **gatewayMote/** and upload them to your gateway sensor
 4. Compile and launch POPWin main application
 
-```
-	cd pop-win
-	make
-	popcrun objects.map ./main resources.json
-```
+        cd pop-win
+        make
+        popcrun objects.map ./main resources.json
 
 For details on installation and troubleshooting please look at the [development documentation](INSTALL.md). 
 

@@ -14,9 +14,9 @@
  *
  */
 
-#define CONTIKIv3 // comment for Contiki 2.6 and 2.7
-//#define XM1000_FLASH // uncomment to flash code for XM1000 sensor
-#define DRW_FLASH 0 // 0 for HEIA-FR test code, 1 for DRW code (UNIGE)
+#define CONTIKIv3 /*!< Enable compatibility with Contiki 3.0, comment for Contiki 2.6 and 2.7 */
+//#define XM1000_FLASH /*!< Flash code for XM1000 sensor, comment to flash Z1 sensor */
+#define DRW_FLASH 0 /*!< 0 for HEIA-FR test code, 1 for DRW code (UNIGE) */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -50,6 +50,8 @@
 #include "DRW.h"
 
 
+/*! \file */
+
 /****************************/
 /*** MACROS                 */
 /****************************/
@@ -63,8 +65,8 @@
 
 #define ABS(x) ((x) < 0 ? (-x) : (x))
 
-//#define EN_LOGS 1 // enable log messages, comment to disable
-//#define EN_DEBUG 1 // enable debug messages, comment to disable
+//#define EN_LOGS 1 /*!< enable log messages, comment to disable */
+//#define EN_DEBUG 1 /*!< enable debug messages, comment to disable */
 
 /****************************/
 /*** DECLARE FUNCTIONS      */
@@ -92,7 +94,10 @@ void logging(const char *format,...);
 char g_debug   = 1; // Toggle debug mode
 int g_gateway = DEFAULT_GATEWAY_ID; // ID of the gateway
 
-// send a subscription message
+/*!
+ * \brief send a subscription message through the serial line
+ * \param msg the SubscribeMessage to send
+ */
 void gwSendSubscriptionSerial(const struct SubscribeMessage* msg)
 {
 	char buf[BUFFERSIZE];
@@ -103,7 +108,10 @@ void gwSendSubscriptionSerial(const struct SubscribeMessage* msg)
 	printf("%s\n", buf);
 }
 
-// send a notification message: Only for use on the remote gateway
+/*!
+ * \brief Send a notification message: Only for use on the remote gateway
+ * \param msg the NotifyMessage to send
+ */
 void gwSendNotificationSerial(const struct NotifyMessage* msg)
 {
 	char buf[BUFFERSIZE];
@@ -115,7 +123,10 @@ void gwSendNotificationSerial(const struct NotifyMessage* msg)
 	printf("%s\n", buf);
 }
 
-// send a publication message: Only for use on the remote gateway
+/*!
+* \brief Send a publication message: Only for use on the remote gateway
+* \param msg the PublishMessage to send
+*/
 void gwSendPublicationSerial(const struct PublishMessage* msg)
 {
 	char buf[BUFFERSIZE];
@@ -127,18 +138,22 @@ void gwSendPublicationSerial(const struct PublishMessage* msg)
 	printf("%s\n", buf);
 }
 
-// send notification via multi hop from sensor
 void sensorSendNotification(struct NotifyMessage* msg);
 
-
-/// Return the id of the node
+/*!
+* \brief Return the id of the node
+* \return the id of the node
+*/
 int get_id()
 {
 	// Id is computed from rime address (for messaging)
 	return linkaddr_node_addr.u8[0];
 }
 
-/// Log message (handled as a notification of type string): Only for use on the remote sensor
+/*!
+* \brief Log message (handled as a notification of type string): Only for use on the remote sensor
+* \param format format of the log message
+*/
 void logging(const char *format,...)
 {
 
@@ -160,16 +175,22 @@ void logging(const char *format,...)
 
 /*---------------------------------------------------------------------------*/
 /* We first declare our processes. */
+/*! \brief Declare the contiki process that will handle communication to/from the gateway */
 PROCESS(gateway_communication_process , "Communication to/from the gateway");
+/*! \brief Declare the contiki process that will handle pressing a button on the sensor */
 PROCESS(button_pressed                , "Button pressed");
+/*! \brief Declare the contiki process that will handle the communication of the DRW system */
 PROCESS(communication_process         , "Communication process");
+/*! \brief Declare the contiki process that will handle the DRW system */
 PROCESS(drw                           , "Directional Random Walk");
 //PROCESS(sensor_events                 , "Send events based on sensor values");
+/*! \brief Declare the contiki process that will handle the multihop announcing (find neighbors) */
 PROCESS(multihop_announce             , "Multihop communication: init and announce periodically");
+/*! \brief Declare the contiki process that will handle sensing data and transmit via multihop */
 PROCESS(multihop_sense                , "Take measurements and transmit via multihop");
 
 
-/* The AUTOSTART_PROCESSES() definition specifices what processes to
+/* The AUTOSTART_PROCESSES() definition specifies what processes to
    start when this module is loaded. We put our processes there. */
 
 // note: we can choose here which version of the code we want to run:
@@ -183,6 +204,11 @@ AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &communicat
 AUTOSTART_PROCESSES(&gateway_communication_process, &multihop_announce, &multihop_sense);
 #endif
 
+/*!
+ * \brief The method that will handle the received messages from a broadcast
+ * \param c A pointer to a struct broadcast_conn
+ * \param from A pointer to a linkaddr_t that defines the sender of broadcast
+ */
 static void
 broadcast_recvGWM(struct broadcast_conn *c, const linkaddr_t *from)
 {
@@ -199,7 +225,7 @@ static const struct broadcast_callbacks broadcast_callGWM = {broadcast_recvGWM};
 /********* RECEIVE MSG FROM GATEWAY **********/
 /****************************/
 
-
+/*! \brief The contiki process thread that handles communication to/from the gateway */
 PROCESS_THREAD(gateway_communication_process, ev, data)
 {   
 	PROCESS_EXITHANDLER(goto exit);
@@ -252,8 +278,10 @@ PROCESS_THREAD(gateway_communication_process, ev, data)
 	PROCESS_END();
 }
 
-/*
- * Handle any incoming message on gateway
+/*!
+ * \brief Handle any incoming messages
+ * \param data pointer to where data is stored (in chars)
+ * \param fromProxy a char indicating if message comes from SensorProxy or not
  */
 void gwHandleMessage(const char* data, char fromProxy)
 {
@@ -277,8 +305,10 @@ void gwHandleMessage(const char* data, char fromProxy)
 	}
 }
 
-/*
- * Handle notification messages from gateway
+/*!
+ * \brief Handle notification messages
+ * \param data pointer to where data is stored (in chars)
+ * \param fromProxy a char indicating if message comes from SensorProxy or not
  */
 void gwHandleNotification(const char* data, char fromProxy)
 {
@@ -370,8 +400,10 @@ void gwHandleNotification(const char* data, char fromProxy)
 	else gwSendNotificationSerial(&msg);
 }
 
-/*
- * Handle notification messages from gateway
+/*!
+ * \brief Handle subscription messages
+ * \param data pointer to where data is stored (in chars)
+ * \param fromProxy a char indicating if message comes from SensorProxy or not
  */
 void gwHandleSubscription(const char* data, char fromProxy)
 {
@@ -395,8 +427,10 @@ void gwHandleSubscription(const char* data, char fromProxy)
 	else gwSendSubscriptionSerial(&msg);
 }
 
-/*
- * Handle publication messages from gateway
+/*!
+ * \brief Handle publication messages
+ * \param data pointer to where data is stored (in chars)
+ * \param fromProxy a char indicating if message comes from SensorProxy or not
  */
 void gwHandlePublication(const char* data, char fromProxy)
 {
@@ -427,15 +461,19 @@ void gwHandlePublication(const char* data, char fromProxy)
 	}
 }
 
-/*
- * Print the id of the node
+/*!
+ * \brief Print the id of the node
  */
 void print_id(){
 	LOG("ID of node is %d (= %d.%d)", get_id(), linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
 }
 
-/*
- * Design the mote as a gateway
+/*!
+ * \brief Set the ID of the gateway for this sensor
+ *
+ * If the given ID of the gateway equals the ID of this sensor, this sensors becomes the gateway.
+ *
+ * \param id The id of the gateway
  */
 void set_as_gateway(int id){
 	g_gateway = id; // !g_gateway;
@@ -444,6 +482,7 @@ void set_as_gateway(int id){
 
 #define CHANNEL 135
 
+/*! \brief List of neighbors of a sensor */
 struct example_neighbor {
 	struct example_neighbor *next;
 	linkaddr_t addr;
@@ -455,7 +494,9 @@ struct example_neighbor {
 LIST(neighbor_table);
 MEMB(neighbor_mem, struct example_neighbor, MAX_NEIGHBORS);
 /*---------------------------------------------------------------------------*/
-/*
+/*!
+ * \brief Remove a neighbor after timeout.
+ *
  * This function is called by the ctimer present in each neighbor
  * table entry. The function removes the neighbor from the table
  * because it has become too old.
@@ -469,7 +510,7 @@ remove_neighbor(void *n)
 	memb_free(&neighbor_mem, e);
 }
 /*---------------------------------------------------------------------------*/
-/*
+/*!
  * This function is called when an incoming announcement arrives. The
  * function checks the neighbor table to see if the neighbor is
  * already present in the list. If the neighbor is not present in the
@@ -505,7 +546,7 @@ received_announcement(struct announcement *a,
 }
 static struct announcement example_announcement;
 /*---------------------------------------------------------------------------*/
-/*
+/*!
  * This function is called at the final recepient of the message.
  */
 static void
@@ -515,7 +556,7 @@ recv(struct multihop_conn *c, const linkaddr_t *sender,
 {
 	gwHandleMessage((char *)packetbuf_dataptr(), 0);
 }
-/*
+/*!
  * This function is called to forward a packet. The function picks a
  * random neighbor from the neighbor list and returns its address. The
  * multihop layer sends the packet to this address. If no neighbor is
@@ -549,6 +590,10 @@ forward(struct multihop_conn *c,
 static const struct multihop_callbacks multihop_call = {recv, forward};
 static struct multihop_conn multihop;
 
+/*!
+ * \brief Use multihop or serial line to send a message
+ * \param msg A NotifyMessage to send
+ */
 void sensorSendNotification(struct NotifyMessage* msg)
 {
 	// declare destination
@@ -577,6 +622,13 @@ void sensorSendNotification(struct NotifyMessage* msg)
 	}
 }
 
+/*!
+ * \brief Get LEDs value
+ *
+ * 0 : all off | 1 : green on | 2 : blue on | 4 : red on | or any OR combination of those 3 options
+ *
+ * \return the value of the RGB LEDs encoded in one char
+ */
 unsigned char sense_leds()
 {
 	unsigned char value = leds_get();
@@ -584,9 +636,9 @@ unsigned char sense_leds()
 }
 
 /*---------------------------------------------------------------------------*/
-// For communication based on multihop: init and announce periodically
-
-
+/*!
+ * \brief For communication based on multihop: init and announce periodically
+ */
 PROCESS_THREAD(multihop_announce, ev, data)
 {
 	PROCESS_EXITHANDLER(multihop_close(&multihop);)
@@ -627,8 +679,9 @@ PROCESS_THREAD(multihop_announce, ev, data)
 }
 
 /*---------------------------------------------------------------------------*/
-// For communication based on multihop: read sensor data
-
+/*!
+ * \brief For communication based on multihop: read sensor data
+ */
 PROCESS_THREAD(multihop_sense, ev, data)
 {
 	//PROCESS_EXITHANDLER(multihop_close(&multihop);)
@@ -727,8 +780,9 @@ PROCESS_THREAD(multihop_sense, ev, data)
 }
 
 /*---------------------------------------------------------------------------*/
-// Button pressed routine
-
+/*!
+ * \brief Button pressed routine
+ */
 PROCESS_THREAD(button_pressed, ev, data)
 {   
 	PROCESS_EXITHANDLER(goto exit);

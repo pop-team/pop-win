@@ -24,7 +24,7 @@
 
 #include <map>
 #include <string>
-#include "popwin_messages.h"
+#include "gatewayMote/popwin_messages.h"
 #include "POPSensorData.h"
 
 class SensorProxy;
@@ -70,7 +70,7 @@ private:
 	void Initialize(const std::string& x_resourceFileName);
 
 	/// Send a subscription to sensors
-	void Subscribe(int x_measurementType, Datatype x_dataType);
+	void Subscribe(int x_measurementType, int x_dataType);
 
 	/// Start listening on serial line
 	void StartListening();

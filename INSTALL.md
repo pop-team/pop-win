@@ -136,12 +136,10 @@ Type 'y' and enter and do not forget to add POPC_LOCATION to your path as specif
 #### Installation of Contiki
 Contiki must be installed as mentionned above. The version to install is 3.0.
 
-```
 	cd ~
 	git clone git://github.com/contiki-os/contiki.git
 	cd contiki
 	git checkout release-3-0
-```
 
 Do not forget to install the mentionned patch for **cpu/msp430/Makefile.msp430** if you choose to run the 2.6 version.
 
@@ -149,13 +147,11 @@ Do not forget to install the mentionned patch for **cpu/msp430/Makefile.msp430**
 
 When prompted for MySQL admin password during mysql-server-5.6 install, choose one and remember it !
 
-```
 	sudo apt-get install libjsoncpp-dev libmysqlcppconn-dev mysql-server-5.6
 	cd ~
 	git clone https://github.com/pop-team/pop-win.git
 	cd pop-win
 	make clean && make
-```
 
 #### Install the MySQL workbench and setup MySQL tables
 
@@ -163,71 +159,51 @@ When prompted for MySQL admin password during mysql-server-5.6 install, choose o
 - Or use direct link for workbench 6.3.5 for Ubuntu 14.04 x64 : http://bit.ly/1MZ72tL
 - Then execute (in the right directory) :
 
-```	
-	sudo dpkg -i mysql-workbench-community-6.3.5-1ubu1404-amd64.deb
-	sudo apt-get -f install
-```
+	   sudo dpkg -i mysql-workbench-community-6.3.5-1ubu1404-amd64.deb
+	   sudo apt-get -f install
 
 - Launch workbench
 
-```
-	mysql-workbench &
-```
+	   mysql-workbench &
 
 - Connect to DB with PWD created when mysql-server-5.6 was installed
 - Create schema with query :
 
-```
-	CREATE SCHEMA `popwin_schema` ;
-```
+	   CREATE SCHEMA `popwin_schema` ;
 
 - Reconnect to DB/refresh if needed for schema to appear, make it default (right-click on name) then execute :
 
-```
-	CREATE TABLE `POPSensorData` (`idPOPSensorData` int(11) NOT NULL AUTO_INCREMENT,
-	`type` varchar(45) DEFAULT NULL, `genre` varchar(45) DEFAULT NULL,
-  	`location` varchar(45) DEFAULT NULL, `sensorID` int(11) NOT NULL,
-  	`value` varchar(45) NOT NULL, `unit` varchar(45) DEFAULT NULL,
-  	PRIMARY KEY (`idPOPSensorData`)) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-```
+	   CREATE TABLE `POPSensorData` (`idPOPSensorData` int(11) NOT NULL AUTO_INCREMENT,
+	   `type` varchar(45) DEFAULT NULL, `genre` varchar(45) DEFAULT NULL,
+  	   `location` varchar(45) DEFAULT NULL, `sensorID` int(11) NOT NULL,
+  	   `value` varchar(45) NOT NULL, `unit` varchar(45) DEFAULT NULL,
+  	   PRIMARY KEY (`idPOPSensorData`)) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 #### Install the application on the gateway mote
 - Connect the mote to your PC. In our setup we use a Zolertia z1 mote
 - Go to the **gatewayMote/** directory inside popwin
 - Modify the Makefile to point to your contiki directory
 
-Makefile:
+	   CONTIKI=$(HOME)/contiki/
+	   include $(CONTIKI)/Makefile.include
 
-```
-	CONTIKI=$(HOME)/contiki/
-	include $(CONTIKI)/Makefile.include
-```
+- Make sure XM1000_FLASH is commented in **gatewayMote.c** if you want to flash for Z1 :
 
-Make sure XM1000_FLASH is commented in **gatewayMote.c** if you want to flash for Z1 :
-
-```
-	//#define XM1000_FLASH
-```
+	   //#define XM1000_FLASH
 
 - Compile and upload to Z1 sensor (use TARGET=xm1000 for xm1000 sensors).
 
-```
-	make TARGET=z1 clean
-	make TARGET=z1 gatewayMote
-	make TARGET=z1 gatewayMote.upload
-```
+	   make TARGET=z1 clean
+	   make TARGET=z1 gatewayMote
+	   make TARGET=z1 gatewayMote.upload
 
 #### Start the demo on PC
 In your root POPWin directory type:
 
-
-```
 	make sql
-```
 
 This should give you the following output:
 
-```
 	=======================================================================================
  	POPWin demo: Launching the demo                                                       
 	=======================================================================================
@@ -242,8 +218,6 @@ This should give you the following output:
 	Connecting to db
 
 	Press key to continue
-
-```
 
 Wait for some values to be inserted in the DB and then press a keyboard key to show values from DB. Feel free to change main_sql.cc to test other SQL queries (~line 53).
 
@@ -463,15 +437,13 @@ Limitations
 - **Broadcast of messages**: Broadcast of message is working only in HEIA_FR code (not DRW) and mainly for test to light some LEDs.
 - **Full implementation of routing** : So far the routing of message is implemented twice: the first implementation is a full implementation made by UNIGE (slow), the second is a faster implementation using the libraries of Contiki (fast). The second implementation was used for tests.
 
-```
-	// note: we can choose here which version of the code we want to run:
-	\#if DRW_FLASH
-	// Processes to run with routing algo of UNIGE
-	AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &communication_process, &drw, &sensor_events); // Processes to run with algo of UNIGE
-	\#else
-	// Processes to use the routing of messages given by the multihop example
-	AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &multihop_announce, &multihop_sense);
-	\#endif
-```
+	   // note: we can choose here which version of the code we want to run:
+	   \#if DRW_FLASH
+	   // Processes to run with routing algo of UNIGE
+	   AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &communication_process, &drw, &sensor_events); // Processes to run with algo of UNIGE
+	   \#else
+	   // Processes to use the routing of messages given by the multihop example
+	   AUTOSTART_PROCESSES(&gateway_communication_process, &button_pressed, &multihop_announce, &multihop_sense);
+	   \#endif
 
 - **SQL queries**: SQL queries of type SELECT or TRUNCATE work as expected. Types like UPDATE will work but if you update the value for a LED, the LED won't change color or go on/off. Instead you simply changed a value in the DB.

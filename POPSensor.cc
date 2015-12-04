@@ -317,7 +317,7 @@ void POPSensor::Notify(int x_genre, int x_unit, const std::string& x_message)
 /// @brief Subscribe to messages of given type and data type
 /// @param x_genre the genre of data (temp, light, humidity, ...)
 /// @param x_dataType the type of data
-void POPSensor::Subscribe(int x_genre, DataType x_dataType)
+void POPSensor::Subscribe(int x_genre, int x_dataType)
 {
 	for(auto it : m_sensorsProxy)
 	{
@@ -326,7 +326,7 @@ void POPSensor::Subscribe(int x_genre, DataType x_dataType)
 }
 
 /// @brief (Un)Subscribe to all resources contained in resource.json
-///
+/// @param sub a boolean to choose between sub (true) or unsubscribe (false)
 void POPSensor::SubscribeToResources(bool sub)
 {
 	if(m_jsonResources.empty())

@@ -5,19 +5,26 @@
  * @author Marco Lourenço <kriegalex@gmail.com>.
  */
 
-//----------------------------------------------------------------- 
+//-----------------------------------------------------------------
+/*! \file */
 /// This file contains all messages and format that are common to both the PC and the remote sensor
 
 #include <stdio.h>
 #include <string.h>
 #include "popwin_messages.h"
 
-/// TYPES OF MESSAGES ///
+// TYPES OF MESSAGES //
 
 // -------------------------------------------------------------------------------- //
 // Subscription message
 
-// Print message to buffer
+/*!
+ * \brief Print message to buffer
+ *
+ * \param x_msg         input SubscribeMessage msg
+ * \param xp_buffer     output buffer
+ * \param x_bufferSize  size_t size of the buffer for safety
+ */
 int bufferizeSubscribeMessage(const struct SubscribeMessage* x_msg, char* xp_buffer, size_t x_bufferSize)
 {
 	int ret = snprintf(xp_buffer, x_bufferSize, "%02x %02x %02x %04x",
@@ -29,7 +36,10 @@ int bufferizeSubscribeMessage(const struct SubscribeMessage* x_msg, char* xp_buf
 	return ret > 0 && ret < x_bufferSize;
 }
 
-// Read message from buffer
+/// \brief Read message from buffer
+///
+/// @param xp_msg         Output: message structure
+/// @param x_buffer       Input:  message is read from here
 int unbufferizeSubscribeMessage(struct SubscribeMessage* xp_msg, const char* x_buffer)
 {
 	memset(xp_msg, 0, sizeof(xp_msg));
@@ -56,7 +66,11 @@ int unbufferizeSubscribeMessage(struct SubscribeMessage* xp_msg, const char* x_b
 // -------------------------------------------------------------------------------- //
 // UnSubscription message
 
-// Print message to buffer
+/// \brief Print message to buffer
+///
+/// @param x_msg     Incoming UnSubscribeMessage message
+/// @param xp_buffer Output buffer
+/// @param x_bufferSize Size of the buffer for safety
 int bufferizeUnSubscribeMessage(const struct UnSubscribeMessage* x_msg, char* xp_buffer, size_t x_bufferSize)
 {
 	int ret = snprintf(xp_buffer, x_bufferSize, "%02x %02x %02x %04x",
@@ -68,7 +82,10 @@ int bufferizeUnSubscribeMessage(const struct UnSubscribeMessage* x_msg, char* xp
 	return ret > 0 && ret < x_bufferSize;
 }
 
-// Read message from buffer
+/// \brief Read message from buffer
+///
+/// @param xp_msg         Output: message structure
+/// @param x_buffer       Input:  message is read from here
 int unbufferizeUnSubscribeMessage(struct UnSubscribeMessage* xp_msg, const char* x_buffer)
 {
 	memset(xp_msg, 0, sizeof(xp_msg));
@@ -95,7 +112,11 @@ int unbufferizeUnSubscribeMessage(struct UnSubscribeMessage* xp_msg, const char*
 // -------------------------------------------------------------------------------- //
 // Notification message
 
-// Print message to buffer
+/// \brief Print message to buffer
+///
+/// @param x_msg     Incoming message
+/// @param xp_buffer Output buffer
+/// @param x_bufferSize Size of the buffer for safety
 int bufferizeNotifyMessage(const struct NotifyMessage* x_msg, char* xp_buffer, size_t x_bufferSize)
 {
 	// note: sizeof(size_t) = 2 for contiki but we use 4 for compatibility
@@ -114,7 +135,11 @@ int bufferizeNotifyMessage(const struct NotifyMessage* x_msg, char* xp_buffer, s
 	return ret > 0 && ret < x_bufferSize;
 }
 
-/// Read message from buffer
+/// \brief Read message from buffer
+///
+/// @param xp_msg         Output: message structure
+/// @param x_buffer       Input:  message is read from here
+/// @param x_maxDataSize: Size of the data buffer for safety
 int unbufferizeNotifyMessage(struct NotifyMessage* xp_msg, const char* x_buffer, size_t x_maxDataSize)
 {
 	memset(xp_msg, 0, sizeof(xp_msg));
@@ -168,7 +193,11 @@ int unbufferizeNotifyMessage(struct NotifyMessage* xp_msg, const char* x_buffer,
 // -------------------------------------------------------------------------------- //
 // Publication message
 
-// Print message to buffer
+/// \brief Print message to buffer
+///
+/// @param x_msg     Incoming message
+/// @param xp_buffer Output buffer
+/// @param x_bufferSize Size of the buffer for safety
 int bufferizePublishMessage(const struct PublishMessage* x_msg, char* xp_buffer, size_t x_bufferSize)
 {
 	// note: sizeof(size_t) = 2 for contiki but we use 4 for compatibility
@@ -180,7 +209,11 @@ int bufferizePublishMessage(const struct PublishMessage* x_msg, char* xp_buffer,
 	return ret > 0 && ret < x_bufferSize;
 }
 
-// Read message from buffer
+/// \brief Read message from buffer
+///
+/// @param xp_msg         Output: message structure
+/// @param x_buffer       Input:  message is read from here
+/// @param x_maxDataSize: Size of the data buffer for safety
 int unbufferizePublishMessage(struct PublishMessage* xp_msg, const char* x_buffer, size_t x_maxDataSize)
 {
 	//printf("Unbuffering from buffer size: %d\n",strlen(x_buffer));
@@ -206,7 +239,11 @@ int unbufferizePublishMessage(struct PublishMessage* xp_msg, const char* x_buffe
 // -------------------------------------------------------------------------------- //
 // UnPublication message
 
-// Print message to buffer
+/// \brief Print message to buffer
+///
+/// @param x_msg     Incoming message
+/// @param xp_buffer Output buffer
+/// @param x_bufferSize Size of the buffer for safety
 int bufferizeUnPublishMessage(const struct UnPublishMessage* x_msg, char* xp_buffer, size_t x_bufferSize)
 {
 	// note: sizeof(size_t) = 2 for contiki but we use 4 for compatibility
@@ -218,7 +255,11 @@ int bufferizeUnPublishMessage(const struct UnPublishMessage* x_msg, char* xp_buf
 	return ret > 0 && ret < x_bufferSize;
 }
 
-// Read message from buffer
+/// \brief Read message from buffer
+///
+/// @param xp_msg         Output: message structure
+/// @param x_buffer       Input:  message is read from here
+/// @param x_maxDataSize: Size of the data buffer for safety
 int unbufferizeUnPublishMessage(struct UnPublishMessage* xp_msg, const char* x_buffer, size_t x_maxDataSize)
 {
 	//printf("Unbuffering from buffer size: %d\n",strlen(x_buffer));
@@ -243,7 +284,7 @@ int unbufferizeUnPublishMessage(struct UnPublishMessage* xp_msg, const char* x_b
 
 // -------------------------------------------------------------------------------- //
 
-// Retrieve the type of the message (first 2 bytes)
+/// Retrieve the type of the message (first 2 bytes)
 enum MessageType getMessageType(const char* x_msg)
 {
 	int type = 0;
@@ -256,7 +297,7 @@ enum MessageType getMessageType(const char* x_msg)
 
 // -------------------------------------------------------------------------------- //
 
-// Return measurement type from string
+/// Translate a measurement type from text to enum
 enum MeasurementType translateMeasurementType(const char* x_str)
 {
 	if(!strcmp(x_str, "logging"))      return MSR_LOG;
@@ -277,7 +318,7 @@ enum MeasurementType translateMeasurementType(const char* x_str)
 	return MSR_LOG;
 }
 
-// String to explain measurement type
+/// Translate a measurement type enum to text
 const char* explainMeasurementType(enum MeasurementType x)
 {
 	switch(x)
@@ -300,7 +341,7 @@ const char* explainMeasurementType(enum MeasurementType x)
 	return "unknown";
 }
 
-// Return measurement units from string
+/// Translate a measurement unit from text to enum
 enum MeasurementUnit translateMeasurementUnit(const char* x_str)
 {
 	if(!strcmp(x_str, "no unit"))     return UNT_NONE;
@@ -316,7 +357,7 @@ enum MeasurementUnit translateMeasurementUnit(const char* x_str)
 	return UNT_NONE;
 }
 
-// String to explain measurement units
+/// Translate a measurement unit enum to text
 const char* explainMeasurementUnit(enum MeasurementUnit x)
 {
 	switch(x)
@@ -333,7 +374,7 @@ const char* explainMeasurementUnit(enum MeasurementUnit x)
 	return "unknown";
 }
 
-// Return data types from string
+/// Translate a data type from text to enum
 enum DataType translateDataType(const char* x_str)
 {
 	if(!strcmp(x_str, "unknown"))     return TYPE_UNKNOWN;
@@ -347,7 +388,7 @@ enum DataType translateDataType(const char* x_str)
 	return TYPE_UNKNOWN;
 }
 
-// String to explain data types
+/// Translate a data type enum to text
 const char* explainDataType(enum DataType x)
 {
 	switch(x)
@@ -361,7 +402,7 @@ const char* explainDataType(enum DataType x)
 	return "unknown";
 }
 
-// Return data types from string
+/// Translate a publication type from text to enum
 enum PublicationType translatePublicationType(const char* x_str)
 {
 	if(!strcmp(x_str, "led"))         return PUB_LED;
@@ -374,7 +415,7 @@ enum PublicationType translatePublicationType(const char* x_str)
 	return PUB_UNKNOWN;
 }
 
-// String to explain data types
+/// Translate a measurement unit enum to text
 const char* explainPublicationType(enum PublicationType x)
 {
 	switch(x)
