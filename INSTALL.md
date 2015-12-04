@@ -62,7 +62,7 @@ As explained on:
 
 Dependencies to install (on Ubuntu):
 
-	sudo apt-get install build-essential binutils-msp430 gcc-msp430 msp430-libc binutils-avr gcc-avr gdb-avr avr-libc avrdude openjdk-7-jdk openjdk-7-jre ant libncurses5-dev doxygen git
+    sudo apt-get install build-essential binutils-msp430 gcc-msp430 msp430-libc binutils-avr gcc-avr gdb-avr avr-libc avrdude openjdk-7-jdk openjdk-7-jre ant libncurses5-dev doxygen git
 
 Get the sources and compiling the example natively
 
@@ -122,17 +122,15 @@ Downloading the 3.0 release version of POP-C++.
 
 In case of problem with the installation, please refer to the README file contained in POP-C++.
 
-```
-	sudo apt-get install git-core g++ flex bison cxxtest zlib1g-dev cmake
-	cd ~
-	git clone https://github.com/pop-team/pop-cpp.git
-	cd pop-cpp
-	git checkout -b release3.0 tags/3.0
-	cmake .
-	make
-	sudo make install
+    sudo apt-get install git-core g++ flex bison cxxtest zlib1g-dev cmake
+    cd ~
+    git clone https://github.com/pop-team/pop-cpp.git
+    cd pop-cpp
+    git checkout -b release3.0 tags/3.0
+    cmake .
+    make
+    sudo make install
 
-```
 Type 'y' and enter and do not forget to add POPC_LOCATION to your path as specified at the end of the installation. Then restart another shell.
 
 #### Installation of Contiki
