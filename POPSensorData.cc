@@ -30,6 +30,8 @@ void POPSensorData::insert(map< string,boost::variant< int, float, double, std::
 
 /*!
  * \brief Empty the data object
+ *
+ * This does not affect the database, only the object
  */
 void POPSensorData::clear()
 {
@@ -146,8 +148,9 @@ bool POPSensorData::next()
 }
 
 /*!
- * \brief Get the value of the column named columnLabel as a string, if possible
- * \param TODO
+ * \brief Get the integer value of the column named columnLabel from the current row
+ * \param columnLabel the name of the column as a string
+ * \return the integer value from the requested column or 0 if not found
  */
 int POPSensorData::getInt(string columnLabel)
 {
@@ -171,11 +174,22 @@ int POPSensorData::getInt(string columnLabel)
 	else return 0;
 }
 
+/*!
+ * \brief Get the value of the column at index columnIndex from the current row
+ * \param columnIndex the integer index of the column (from SQL table structure)
+ * \return the int value from the requested column or 0 if not found
+ * \warning index goes from 1 to N (cf. mysql usage of ResultSet)
+ */
 int POPSensorData::getInt(int columnIndex)
 {
 	return getInt(colNames[columnIndex-1]);
 }
 
+/*!
+ * \brief Get the string value of the column named columnLabel from the current row
+ * \param columnLabel the name of the column as a string
+ * \return the string value from the requested column or "" if not found
+ */
 string POPSensorData::getString(string columnLabel)
 {
 	map_iter = list_iter->find(columnLabel);
@@ -198,11 +212,22 @@ string POPSensorData::getString(string columnLabel)
 	return "";
 }
 
+/*!
+ * \brief Get the string value of the column at index columnIndex from the current row
+ * \param columnIndex the integer index of the column (from SQL table structure)
+ * \return the string value from the requested column or "" if not found
+ * \warning index goes from 1 to N (cf. mysql usage of ResultSet)
+ */
 string POPSensorData::getString(int columnIndex)
 {
 	return getString(colNames[columnIndex-1]);
 }
 
+/*!
+ * \brief Get the float value of the column named columnLabel from the current row
+ * \param columnLabel the name of the column as a string
+ * \return the float value from the requested column or 0.0f if not found
+ */
 float POPSensorData::getFloat(string columnLabel)
 {
 	map_iter = list_iter->find(columnLabel);
@@ -227,11 +252,22 @@ float POPSensorData::getFloat(string columnLabel)
 	}
 }
 
+/*!
+ * \brief Get the float value of the column at index columnIndex from the current row
+ * \param columnIndex the integer index of the column (from SQL table structure)
+ * \return the float value from the requested column or 0.0f if not found
+ * \warning index goes from 1 to N (cf. mysql usage of ResultSet)
+ */
 float POPSensorData::getFloat(int columnIndex)
 {
 	return getFloat(colNames[columnIndex-1]);
 }
 
+/*!
+ * \brief Get the double value of the column named columnLabel from the current row
+ * \param columnLabel the name of the column as a string
+ * \return the double value from the requested column or 0.0 if not found
+ */
 double POPSensorData::getDouble(string columnLabel)
 {
 	map_iter = list_iter->find(columnLabel);
@@ -254,11 +290,26 @@ double POPSensorData::getDouble(string columnLabel)
 	else return 0.0;
 }
 
+/*!
+ * \brief Get the double value of the column at index columnIndex from the current row
+ * \param columnIndex the integer index of the column (from SQL table structure)
+ * \return the double value from the requested column or 0.0 if not found
+ * \warning index goes from 1 to N (cf. mysql usage of ResultSet)
+ */
 double POPSensorData::getDouble(int columnIndex)
 {
 	return getDouble(colNames[columnIndex-1]);
 }
 
+/*!
+ * \brief Serialize the object POPSensorData
+ *
+ * This method is inherited from POPBase and allows this object to be automatically serialized when transferred
+ * over network by POP-C++ framework.
+ *
+ * \param buf The POP buffer where data is serialized
+ * \param pack Choose between serialize or unserialize
+ */
 void POPSensorData::Serialize(POPBuffer &buf, bool pack)
 {
 	if(pack)

@@ -73,7 +73,7 @@ To start the main example of POPWin:
 
         cd pop-win
         make
-        popcrun objects.map ./main resources.json
+        popcrun objects.map ./main_sql resources.json
 
 For details on installation and troubleshooting please look at the [development documentation](INSTALL.md). 
 

@@ -110,7 +110,7 @@ void POPSensor::Initialize(const std::string& x_resourceFileName)
 
 		string connectionType = root["gateways"][i].get("connection", "<not found>").asString();
 		string url            = root["gateways"][i].get("url", "localhost").asString();
-		// TODO: redesigne because in theory multiple GW per POPSensor possible, but not now
+		// TODO: redesign because in theory multiple GW per POPSensor possible, but not now
 		string gwID			  = root["gateways"][i].get("id", "0").asString();
 
 		if(connectionType == "usb")
@@ -136,7 +136,6 @@ void POPSensor::Initialize(const std::string& x_resourceFileName)
 		cout<<"Created "<<m_sensorsProxy.size()<<" sensor proxy objects"<<popcendl;
 		for(auto it : m_sensorsProxy) // should be only one for now, else error
 		{
-			//it->TestSQL();
 			it->Publish(MSR_SET_GW);
 			it->SetAsGateway(stoi(gwID));
 		}

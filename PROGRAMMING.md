@@ -4,26 +4,20 @@ Programming manual
 Examples of programmation
 -------------------------
 
-### main_example.cpp
+### main_sql.cpp
 This file contains the a simple example on how to uses the different classes of the POPWin project. The main code of this examples is:
 
     // Create a POPSensor object on the local machine with resource description
 	POPSensor popSensor("localhost", "resource.json");
 
-	// Start listening to the remote sensors
-	popSensor.StartListening();
-
 	// wait ...
 
-	// Stop listening
-	popSensor.StopListening();
-
 	// Print the gathered data
-	POPSensorData data(popSensor.Gather());
-	data.Print();
+	POPSensorData data = popSensor.executeQuery("SELECT * FROM TABLE");
+	data.printAll();
 
 	// Clear data
-	popSensor.Clear();
+	popSensor.clear();
 
 As shown here the POPSensor object can be used in a very simple and efficient manner. For the programmer this class can be used transparently.
 
@@ -32,19 +26,19 @@ To compile and run this example use:
 ```
 	cd pop-win
 	make
-	popcrun objects.map ./main_example resources.json
+	popcrun objects.map ./main_sql resources.json
 ```
 
 
-### main.cpp
-This file contains a more complete use of the POPWin objects. It also instantiates a POPSensor objects and lets the user send commands via the keyboard. This example can be used to test the system.
+### main_demo.cpp
+This file contains a more complete use of the POPWin objects. It also instantiates a remote POPSensor objects.
 
 To compile and run this example use:
 
 ```
 	cd pop-win
 	make
-	popcrun objects.map ./main resources.json
+	popcrun objects.map ./main_demo resources.json
 ```
 
 ### main_plot.cpp
@@ -62,9 +56,8 @@ This chapter describes in more details the main classes used in this project.
 POPSensor is the primary class to use in a POPWin application. It allows the user to access the remote sensors. Its main methods are:
 
 - **Constructor**: specifies the name of the JSON file that describes resources and start acquiring data from the remote sensors.
-- **Gather**     : returns the data that was gathered in the form of a POPSensorData object.
+- **ExecuteQuery**: returns the data that was gathered by the SQL request in the form of a POPSensorData object.
 - **Broadcast**  : broadcast one message to all sensors
-- **Reduce**      : Compute and returns statistics on the data (size, min, max, aver, sum, stdev)
 
 [Full definition](POPSensor.ph). 
 
@@ -74,21 +67,19 @@ One POPSensor object can connect to one or many POPSensor class. This second cla
 [Full definition](SensorProxy.ph). 
 
 ### POPSensorData class
-A POPSensorData object is returned by the Gather() method. It contains all the data collected by the sensors including:
+A POPSensorData object is returned by the ExecuteQuery() method. It contains all the data collected by the sensors including:
 
 - Sensor id
 - Time stamp
 - Measurement type
 - Measurement unit
 
-Additionally this class provides the mothods:
+Additionally this class provides the methods:
 
-- **Print**       : Prints the data to the standard output
-- **PrintToFile** : Outputs the data to a file in .csv format
-- **Clear**       : Clears the data
-- **GetSize**     : Returns the number of records
-- **Insert**      : Insert new data into the structure
-- **Reduce**      : Compute and returns statistics on the data (size, min, max, aver, sum, stdev)
+- **printAll**       : Prints the data to the standard output
+- **clear**       : Clears the data
+- **getRow**     : Returns the number of rows
+- **insert**      : Insert a new data row into the structure
 
 [Full definition](POPSensorData.h). 
 

@@ -7,9 +7,13 @@ The remote sensors that the programmer wants to access are specified in the **re
 	- **url**: the machine on which the gateway sensor is connected
 	- **connection**: the connection between the machine and the gateway sensor (for now only usb is supported)
 - **nodes**: specifies the types of measurement
-	- **measurement type**: temperature, humidity, light, ... as specified in [gatewayMote/popwin_messages.h]
+	- **genre**: temperature, humidity, light, ... as specified in [gatewayMote/popwin_messages.h]
 	- **direction**: "IN" for sensor or "OUT" for actuators
-
+	- **type**: type of the measured data: float, double, string...
+	- **location**: specify which place the data comes from, ex. room A
+    - **unit**: the unit of the data we want, ex. celsius
+	
+Currently, in nodes list, *type*, *location* and *unit* are read and stored but are not used in the program.
 
 	{
 		"gateways":[
@@ -21,8 +25,11 @@ The remote sensors that the programmer wants to access are specified in the **re
 		"wsns":{
 			"nodes":[
 				{
-					"measurementType": "temperature",
-					"direction":   "IN"
+					"genre": "temperature",
+				    "direction":   "IN",
+				    "type": "float",
+				    "location": "batiment A",
+				    "unit": "celsius"
 				},
 				{
 					"measurementType": "humidity",
@@ -66,6 +73,8 @@ The messages can contain the following fields:
 		enum DataType        dataType;
 		unsigned short       id;
 		enum MeasurementUnit unit;
+		size_t               locationSize;
+		char                 location[BUFFERDATASIZE];
 		size_t               dataSize;
 		char                 data[BUFFERDATASIZE];
 	};
@@ -75,11 +84,10 @@ The messages can contain the following fields:
 	struct PublishMessage
 	{
 		enum PublicationType publicationType;
-		enum DataType        dataType;
 		unsigned short       id;               // not mandatory, for convenience
-		size_t               dataSize;
-		char                 data[BUFFERDATASIZE];
 	};
+	
+The UnPublishMessage has the same fields, only name and purpose change.
 
 
 #### Subscription message
@@ -90,6 +98,8 @@ The messages can contain the following fields:
 		enum MeasurementType measurementType;
 		enum DataType        dataType;
 	};
+	
+The UnSubscribeMessage has the same fields, only name and purpose change.
 
 #### Print the messages to buffer
 The message structures can be written to and read from a buffer of char. This is used when the message needs to be bufferized.

@@ -58,9 +58,6 @@ public:
 	/// Send a publication to sensors
 	// void Publish(int x_publicationType, int x_data); --> use broadcast
 
-	/// Send notification to the connected sensor
-	void Notify(int x_measurementType, int x_measurementUnit, const std::string& x_message);
-
 	/// Check if connected to any sensor
 	bool IsConnected();
 
@@ -80,6 +77,9 @@ private:
 
 	/// Subscribe to resources specified at connection
 	void SubscribeToResources(bool unsub);
+
+    /// Send notification to the connected sensor
+	void Notify(int x_measurementType, int x_measurementUnit, const std::string& x_message);
 
 	/// List of sensor proxy. Each proxy can be connected to one sensor via serial line
 	std::vector<SensorProxy*> m_sensorsProxy;

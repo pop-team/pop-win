@@ -204,9 +204,9 @@ In your root POPWin directory type:
 
 This should give you the following output:
 
-	=======================================================================================
+	\==================================
  	POPWin demo: Launching the demo                                                       
-	=======================================================================================
+	\==================================
 	Creating POPSensor 1
 	Creating POPSensor with id=0
 	Creating sensor proxy with id=1000 on port /dev/ttyUSB0
