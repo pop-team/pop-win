@@ -64,14 +64,14 @@ This chapter describes in more details the main classes used in this project.
 ### POPSensor parallel class
 POPSensor is the primary class to use in a POPWin application. It allows the user to access the remote sensors. Its main methods are:
 
-- **Constructor**: specifies the name of the JSON file that describes resources and start acquiring data from the remote sensors.
+- **Constructor**: specifies the IP of the machine connected to the target WSN and the name of the JSON file that describes resources and start acquiring data from the remote sensors.
 - **ExecuteQuery**: returns the data that was gathered by the SQL request in the form of a POPSensorData object.
-- **Broadcast**  : broadcast one message to all sensors
+- **Broadcast**  : broadcast one message to all sensors in the WSN
 
 [Full definition](POPSensor.ph). 
 
 ### SensorProxy parallel class
-One POPSensor object can connect to one or many POPSensor class. This second class handles the communication with the gateway sensor. The POPSensor object will create one POPSensor for each gateway sensor connected on USB. This is transparent to the programmer so this class should not be used directly.
+One POPSensor object can connect to one or many SensorProxy class. This second class handles the communication with the gateway sensor. The POPSensor object will create one SensorProxy for each gateway sensor connected on USB. This is transparent to the programmer so this class should not be used directly.
 
 [Full definition](SensorProxy.ph). 
 
