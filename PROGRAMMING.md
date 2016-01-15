@@ -40,6 +40,8 @@ To compile and run this example use:
 ### main_demo.cpp
 This file contains a more complete use of the POPWin objects. It also instantiates a remote POPSensor objects.
 
+The best way to run the demo is by having two virtual machines (with SSH keys already exchanged) and connect one Wireless Sensor Network to each VM. Then configure the IP addresses accordingly in the makefile and in the two json files (one per POPSensor, so one per VM). The two VMs must have the same file structure for simplicity of use. For example, install popwin in the home folder on both VMs.
+
 To compile and run this example use:
 
 ```
