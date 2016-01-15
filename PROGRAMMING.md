@@ -11,13 +11,20 @@ This file contains the a simple example on how to uses the different classes of 
 	POPSensor popSensor("localhost", "resource.json");
 
 	// wait ...
-
-	// Print the gathered data
-	POPSensorData data = popSensor.executeQuery("SELECT * FROM TABLE");
+	
+	// Send a command to all sensors of WSN to toggle green LED
+    popSensor.Broadcast(MSR_LED, UNT_NONE, LED_GREEN_TOGGLE);
+    
+	// Gather all data from WSN database
+	POPSensorData data = popSensor.executeQuery("SELECT * FROM popwin_schema.POPSensorData");
 	data.printAll();
 
 	// Clear data
 	popSensor.clear();
+
+In case you don't want everything from the database, the complete list of columns is : idPOPSensorData, type, genre, location, sensorID, value, unit. This could give for example :
+
+    popSensor.executeQuery("SELECT genre,value,unit FROM popwin_schema.POPSensorData");
 
 As shown here the POPSensor object can be used in a very simple and efficient manner. For the programmer this class can be used transparently.
 
