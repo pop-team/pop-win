@@ -8,10 +8,10 @@ The remote sensors that the programmer wants to access are specified in the **re
 	- **connection**: the connection between the machine and the gateway sensor (for now only usb is supported)
 - **nodes**: specifies the types of measurement
 	- **genre**: temperature, humidity, light, ... as specified in [gatewayMote/popwin_messages.h]
-	- **direction**: "IN" for sensor or "OUT" for actuators
+	- **direction**: "IN" for sensor or "OUT" for actuators, "INOUT" for both
 	- **type**: type of the measured data: float, double, string...
 	- **location**: specify which place the data comes from, ex. room A
-    - **unit**: the unit of the data we want, ex. celsius
+    - **unit**: the unit of the data we want, ex. celsius, lumen, none
 	
 Currently, in nodes list, *type*, *location* and *unit* are read and stored but are not used in the program.
 
@@ -57,13 +57,16 @@ Messages can be contained into fixed-size C structures that contain the full dat
 - **struct PublishMessage**
 
 The messages can contain the following fields:
-- **MeasurementType**: An enum that specifies the type of measurement: temperature, vibration, humidity, ...
-- **MeasurementUnit**: An enum that specifies the measurement unit: Celsius, seconds, meters, ...
-- **PublicationType**: An enum that specifies the type of publication: e.g. led
-- **ID**             : The id of the sender
-- **DataType**       : An enum that specifies the type of the data: double, int or string
-- **data**           : A buffer of character (of size BUFFERDATASIZE=64) that contains the data. For compatibility between systems integers and floats are printed to this buffer and not stored as bit value.
-- **DataSize**       : The size of the above data in characters
+- **measurementType**: An enum that specifies the type of measurement: temperature, vibration, humidity, ...
+- **measurementUnit**: An enum that specifies the measurement unit: Celsius, seconds, meters, ...
+- **publicationType**: An enum that specifies the type of publication: e.g. led
+- **id**             : The id of the sender
+- **dataType**       : An enum that specifies the type of the data: double, int or string
+- **data**           : A buffer of character (of size BUFFERDATASIZE=64) that contains the data. For compatibility between systems, integers and floats are printed to this buffer and not stored as bit value.
+- **dataSize**       : A buffer of character (of size BUFFERDATASIZE=64) that contains the location data. For compatibility between systems, location strings are printed to this buffer.
+- **location**       : The size of the location data in characters
+- **locationSize**   : The size of the location data in characters
+
 
 #### Notification message
 
