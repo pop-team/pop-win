@@ -1,6 +1,6 @@
 POPCC=popcc -cpp11 -g -no-async-allocation
 INC=-IlineComm -I/usr/include/jsoncpp
-LIBS=-ljsoncpp -lmysqlcppconn 
+LIBS=-ljsoncpp -lmysqlcppconn -lcurl
 
 all: POPSensor.obj SensorProxy.obj main_sql objects.map
 

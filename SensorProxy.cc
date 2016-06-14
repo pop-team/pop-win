@@ -26,9 +26,13 @@
 #include <pthread.h>
 #include <time.h>
 #include <regex.h>
+#include <time.h>
 
 #include <pop_object.h>
 #include <pop_exception.h>
+
+#include <json/json.h>
+#include <curl/curl.h>
 
 // Note: check baudrate of USB port with : stty -F /dev/ttyUSB0
 #define BAUDRATE B115200
@@ -122,14 +126,16 @@ void SensorProxy::InsertSQL(struct NotifyMessage* msg)
 
 		stmt = con->createStatement();
 		std::stringstream ss;
-		ss << "INSERT INTO popwin_schema.POPSensorData(type,genre,location,sensorID,value,unit) VALUES('"
+		ss << "INSERT INTO popwin_schema.POPSensorData(type,genre,location,sensorID,value,unit, timestamp) VALUES('"
 				<< explainDataType(msg->dataType) << "','"
 				<< explainMeasurementType(msg->measurementType) << "','"
 				<< msg->location << "','"
 				<< msg->id << "','"
 				<< msg->data << "','"
-				<< explainMeasurementUnit(msg->unit) << "')";
+				<< explainMeasurementUnit(msg->unit) << "','"
+				<< msg->timestampData << "')";
 		std::string s = ss.str();
+		cout << s << popcendl;
 		stmt->executeUpdate(s);
 
 		/* Access column data by alias or column name */
@@ -144,6 +150,178 @@ void SensorProxy::InsertSQL(struct NotifyMessage* msg)
 		cout << " (MySQL error code: " << e.getErrorCode();
 		cout << ", SQLState: " << e.getSQLState() << " )" << popcendl;
 	}
+	cout << popcendl;
+}
+
+/// @brief Read the callback message from curl request
+static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
+{
+    ((std::string*)userp)->append((char*)contents, size * nmemb);
+    return size * nmemb;
+}
+
+/// @brief Insert a message from sensor network to the database
+/// @param msg  Message received from sensor network with data like temperature, location, ...
+void SensorProxy::InsertKAFKA(struct NotifyMessage* msg)
+{
+	// KAFKA - Create JSON
+	Json::Value kafka_json;   
+	kafka_json["timestamp"] = msg->timestampData;
+	kafka_json["sensor-id"] = msg->id;
+	kafka_json["value"] = msg->data;
+
+	// Take the correct token for sensor
+	switch(msg->id)
+	{
+		case 1: {
+			kafka_json["token"] = "5b9e6a693c6b9c84bc8a2bfef61b5480c35b2d0786ab58829fa651f2e5633c42";
+			break;
+		}
+		case 2: {
+			kafka_json["token"] = "f034f33c493e0e04e826a3d6d67ba317d41186e280f77d54658546181febc1e8";
+			break;
+		}
+		case 3: {
+			kafka_json["token"] = "311115d1ef6ecba3786bb6195f00e123aafb98c9c8f981e40f26a8433fe21223";
+			break;
+		}
+		case 4: {
+			kafka_json["token"] = "69f0bf044f5c2d7e8655a37f31d9566a15d6fa3a6e3afb6a1c7bd6532025c4e4";
+			break;
+		}
+		case 5: {
+			kafka_json["token"] = "1e407bb9462fde71b722f2108d542650ebf462c05be3006b6e16efa504fabdc0";
+			break;
+		}
+		case 6: {
+			kafka_json["token"] = "a61a588dbf2fda363bc97a21a44c7dbde22c54b6a9ba8b40b6040e46839cb847";
+			break;
+		}
+		case 7: {
+			kafka_json["token"] = "6249f8c1f92a9d72cf7507a15c024d56def0c6de2683c2dcc740584c2873bb06";
+			break;
+		}
+		case 8: {
+			kafka_json["token"] = "0420235dd66a60878b9c92b271def023cac07498fa792114076c40f5eb517f8d";
+			break;
+		}
+		case 9: {
+			kafka_json["token"] = "9b8fd13f9ec69bb7200a2ba986e0742ea3b0b0737f6406a3c6dd69122b8dbdd5";
+			break;
+		}
+		case 10: {
+			kafka_json["token"] = "d5a4129d4df5240621a74ad29db3bcc89175ef48e937c2248e8afcc79d175170";
+			break;
+		}
+		case 11: {
+			kafka_json["token"] = "34d98906d27c98c03b5615fa86ec83884828056039ff2ab70918394cb26ccb3b";
+			break;
+		}
+		case 12: {
+			kafka_json["token"] = "a01ea52f4f53e76ea0b2af5b5a3891461b1f88e5ac83d4828f41ba83e714da32";
+			break;
+		}
+		case 13: {
+			kafka_json["token"] = "f9e9a4bacae574d66c72090b80369e630c063067ab18bd44b486d986ad3abca6";
+			break;
+		}
+		case 14: {
+			kafka_json["token"] = "e3bbfa95bee3d6f8616eeb8c8f9c2aa2a165a10280f3a68a591ef257bf9f4ec1";
+			break;
+		}
+		case 15: {
+			kafka_json["token"] = "dfefed92c173a0da536079c75f76ac2c01696e16c06e336144d1592159d678ff";
+			break;
+		}
+		case 16: {
+			kafka_json["token"] = "185cc1faaedd8e0ab68aea0e9f854eb17b06c52fedee1bcceb34b6a22c323020";
+			break;
+		}
+		case 17: {
+			kafka_json["token"] = "00b6d6fd33c48ea8b79354aaee7a0875ca4aa58ecf63ef344b72de8c4794394a";
+			break;
+		}
+		case 18: {
+			kafka_json["token"] = "a1a35baed73a6beab58ae21b8c8dff23632d1938b40f0e6dbaf4e549ab4f671b";
+			break;
+		}
+		case 19: {
+			kafka_json["token"] = "43dde717264de3ae2f1d1ef44b46a9850ac7480fb01e130f998c459e202086b0";
+			break;
+		}
+		case 20: {
+			kafka_json["token"] = "a7a685527cbd9520b66a7a5b03f384af3021e5a731d47ab1c36b84b625a07d00";
+			break;
+		}
+		case 21: {
+			kafka_json["token"] = "0a57e1783db6c544b3e57081217c5bdb7cdb1a15c43c573918e16e56a4d908c4";
+			break;
+		}
+		case 22: {
+			kafka_json["token"] = "f497a250c9a0b4e77f9d078f2850442e3618320b84e4fc4feec80bbca6f67684";
+			break;
+		}
+		case 23: {
+			kafka_json["token"] = "74e34962e7dade9b01b300b3fe243547159b928065560452fc002d8ade528786";
+			break;
+		}
+	}
+
+
+
+	// Create string from json object
+	Json::FastWriter fastWriter;
+	std::string output = fastWriter.write(kafka_json);
+	std::string err_tag = "errors";
+
+	CURL *curl;
+	CURLcode res;
+
+	// Create string for callback
+	std::string readBuffer;
+
+	struct curl_slist *headers=NULL; // init to NULL is important
+
+	headers = curl_slist_append(headers, "Accept: application/json");
+	headers = curl_slist_append(headers, "Content-Type: application/json");
+	headers = curl_slist_append(headers, "charsets: utf-8");
+
+	// get a curl handle
+	curl = curl_easy_init();
+	if(curl) 
+	{
+		/* First set the URL that is about to receive our POST. This URL can
+		just as well be a https:// URL if that is what should receive the
+		data. */ 
+		curl_easy_setopt(curl, CURLOPT_URL, "localhost:12345/input-api/measures");
+		// Now specify the POST data  
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, output.c_str());
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, output.length());
+		curl_easy_setopt(curl, CURLOPT_POST, 1);
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+
+	    	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+	    	res = curl_easy_perform(curl);
+
+		// Perform the request, res will get the return code
+		// Check for errors
+		if(res != CURLE_OK) {
+			fprintf(stderr, "curl_easy_perform() failed: %s\n",
+	      		curl_easy_strerror(res));
+		} else {
+			// Check if KAFKA return errors
+			if (readBuffer.find(err_tag) != std::string::npos) {
+			    throw POPException("Error with the data sended to KAFKA");
+			} else {
+				cout << "Inserted 1 input message in DB KAFKA: Value: " << msg->data << popcendl;
+			}
+		}
+		// always cleanup 
+		curl_easy_cleanup(curl);
+
+	}
+	curl_global_cleanup();
 	cout << popcendl;
 }
 
@@ -284,6 +462,24 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 			if(unbufferizeNotifyMessage(&msg, x_rawMsg.c_str(), x_rawMsg.size()) <= 0)
 				throw POPException("Cannot unbufferize notify message");
 
+			// Variables to get timestamp
+			char buffer[45];
+			time_t curtime;
+			struct tm *loctime;
+
+			// Get the current time.
+			curtime = time (NULL);
+
+			// Convert it to local time representation.
+			loctime = localtime (&curtime);
+
+			// Format RFC3339
+			strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%S%z", loctime);
+			strcpy(buffer+22, ":00");
+
+			// Add timestamp to msg
+			strcpy(msg.timestampData,buffer);
+
 			auto it = m_subscriptions.find(msg.measurementType);
 			bool subscribed = it != m_subscriptions.end() && it->second;
 			if(msg.measurementType == MSR_LOG)
@@ -302,6 +498,8 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 			cout<< "Proxy "<< m_id << ", stored notification   (" << explainMeasurementType(msg.measurementType) << "): '" << msg.data << "'" << popcendl;
 #endif
 			InsertSQL(&msg);
+			InsertKAFKA(&msg);
+
 		}
 		break;
 
@@ -318,6 +516,8 @@ void SensorProxy::HandleIncomingMessage(const std::string& x_rawMsg)
 	}
 
 }
+
+
 
 /// @brief Send a notification with int data to the gateway
 /// @param x_measurementType the type of measurement we want to notify (temp, light, ...)

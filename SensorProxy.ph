@@ -58,6 +58,7 @@ private:
 	void HandleIncomingMessage(const std::string& x_msg);
 
 	void InsertSQL(struct NotifyMessage* msg);
+	void InsertKAFKA(struct NotifyMessage* msg);
 
 	int m_fd;
 	int m_id;

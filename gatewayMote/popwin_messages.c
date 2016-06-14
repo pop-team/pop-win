@@ -313,6 +313,17 @@ enum MeasurementType translateMeasurementType(const char* x_str)
 	if(!strcmp(x_str, "led"))          return MSR_LED;
 	if(!strcmp(x_str, "set_gw"))       return MSR_SET_GW;
 	if(!strcmp(x_str, "error"))        return MSR_ERROR;
+	if(!strcmp(x_str, "pressure"))     return MSR_PRESSURE;
+	if(!strcmp(x_str, "co2"))          return MSR_CO2;
+	if(!strcmp(x_str, "particle1"))    return MSR_PARTICLE1;
+	if(!strcmp(x_str, "particle2.5"))  return MSR_PARTICLE2_5;
+	if(!strcmp(x_str, "particle10"))   return MSR_PARTICLE10;
+	if(!strcmp(x_str, "luminosity"))   return MSR_LUMINOSITY;
+	if(!strcmp(x_str, "halleffect"))   return MSR_HALLEFFECT;
+	if(!strcmp(x_str, "presence"))     return MSR_PRESENCE;
+	if(!strcmp(x_str, "voc"))          return MSR_VOC;
+	if(!strcmp(x_str, "ammonia"))      return MSR_AMMONIA;
+	if(!strcmp(x_str, "methane"))      return MSR_METHANE;
 
 	printf("ERROR: Unknown measurement type %s\n", x_str);
 	return MSR_LOG;
@@ -336,6 +347,17 @@ const char* explainMeasurementType(enum MeasurementType x)
 	case MSR_LED:         return "led";
 	case MSR_SET_GW:      return "set_gw";
 	case MSR_ERROR:       return "error";
+	case MSR_PRESSURE:    return "pressure";
+	case MSR_CO2:         return "co2";
+	case MSR_PARTICLE1:   return "particle1";
+	case MSR_PARTICLE2_5: return "particle2.5";
+	case MSR_PARTICLE10:  return "particle10";
+	case MSR_LUMINOSITY:  return "luminosity";
+	case MSR_HALLEFFECT:  return "halleffect";
+	case MSR_PRESENCE:    return "presence";
+	case MSR_VOC:         return "voc";
+	case MSR_AMMONIA:     return "ammonia";
+	case MSR_METHANE:     return "methane";
 	}
 	printf("ERROR: Unknown measurement type %d\n", (int)x);
 	return "unknown";
@@ -352,6 +374,11 @@ enum MeasurementUnit translateMeasurementUnit(const char* x_str)
 	if(!strcmp(x_str, "meters"))      return UNT_METERS;
 	if(!strcmp(x_str, "lux"))         return UNT_LUX;
 	if(!strcmp(x_str, "percent"))     return UNT_PERCENT;
+	if(!strcmp(x_str, "pascal"))      return UNT_PASCAL;
+	if(!strcmp(x_str, "ppm"))         return UNT_PPM;
+	if(!strcmp(x_str, "microgram"))   return UNT_MICROGRAM;
+	if(!strcmp(x_str, "ohm"))         return UNT_OHM;
+	if(!strcmp(x_str, "volt"))        return UNT_VOLT;
 
 	printf("ERROR: Unknown measurement unit %s\n", x_str);
 	return UNT_NONE;
@@ -369,6 +396,11 @@ const char* explainMeasurementUnit(enum MeasurementUnit x)
 	case UNT_METERS:      return "meters";
 	case UNT_LUX:         return "lux";
 	case UNT_PERCENT:     return "percent";
+	case UNT_PASCAL:      return "pascal";
+	case UNT_PPM:         return "ppm";
+	case UNT_MICROGRAM:   return "microgram";
+	case UNT_OHM:         return "ohm";
+	case UNT_VOLT:        return "volt";
 	}
 	printf("ERROR: Unknown measurement unit %d\n", (int)x);
 	return "unknown";

@@ -46,8 +46,19 @@ enum MeasurementType
 	MSR_INFRARED    = 8,  // infrared measurement
 	MSR_EVENT       = 9,  // a specific event is sent
 	MSR_LED         = 10, // led status
-	MSR_SET_GW		= 11, // set sensor as GW notification
-	MSR_ERROR       = 12  // error
+	MSR_SET_GW	= 11, // set sensor as GW notification
+	MSR_ERROR       = 12, // error
+	MSR_PRESSURE	= 13, // pressure measurement
+	MSR_CO2		= 14, // CO2 concentration measurement
+	MSR_PARTICLE1	= 15, // Particle measurement
+	MSR_PARTICLE2_5	= 16, // Particle measurement
+	MSR_PARTICLE10	= 17, // Particle measurement
+	MSR_LUMINOSITY	= 18, // Luminosity measurement
+	MSR_HALLEFFECT	= 19, // Hall effect measurement
+	MSR_PRESENCE	= 20, // Presence measurement
+	MSR_VOC		= 21, // Volatile organic compounds measurement
+	MSR_AMMONIA	= 22, // Ammonia measurement
+	MSR_METHANE	= 23  // Methane measurement
 	// ... //
 };
 
@@ -63,7 +74,12 @@ enum MeasurementUnit
 	UNT_SECONDS     = 3,
 	UNT_METERS      = 4,
 	UNT_LUX         = 5,
-	UNT_PERCENT     = 6
+	UNT_PERCENT     = 6,
+	UNT_PASCAL	= 7,
+	UNT_PPM		= 8,
+	UNT_MICROGRAM	= 9,
+	UNT_OHM		= 10,
+	UNT_VOLT	= 11
 	// ... // 
 };
 
@@ -170,6 +186,8 @@ struct NotifyMessage
 	size_t               dataSize;
 	/// Buffer containing the data on text format
 	char                 data[BUFFERDATASIZE];
+	/// Timestamp of the data
+	char 		     timestampData[BUFFERDATASIZE];
 };
 
 

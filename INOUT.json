@@ -19,8 +19,115 @@
 				"genre": "temperature",
 				"direction":   "IN",
 				"type": "float",
-				"location": "batiment A",
 				"unit": "celsius"
+			},
+			{
+				"genre": "humidity",
+				"direction":   "IN",
+				"type": "float",
+				"unit": "percent"
+			},
+			{
+				"genre": "pressure",
+				"direction":   "IN",
+				"type": "float",
+				"unit": "pascal"
+			},
+			{
+				"genre": "co2",
+				"direction":   "IN",
+				"type": "float",
+				"unit": "ppm"
+			},
+			{
+				"genre": "particle1",
+				"direction":   "IN",
+				"type": "float",
+				"unit": "microgram"
+			},
+			{
+				"genre": "particle2.5",
+				"direction":   "IN",
+				"type": "float",
+				"unit": "microgram"
+			},
+			{
+				"genre": "particle10",
+				"direction":   "IN",
+				"type": "float",
+				"unit": "microgram"
+			},
+			{
+				"genre": "luminosity",
+				"direction":   "IN",
+				"type": "float",
+				"unit": "volt"
+			},
+			{
+				"genre": "luminosity",
+				"direction":   "IN",
+				"type": "float",
+				"unit": "ohm"
+			},
+			{
+				"genre": "halleffect",
+				"direction":   "IN",
+				"type": "float",
+				"unit": "volt"
+			},
+			{
+				"genre": "halleffect",
+				"direction":   "IN",
+				"type": "float",
+				"unit": "ohm"
+			},
+			{
+				"genre": "presence",
+				"direction":   "IN",
+				"type": "float",
+				"unit": "volt"
+			},
+			{
+				"genre": "co2",
+				"direction":   "IN",
+				"type": "float",
+				"unit": "volt"
+			},
+			{
+				"genre": "voc",
+				"direction":   "IN",
+				"type": "float",
+				"unit": "ohm"
+			},
+			{
+				"genre": "voc",
+				"direction":   "IN",
+				"type": "float",
+				"unit": "volt"
+			},
+			{
+				"genre": "ammonia",
+				"direction":   "IN",
+				"type": "float",
+				"unit": "ohm"
+			},
+			{
+				"genre": "ammonia",
+				"direction":   "IN",
+				"type": "float",
+				"unit": "volt"
+			},
+			{
+				"genre": "methane",
+				"direction":   "IN",
+				"type": "float",
+				"unit": "ohm"
+			},
+			{
+				"genre": "methane",
+				"direction":   "IN",
+				"type": "float",
+				"unit": "volt"
 			}
 		]
 	}
