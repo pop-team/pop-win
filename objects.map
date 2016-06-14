@@ -1,0 +1,2 @@
+POPSensor x86_64-Linux /home/ubuntu/pop-win/POPSensor.obj
+SensorProxy x86_64-Linux /home/ubuntu/pop-win/SensorProxy.obj
