@@ -52,6 +52,9 @@ void setup() {
   //Turn on the USB
   USB.ON();
   
+  // Turn on the SensorGase
+  SensorGasv20.ON();
+  
   // Configure the CO2 sensor socket
   SensorGasv20.configureSensor(SENS_CO2, GAIN_CO2);
 
