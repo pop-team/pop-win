@@ -62,10 +62,10 @@ void setup() {
   SensorGasv20.setSensorMode(SENS_ON, SENS_CO2);
   
   // Configure the VOC sensor socket
-  SensorGasv20.configureSensor(SENS_SOCKET3B, GAIN_VOC, RESISTOR_VOC);
+  SensorGasv20.configureSensor(SENS_SOCKET2B, GAIN_VOC, RESISTOR_VOC);
   
-  // Turn on the VOC sensor on socket 3B and wait for stabilization
-  SensorGasv20.setSensorMode(SENS_ON, SENS_SOCKET3B);
+  // Turn on the VOC sensor on socket 2B and wait for stabilization
+  SensorGasv20.setSensorMode(SENS_ON, SENS_SOCKET2B);
   
   // Configure the NH3 sensor on socket 3
   SensorGasv20.configureSensor(SENS_SOCKET3NH3, GAIN_NH3, RESISTOR_NH3);
@@ -134,7 +134,7 @@ void loop() {
   ///////////////////////////////////////
   
   // 3.1 Read the voc sensor raw output 
-  vocRaw = SensorGasv20.readValue(SENS_SOCKET3B);
+  vocRaw = SensorGasv20.readValue(SENS_SOCKET2B);
   
   decimal1 = vocRaw;                       // Get the integer part before comma
   fractional = vocRaw - decimal1;          // Get fractional part
@@ -153,7 +153,7 @@ void loop() {
   gwSendNotificationSerial(&msg);
   
   // 3.3 Conversion from voltage into kiloohms
-  voc = SensorGasv20.calculateResistance(SENS_SOCKET3B, vocRaw, GAIN_VOC, RESISTOR_VOC);
+  voc = SensorGasv20.calculateResistance(SENS_SOCKET2B, vocRaw, GAIN_VOC, RESISTOR_VOC);
   
   voc = voc * 1000;                        // Convert kohm to ohm
   
